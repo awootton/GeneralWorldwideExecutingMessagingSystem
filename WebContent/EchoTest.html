@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+  <head>
+    <title>WebSockets echo</title>
+    <meta charset="utf-8" />
+    <script src="http://code.jquery.com/jquery.min.js"></script>
+    <script>
+    
+    var startTime;
+    var endTime;
+
+    $(document).ready(function () {
+      var socket;
+      $("#open").click(function(event) {
+    	  
+    	 console.log("have open");
+    	  
+        event.preventDefault();
+        var host = $("#host").val();
+        var port = $("#port").val();
+        var uri = $("#uri").val();
+        socket = new WebSocket("ws://" + host + ":" + port + uri);
+        socket.onmessage = function(event) {
+        	var msg = event.data;
+        	 endTime = new Date().getMilliseconds();
+        	 msg += " in " + (endTime-startTime);
+        	 console.log("Message received: " + msg );
+          $("#log").prepend(msg+"<br>");
+        };
+        socket.onerror = function(event) { 
+        	console.log(event,'Connection error ');
+        	alert("Connection error " + event); 
+        };
+        socket.onclose = function(event) {
+        	$("#log").prepend("Connection close"+"<br>");
+        };
+        socket.onopen = function(event) {
+        	$("#log").prepend("Connection open"+"<br>");
+        };
+      });
+      $("#close").click(function(event) {
+        event.preventDefault();
+        socket.close();
+      });
+      $("#send").click(function(event) {
+        event.preventDefault();
+        var msg = $("#message").val();
+        console.log("sending " + msg);
+        startTime = new Date().getMilliseconds();
+        socket.send(msg);
+      });
+    });
+    
+    </script>
+  </head>
+  <body>
+    <h1>WebSockets echo</h1>
+    <form>
+      <label for="host">host:</label>
+      <input type="text" id="host" value="localhost" /><br />
+      <label for="port">port:</label>
+      <input type="number" id="port" value="8081" /><br />
+      <label for="uri">uri:</label>
+      <input type="text" id="uri" value="/echo" /><br />
+      <input type="submit" id="open" value="open" />
+      <input type="submit" id="close" value="close" /><br />
+      <textarea placeholder="Write your message here" id="message"></textarea><br />
+      <input type="submit" id="send" value="send" />
+      <div id="log"></div>
+    </form>
+  </body>
+</html>
