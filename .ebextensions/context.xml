@@ -19,8 +19,8 @@
          the AWS SDK for Java Developer Guide:
          http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/welcome.html
          -->
-    <Manager className="com.amazonaws.services.dynamodb.sessionmanager.DynamoDBSessionManager"
-             awsAccessKey="AKIAJIKT4SKF3A5DYBDA"
-             awsSecretKey="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"
+    <xxxManager className="com.amazonaws.services.dynamodb.sessionmanager.DynamoDBSessionManager"
+             awsAccessKey="GARBAGE"
+             awsSecretKey="GARBAGE"
              createIfNotExist="true" />
 </Context>
