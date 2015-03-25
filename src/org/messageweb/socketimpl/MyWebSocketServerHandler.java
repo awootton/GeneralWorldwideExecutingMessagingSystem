@@ -1,4 +1,4 @@
-package org.messageweb;
+package org.messageweb.socketimpl;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
@@ -28,6 +28,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 
+import org.messageweb.ServerGlobalState;
 import org.messageweb.messages.PingEcho;
 
 public class MyWebSocketServerHandler extends
@@ -73,9 +74,9 @@ public class MyWebSocketServerHandler extends
 					FORBIDDEN));
 			return;
 		}
-
-		// Send the demo page and favicon.ico, NEVER
-		if (req.getMethod() != GET && "/".equals(req.getUri())) {
+		boolean doHttpStuff = false || req.getMethod() != GET;// NEVER
+		// Send the demo page and favicon.ico
+		if (doHttpStuff&& "/".equals(req.getUri())) {
 			ByteBuf content = WebSocketServerIndexPage
 					.getContent(getWebSocketLocation(req));
 			FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK,
@@ -87,8 +88,7 @@ public class MyWebSocketServerHandler extends
 			sendHttpResponse(ctx, req, res);
 			return;
 		}
-		// NEVER
-		if (req.getMethod() != GET && "/favicon.ico".equals(req.getUri())) {
+		if ( doHttpStuff && "/favicon.ico".equals(req.getUri())) {
 			FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1,
 					NOT_FOUND);
 			sendHttpResponse(ctx, req, res);
@@ -137,7 +137,7 @@ public class MyWebSocketServerHandler extends
 		// make into class
 		Exception ex = null;
 		try {
-			Runnable r = PingEcho.deser(request);
+			Runnable r = ServerGlobalState.deserialize(request);
 
 			//System.out.println(r);
 

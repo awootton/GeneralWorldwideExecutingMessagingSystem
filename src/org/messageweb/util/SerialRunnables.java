@@ -1,4 +1,4 @@
-package org.messageweb;
+package org.messageweb.util;
 
 /**
  * 

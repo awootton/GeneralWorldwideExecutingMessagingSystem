@@ -1,4 +1,4 @@
-package org.messageweb;
+package org.messageweb.socketimpl;
 
 /** Copyright Alan Wootton 2015
  * 
@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.messageweb.ServerGlobalState;
 
 /**
  * A HTTP server which serves Web Socket requests at:
@@ -110,7 +111,7 @@ public final class MyWebSocketServer {
 			portsStarted.add(port);
 		}
 		
-		logger.debug(" &@^@%   &@^@%   &@^@%   &@^@%   &@^@%   &@^@%   Starting " + global + " on " + port);
+		logger.info(" &@^@%   &@^@%   &@^@%   &@^@%   &@^@%   &@^@%   Starting " + global + " on " + port);
 		// Configure SSL.
 		final SslContext sslCtx;
 		if (SSL) {

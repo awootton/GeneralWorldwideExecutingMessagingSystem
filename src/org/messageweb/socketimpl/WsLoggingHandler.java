@@ -1,4 +1,4 @@
-package org.messageweb;
+package org.messageweb.socketimpl;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;

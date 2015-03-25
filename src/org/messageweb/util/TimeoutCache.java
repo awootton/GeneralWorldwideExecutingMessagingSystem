@@ -1,4 +1,4 @@
-package org.messageweb.experiments;
+package org.messageweb.util;
 
 import java.util.ArrayList;
 import java.util.Comparator;
