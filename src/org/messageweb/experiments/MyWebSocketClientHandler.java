@@ -13,13 +13,23 @@ import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.CharsetUtil;
 
+import java.util.concurrent.Executor;
+
+import org.apache.log4j.Logger;
+import org.messageweb.ServerGlobalState;
+
 public class MyWebSocketClientHandler  extends SimpleChannelInboundHandler<Object> {
+	
+	public static Logger logger = Logger.getLogger(MyWebSocketClientHandler.class);
 
     private final WebSocketClientHandshaker handshaker;
     private ChannelPromise handshakeFuture;
+    
+    WsClientTest client;
 
-    public MyWebSocketClientHandler(WebSocketClientHandshaker handshaker) {
+    public MyWebSocketClientHandler(WebSocketClientHandshaker handshaker, WsClientTest client ) {
         this.handshaker = handshaker;
+        this.client = client;
     }
 
     public ChannelFuture handshakeFuture() {
@@ -38,7 +48,7 @@ public class MyWebSocketClientHandler  extends SimpleChannelInboundHandler<Objec
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        System.out.println("WebSocket Client disconnected!");
+    	logger.debug("WebSocket Client disconnected!");
     }
 
     @Override
@@ -46,7 +56,7 @@ public class MyWebSocketClientHandler  extends SimpleChannelInboundHandler<Objec
         Channel ch = ctx.channel();
         if (!handshaker.isHandshakeComplete()) {
             handshaker.finishHandshake(ch, (FullHttpResponse) msg);
-            System.out.println("WebSocket Client connected!");
+            logger.debug("WebSocket Client connected!");
             handshakeFuture.setSuccess();
             return;
         }
@@ -61,18 +71,30 @@ public class MyWebSocketClientHandler  extends SimpleChannelInboundHandler<Objec
         WebSocketFrame frame = (WebSocketFrame) msg;
         if (frame instanceof TextWebSocketFrame) {
             TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-            System.out.println("WebSocket Client atw received textFrame message: " + textFrame.text());
+           
+            logger.trace("WebSocket Client atw received textFrame message: " + textFrame.text());
+            
+            // change into a runnable. 
+            Runnable r;
+			try {
+				r = ServerGlobalState.deserialize(textFrame.text());
+				  client.executeChannelMessage( ctx, r);
+			} catch (Exception e) {
+				logger.error(e );
+			}
+            
         } else if (frame instanceof PongWebSocketFrame) {
-            System.out.println("WebSocket Client received pong - not handled");
+        	logger.info("WebSocket Client received pong - not handled");
         } else if (frame instanceof CloseWebSocketFrame) {
-            System.out.println("WebSocket Client received closing");
+        	logger.info("WebSocket Client received closing");
             ch.close();
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
+        //cause.printStackTrace();
+    	logger.error(cause);
         if (!handshakeFuture.isDone()) {
             handshakeFuture.setFailure(cause);
         }

@@ -49,11 +49,9 @@ import org.messageweb.ServerGlobalState;
  *
  * http://localhost:8081/websocket
  *
- * Open your browser at http://localhost:8081/, then the demo page will be
- * loaded and a Web Socket connection will be made automatically.
+ * Open your browser at http://localhost:8081/, then the demo page will be loaded and a Web Socket connection will be made automatically.
  *
- * This server illustrates support for the different web socket specification
- * versions and will work with:
+ * This server illustrates support for the different web socket specification versions and will work with:
  *
  * <ul>
  * <li>Safari 5+ (draft-ietf-hybi-thewebsocketprotocol-00)
@@ -66,20 +64,27 @@ import org.messageweb.ServerGlobalState;
  */
 public final class MyWebSocketServer {
 
-	private static Logger logger = Logger
-			.getLogger(MyWebSocketServer.class);
+	private static Logger logger = Logger.getLogger(MyWebSocketServer.class);
 
 	final boolean SSL = System.getProperty("ssl") != null;
 	// static final int PORT = Integer.parseInt(System.getProperty("port", SSL ?
 	// ""+ (8443 + 1) : "" + (8080 + 1)));
 
 	static Set<Integer> portsStarted = new HashSet<Integer>();// doesn't work in reload
-	
+
 	ServerGlobalState global;
-	
+
+	EventLoopGroup bossGroup;
+	EventLoopGroup workerGroup;
+
 	public MyWebSocketServer(ServerGlobalState global) {
 		super();
 		this.global = global;
+	}
+
+	public void stop() {
+		workerGroup.shutdownGracefully();
+		bossGroup.shutdownGracefully();
 	}
 
 	public class Starter implements Runnable {
@@ -96,7 +101,7 @@ public final class MyWebSocketServer {
 		public void run() {
 			MyWebSocketServer server = MyWebSocketServer.this;
 			try {
-				server.start(port,global);
+				server.start(port, global);
 			} catch (Exception e) {
 				logger.error(e);
 			}
@@ -110,31 +115,28 @@ public final class MyWebSocketServer {
 				return;
 			portsStarted.add(port);
 		}
-		
+
 		logger.info(" &@^@%   &@^@%   &@^@%   &@^@%   &@^@%   &@^@%   Starting " + global + " on " + port);
 		// Configure SSL.
 		final SslContext sslCtx;
 		if (SSL) {
 			SelfSignedCertificate ssc = new SelfSignedCertificate();
-			sslCtx = SslContext.newServerContext(ssc.certificate(),
-					ssc.privateKey());
+			sslCtx = SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
 		} else {
 			sslCtx = null;
 		}
 
-		EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-		EventLoopGroup workerGroup = new NioEventLoopGroup();
+		bossGroup = new NioEventLoopGroup(1);
+		workerGroup = new NioEventLoopGroup();
+
 		try {
 			ServerBootstrap b = new ServerBootstrap();
-			b.group(bossGroup, workerGroup)
-					.channel(NioServerSocketChannel.class)
-					.handler(new WsLoggingHandler())
+			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).handler(new WsLoggingHandler())
 					.childHandler(new MyWebSocketServerInitializer(sslCtx, global));
 
 			Channel ch = b.bind(port).sync().channel();
 
-			System.out.println("Open your web browser and navigate to "
-					+ (SSL ? "https" : "http") + "://127.0.0.1:" + port + '/');
+			System.out.println("Open your web browser and navigate to " + (SSL ? "https" : "http") + "://127.0.0.1:" + port + '/');
 
 			ch.closeFuture().sync();
 		} finally {
@@ -143,27 +145,27 @@ public final class MyWebSocketServer {
 			portsStarted.remove(port);
 		}
 	}
-	
-	 static  class MyWebSocketServerInitializer extends ChannelInitializer<SocketChannel> {
 
-	    private final SslContext sslCtx;
-	    ServerGlobalState global;
+	static class MyWebSocketServerInitializer extends ChannelInitializer<SocketChannel> {
 
-	    public MyWebSocketServerInitializer(SslContext sslCtx, ServerGlobalState global) {
-	        this.sslCtx = sslCtx;
-	        this.global = global;
-	    }
+		private final SslContext sslCtx;
+		ServerGlobalState global;
 
-	    @Override
-	    public void initChannel(SocketChannel ch) throws Exception {
-	        ChannelPipeline pipeline = ch.pipeline();
-	        if (sslCtx != null) {
-	            pipeline.addLast(sslCtx.newHandler(ch.alloc()));
-	        }
-	        pipeline.addLast(new HttpServerCodec());
-	        pipeline.addLast(new HttpObjectAggregator(65536));
-	        pipeline.addLast(new MyWebSocketServerHandler(global));
-	    }
+		public MyWebSocketServerInitializer(SslContext sslCtx, ServerGlobalState global) {
+			this.sslCtx = sslCtx;
+			this.global = global;
+		}
+
+		@Override
+		public void initChannel(SocketChannel ch) throws Exception {
+			ChannelPipeline pipeline = ch.pipeline();
+			if (sslCtx != null) {
+				pipeline.addLast(sslCtx.newHandler(ch.alloc()));
+			}
+			pipeline.addLast(new HttpServerCodec());
+			pipeline.addLast(new HttpObjectAggregator(65536));
+			pipeline.addLast(new MyWebSocketServerHandler(global));
+		}
 	}
 
 }

@@ -4,16 +4,15 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
-import org.messageweb.messages.PingEcho;
 import org.messageweb.socketimpl.MyWebSocketServer;
 import org.messageweb.util.TimeoutCache;
 
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -29,14 +28,16 @@ public class ServerGlobalState {
 
 	private static Logger logger = Logger.getLogger(ServerGlobalState.class);
 
-	Executor executor = null;
+	ExecutorService executor = null;
 
 	String id = "Server" + ("" + Math.random()).substring(2);
 	// FIXME: more random here
 
 	MyWebSocketServer server;
 
-	public TimeoutCache cache;
+	public TimeoutCache timeoutCache;
+	
+	Thread serverThread;
 
 	public ServerGlobalState(int port) {
 		executor = Executors.newCachedThreadPool();
@@ -44,12 +45,12 @@ public class ServerGlobalState {
 		// open the port
 		server = new MyWebSocketServer(this);
 		Runnable starter = server.new Starter(port, this);
-		Thread thread = new Thread(starter);
-		thread.setName("id");
-		thread.setDaemon(true);
-		thread.start();
+		serverThread = new Thread(starter);
+		serverThread.setName("id");
+		serverThread.setDaemon(true);
+		serverThread.start();
 
-		cache = new TimeoutCache(executor);
+		timeoutCache = new TimeoutCache(executor, id);
 	}
 
 	private class GlobalStateSetter implements Runnable {
@@ -85,6 +86,11 @@ public class ServerGlobalState {
 	 */
 	public void executeChannelMessage(ChannelHandlerContext ctx, Runnable child) {
 		execute(new CtxWrapper(ctx, child));
+	}
+	
+	public void stop(){
+		server.stop(); 
+		executor.shutdown();
 	}
 
 	/**
@@ -130,7 +136,8 @@ public class ServerGlobalState {
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	static {
 
-		MAPPER.setVisibility(PropertyAccessor.ALL, Visibility.NONE);
+		//MAPPER.setVisibility(PropertyAccessor.ALL, Visibility.NONE);
+		MAPPER.setVisibility(PropertyAccessor.GETTER, Visibility.NONE);
 		MAPPER.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
 		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@Class");
 	}
@@ -150,20 +157,20 @@ public class ServerGlobalState {
 	 * @param message
 	 * @throws JsonProcessingException
 	 */
-	public void injectMessage( Runnable message ) throws JsonProcessingException{
-		// we need a WS client !! 
-		String s = serialize(message);
-		
-		
-	}
+//	public void injectMessage( Runnable message ) throws JsonProcessingException{
+//		// we need a WS client !! 
+//		String s = serialize(message);
+//		
+//		
+//	}
 	
 	
 	static public void reply( Runnable message ){
-		ChannelHandlerContext ctx = ServerGlobalState.getCtx();
+		ChannelHandlerContext ctx = myChannelContextStateObj.get();
 		//System.out.println(" have ctx name = " + ctx.name());
 		try {
 			String sendme = ServerGlobalState.serialize(message);
-			ctx.channel().write(new TextWebSocketFrame(sendme));
+			ctx.channel().writeAndFlush(new TextWebSocketFrame(sendme));
 		} catch (JsonProcessingException e) {
 			//e.printStackTrace();
 			logger.error("bad message " + message, e);

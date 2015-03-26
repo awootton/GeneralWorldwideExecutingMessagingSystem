@@ -4,6 +4,7 @@
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
         <wb-resource deploy-path="/WEB-INF/.ebextensions" source-path="/.ebextensions"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/WebContent/WEB-INF/lib"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/test"/>
         <property name="java-output-path" value="/GeneralWorldwideExecutingMessagingSystem1/build/classes"/>
         <property name="context-root" value="GeneralWorldwideExecutingMessagingSystem1"/>
     </wb-module>

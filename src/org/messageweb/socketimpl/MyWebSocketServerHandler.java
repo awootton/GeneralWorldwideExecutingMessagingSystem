@@ -29,7 +29,6 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 
 import org.messageweb.ServerGlobalState;
-import org.messageweb.messages.PingEcho;
 
 public class MyWebSocketServerHandler extends
 		SimpleChannelInboundHandler<Object> {
