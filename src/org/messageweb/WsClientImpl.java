@@ -1,4 +1,4 @@
-package org.messageweb.experiments;
+package org.messageweb;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
@@ -24,6 +24,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -34,11 +35,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.impl.MyWebSocketClientHandler;
 import org.messageweb.messages.PingEcho;
 import org.messageweb.util.TimeoutCache;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  * This is an example of a WebSocket client.
@@ -50,9 +53,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  * The client will attempt to connect to the URI passed to it as the first argument. You don't have to specify any arguments if you want to connect to the
  * example WebSocket server, as this is the default.
  */
-public final class WsClientTest {
+public final class WsClientImpl {
 
-	public static Logger logger = Logger.getLogger(WsClientTest.class);
+	public static Logger logger = Logger.getLogger(WsClientImpl.class);
 
 	static final String URL = System.getProperty("url", "ws://127.0.0.1:8081");// + // "/websocket"
 
@@ -74,7 +77,7 @@ public final class WsClientTest {
 
 	private BlockingQueue<String> commands4serverQ = new ArrayBlockingQueue<String>(16);
 
-	public WsClientTest(int port) {
+	public WsClientImpl(int port) {
 		super();
 		this.port = port;
 
@@ -96,7 +99,7 @@ public final class WsClientTest {
 		}
 
 		public void run() {
-			WsClientTest server = WsClientTest.this;
+			WsClientImpl server = WsClientImpl.this;
 			try {
 				server.startUp(port);
 			} catch (Exception e) {
@@ -208,7 +211,7 @@ public final class WsClientTest {
 	}
 
 	private static final ThreadLocal<ChannelHandlerContext> myClientContext = new ThreadLocal<ChannelHandlerContext>();
-	private static final ThreadLocal<WsClientTest> myClient = new ThreadLocal<WsClientTest>();
+	private static final ThreadLocal<WsClientImpl> myClient = new ThreadLocal<WsClientImpl>();
 
 	static public void reply(Runnable message) {
 		ChannelHandlerContext ctx = myClientContext.get();
@@ -229,26 +232,39 @@ public final class WsClientTest {
 	 * @param ctx
 	 * @param child
 	 */
-	public void executeChannelMessage(ChannelHandlerContext ctx, Runnable child) {
-		executor.execute(new ClientCtxWrapper(ctx, child));
+	public void executeChannelMessage(ChannelHandlerContext ctx, String message) {
+		executor.execute(new ClientCtxWrapper(ctx, message));
 	}
 
 	private class ClientCtxWrapper implements Runnable {
 
 		ChannelHandlerContext ctx;
-		Runnable child;
+		String message;
 
-		public ClientCtxWrapper(ChannelHandlerContext ctx, Runnable child) {
+		public ClientCtxWrapper(ChannelHandlerContext ctx, String message) {
 			super();
 			this.ctx = ctx;
-			this.child = child;
+			this.message = message;
 		}
 
 		@Override
 		public void run() {
 			myClientContext.set(ctx);
-			myClient.set(WsClientTest.this);
-			child.run();
+			myClient.set(WsClientImpl.this);
+			Runnable child;
+			try {
+				child = ServerGlobalState.deserialize(message);
+				child.run();
+			} catch (JsonParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JsonMappingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			myClientContext.set(null);
 			myClient.set(null);
 
@@ -302,12 +318,12 @@ public final class WsClientTest {
 
 	public static void main(String[] args) throws Exception {
 
-		WsClientTest.logger.setLevel(Level.TRACE);
+		WsClientImpl.logger.setLevel(Level.TRACE);
 		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
 
 		logger.info("Starting main");
 
-		WsClientTest test = new WsClientTest(8081);
+		WsClientImpl test = new WsClientImpl(8081);
 
 		test.enqueueRunnable(new PingEcho());
 

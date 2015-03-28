@@ -136,11 +136,7 @@ public class MyWebSocketServerHandler extends
 		// make into class
 		Exception ex = null;
 		try {
-			Runnable r = ServerGlobalState.deserialize(request);
-
-			//System.out.println(r);
-
-			global.executeChannelMessage(ctx, r);
+			global.executeChannelMessage(ctx, request);
 
 			return;
 

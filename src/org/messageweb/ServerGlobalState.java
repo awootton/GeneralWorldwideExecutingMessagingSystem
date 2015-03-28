@@ -8,7 +8,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
+import org.messageweb.impl.JedisRedisPubSubImpl;
 import org.messageweb.socketimpl.MyWebSocketServer;
+import org.messageweb.util.PubSub;
 import org.messageweb.util.TimeoutCache;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -38,6 +40,8 @@ public class ServerGlobalState {
 	public TimeoutCache timeoutCache;
 	
 	Thread serverThread;
+	
+	PubSub redis;
 
 	public ServerGlobalState(int port) {
 		executor = Executors.newCachedThreadPool();
@@ -51,6 +55,8 @@ public class ServerGlobalState {
 		serverThread.start();
 
 		timeoutCache = new TimeoutCache(executor, id);
+		
+		redis = new JedisRedisPubSubImpl("localhost", new LocalSubHandler() );
 	}
 
 	private class GlobalStateSetter implements Runnable {
@@ -84,8 +90,8 @@ public class ServerGlobalState {
 	 * @param ctx
 	 * @param child
 	 */
-	public void executeChannelMessage(ChannelHandlerContext ctx, Runnable child) {
-		execute(new CtxWrapper(ctx, child));
+	public void executeChannelMessage(ChannelHandlerContext ctx, String message) {
+		execute(new CtxWrapper(ctx, message));
 	}
 	
 	public void stop(){
@@ -115,24 +121,75 @@ public class ServerGlobalState {
 	private static class CtxWrapper implements Runnable {
 
 		ChannelHandlerContext ctx;
-		Runnable child;
+		String message;
 
-		public CtxWrapper(ChannelHandlerContext ctx, Runnable child) {
+		public CtxWrapper(ChannelHandlerContext ctx, String message) {
 			super();
 			this.ctx = ctx;
-			this.child = child;
+			this.message = message;
 		}
 
 		@Override
 		public void run() {
 			myChannelContextStateObj.set(ctx);
-			child.run();
+			try {
+				Runnable r = ServerGlobalState.deserialize(message);
+				r.run();
+			} catch (JsonParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JsonMappingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			myChannelContextStateObj.set(null);
 
 		}
 
 	}
 	
+	private static final ThreadLocal<String> latestChannel = new ThreadLocal<String>();
+
+	class LocalSubHandler implements PubSub.Handler
+	{
+
+		@Override
+		public void handle(String channel, String message) {
+			executor.execute(new ChannelWrapper(channel,message));
+		}
+		
+	}
+	
+	private static class ChannelWrapper implements Runnable {
+
+		String channel;
+		String message;
+
+		public ChannelWrapper(String channel, String message) {
+			this.channel = channel;
+			this.message = message;
+		}
+
+		@Override
+		public void run() {
+			latestChannel.set(channel);
+			try {
+				Runnable runme = ServerGlobalState.deserialize(message);
+				runme.run();
+			} catch (JsonProcessingException e) {
+				logger.error("bad message " + message, e);
+			} catch (IOException e) {
+				logger.error("bad message io " + message, e);
+			}
+			latestChannel.set("");
+
+		}
+
+	}
+
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	static {
 
@@ -152,19 +209,6 @@ public class ServerGlobalState {
 		return MAPPER.writeValueAsString(message);
 	}
 
-	/** FOr debugging - open a socket and send the message to the server
-	 * 
-	 * @param message
-	 * @throws JsonProcessingException
-	 */
-//	public void injectMessage( Runnable message ) throws JsonProcessingException{
-//		// we need a WS client !! 
-//		String s = serialize(message);
-//		
-//		
-//	}
-	
-	
 	static public void reply( Runnable message ){
 		ChannelHandlerContext ctx = myChannelContextStateObj.get();
 		//System.out.println(" have ctx name = " + ctx.name());

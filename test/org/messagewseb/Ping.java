@@ -7,8 +7,8 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.messageweb.ServerGlobalState;
-import org.messageweb.experiments.MyWebSocketClientHandler;
-import org.messageweb.experiments.WsClientTest;
+import org.messageweb.WsClientImpl;
+import org.messageweb.impl.MyWebSocketClientHandler;
 import org.messageweb.messages.PingEcho;
 import org.messageweb.util.TimeoutCache;
 
@@ -25,20 +25,20 @@ public class Ping {
 	@Test
 	public void gobabygo() {
 		
-		WsClientTest.logger.setLevel(Level.TRACE);
+		WsClientImpl.logger.setLevel(Level.TRACE);
 		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
 		Ping.logger.setLevel(Level.TRACE);
 		PingEcho.logger.setLevel(Level.TRACE);
 		TimeoutCache.logger.setLevel(Level.TRACE);
 
 		ServerGlobalState global = new ServerGlobalState(8081);// starts a ws server
-		WsClientTest client = new WsClientTest(8081);// start a client
+		WsClientImpl client = new WsClientImpl(8081);// start a client
 
 		PingEcho p = new PingEcho();
 		String key = "iodikehnehdfukff";
 		p.setKey(key);
 		
-		WsClientTest.cache.put(key, new AtomicInteger(0), 1000, new Runnable(){
+		WsClientImpl.cache.put(key, new AtomicInteger(0), 1000, new Runnable(){
 			@Override
 			public void run() { // this will happen in 1000 ms if there's no reply
 				logger.error("Failing now");
@@ -49,7 +49,7 @@ public class Ping {
 		logger.trace("ping message sent");
 		
 		// wait for message to arrive
-		while (WsClientTest.cache.get(key).toString().equals("0") ){
+		while (WsClientImpl.cache.get(key).toString().equals("0") ){
 			try {
 				//logger.trace("cache has " + WsClientTest.cache.get(key));
 				Thread.sleep(10);
@@ -57,7 +57,7 @@ public class Ping {
 				e.printStackTrace();
 			}
 		}
-		WsClientTest.cache.remove(key);// we're done
+		WsClientImpl.cache.remove(key);// we're done
 		logger.trace("removed key now");
 		
 		// how do I do this?? 

@@ -7,7 +7,7 @@ import java.util.TreeSet;
 import java.util.concurrent.Executor;
 
 import org.apache.log4j.Logger;
-import org.messageweb.experiments.WsClientTest;
+import org.messageweb.WsClientImpl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

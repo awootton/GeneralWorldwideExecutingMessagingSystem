@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 import org.messageweb.ServerGlobalState;
-import org.messageweb.experiments.WsClientTest;
+import org.messageweb.WsClientImpl;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,12 +35,12 @@ public class PingEcho implements Runnable {
 		if ( ctx == null ){
 			logger.info(" PingEcho null context ");
 			// this would mean that we are inside of the client
-			Object got = WsClientTest.cache.get(key);
+			Object got = WsClientImpl.cache.get(key);
 			if ( got == null ){
 				got = new AtomicInteger(0);
 			}
 			((AtomicInteger)got).addAndGet(1);
-			WsClientTest.cache.put(key, got, 100);
+			WsClientImpl.cache.put(key, got, 100);
 			return ;
 		}
 		
