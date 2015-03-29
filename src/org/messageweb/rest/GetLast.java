@@ -27,10 +27,16 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
+
+/** An example of using DynamoDB and also S3
+ * 
+ * @author awootton
+ *
+ */
 @WebServlet(urlPatterns = {"/getLast"} )
 public class GetLast  extends HttpServlet {
 
-	private static Logger logger = Logger.getLogger(WorkerServlet.class);
+	private static Logger logger = Logger.getLogger(GetLast.class);
 
 	private static final long serialVersionUID = 1L;
 	private static final Charset UTF_8 = Charset.forName("UTF-8");

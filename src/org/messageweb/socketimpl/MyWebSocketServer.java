@@ -64,7 +64,7 @@ import org.messageweb.ServerGlobalState;
  */
 public final class MyWebSocketServer {
 
-	private static Logger logger = Logger.getLogger(MyWebSocketServer.class);
+	public static Logger logger = Logger.getLogger(MyWebSocketServer.class);
 
 	final boolean SSL = System.getProperty("ssl") != null;
 	// static final int PORT = Integer.parseInt(System.getProperty("port", SSL ?
@@ -83,6 +83,12 @@ public final class MyWebSocketServer {
 	}
 
 	public void stop() {
+		while (workerGroup == null || bossGroup == null) {
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+			}
+		}
 		workerGroup.shutdownGracefully();
 		bossGroup.shutdownGracefully();
 	}
@@ -137,6 +143,8 @@ public final class MyWebSocketServer {
 			Channel ch = b.bind(port).sync().channel();
 
 			System.out.println("Open your web browser and navigate to " + (SSL ? "https" : "http") + "://127.0.0.1:" + port + '/');
+			
+			startedChannel = true;
 
 			ch.closeFuture().sync();
 		} finally {
@@ -145,6 +153,8 @@ public final class MyWebSocketServer {
 			portsStarted.remove(port);
 		}
 	}
+	
+	public boolean startedChannel = false;
 
 	static class MyWebSocketServerInitializer extends ChannelInitializer<SocketChannel> {
 

@@ -272,8 +272,8 @@ public final class WsClientImpl {
 
 	}
 
-	/** Kills everything - all 
-	 * FIXME: should kill all the clients. Not just this one.
+	/**
+	 * Kills everything - all FIXME: should kill all the clients. Not just this one.
 	 */
 	public void stop() {
 		running = false;
@@ -283,7 +283,6 @@ public final class WsClientImpl {
 		}
 		executor.shutdown();
 	}
-	
 
 	/**
 	 * Only wait 100 ms for q ?
@@ -292,12 +291,11 @@ public final class WsClientImpl {
 	 */
 
 	public void enqueueRunnable(Runnable r) {
+		String s;
 		try {
-			String s = ServerGlobalState.serialize(r);
-			commands4serverQ.offer(s, 100, TimeUnit.MILLISECONDS);
+			s = ServerGlobalState.serialize(r);
+			enqueueString(s);
 		} catch (JsonProcessingException e) {
-			logger.error(e);
-		} catch (InterruptedException e) {
 			logger.error(e);
 		}
 	}

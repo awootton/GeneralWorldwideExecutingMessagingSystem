@@ -16,7 +16,7 @@ public class RunServersLocal {
 
 		// No Guice here yet. Assembling manually.
 
-		ServerGlobalState global = new ServerGlobalState(8081);// starts a ws server
+		ServerGlobalState global = new ServerGlobalState(8081, new ClusterState());// starts a ws server
 
 		while (running) {
 			try {

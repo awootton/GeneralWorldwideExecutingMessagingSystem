@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.messageweb.ClusterState;
 import org.messageweb.ServerGlobalState;
 import org.messageweb.rest.LastTimeItem;
 
@@ -47,10 +48,13 @@ public class WorkerServlet extends HttpServlet {
 	public WorkerServlet() {
 
 		logger.debug(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Starting");
+		
+		// what is the name of the cluster??? 
+		// what is the location of the redis here?
+		// whar are the addresses of the other clusters? (get from db - oops, can't !)
 
-		ServerGlobalState global = new ServerGlobalState(8081);// starts a ws
+		ServerGlobalState global = new ServerGlobalState(8081, new ClusterState());// starts a ws
 																// server
-
 		logger.debug(" -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -* Started "
 				+ global);
 	}

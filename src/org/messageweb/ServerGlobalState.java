@@ -6,6 +6,10 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.messageweb.impl.JedisRedisPubSubImpl;
@@ -13,6 +17,14 @@ import org.messageweb.socketimpl.MyWebSocketServer;
 import org.messageweb.util.PubSub;
 import org.messageweb.util.TimeoutCache;
 
+import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -21,31 +33,41 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 
-/** TODO: make an interface and an impl. Hide the helper classes.
+/**
+ * TODO: make an interface and an impl. Hide the helper classes.
  * 
  * @author awootton
  *
  */
 public class ServerGlobalState {
 
-	private static Logger logger = Logger.getLogger(ServerGlobalState.class);
+	public static Logger logger = Logger.getLogger(ServerGlobalState.class);
 
 	ExecutorService executor = null;
 
-	String id = "Server" + ("" + Math.random()).substring(2);
+	public String id = "Server" + ("" + Math.random()).substring(2);
 	// FIXME: more random here
 
 	MyWebSocketServer server;
 
 	public TimeoutCache timeoutCache;
-	
+
 	Thread serverThread;
-	
+
 	PubSub redis;
 
-	public ServerGlobalState(int port) {
-		executor = Executors.newCachedThreadPool();
-		
+	ClusterState cluster;
+
+	public AmazonDynamoDBClient dynamo;
+	public DynamoDBMapper mapper;
+
+	public ServerGlobalState(int port, ClusterState cluster) {
+
+		this.cluster = cluster;
+
+		// executor = Executors.newCachedThreadPool(new MyThreadFactory());
+		executor = new ThreadPoolExecutor(2, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new MyThreadFactory());
+
 		// open the port
 		server = new MyWebSocketServer(this);
 		Runnable starter = server.new Starter(port, this);
@@ -55,8 +77,43 @@ public class ServerGlobalState {
 		serverThread.start();
 
 		timeoutCache = new TimeoutCache(executor, id);
-		
-		redis = new JedisRedisPubSubImpl("localhost", new LocalSubHandler() );
+
+		redis = new JedisRedisPubSubImpl("localhost", new LocalSubHandler());
+
+		cluster.name2server.put(id, this);
+
+		AWSCredentialsProviderChain chain = new AWSCredentialsProviderChain(new InstanceProfileCredentialsProvider(),
+				new ClasspathPropertiesFileCredentialsProvider());
+
+		chain = new DefaultAWSCredentialsProviderChain();
+
+		dynamo = new AmazonDynamoDBClient(chain);
+
+		dynamo.setRegion(Region.getRegion(Regions.US_WEST_2));
+
+		mapper = new DynamoDBMapper(dynamo);
+
+		// how do we wait for server to start up?
+		while (server.startedChannel == false) {
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+			}
+		}
+	}
+
+	private class MyThreadFactory implements ThreadFactory {
+
+		int count = 0;
+
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread thread = new Thread(r);
+			String name = "GWEMS" + cluster.name + ":" + id + ":" + count++;
+			thread.setName(name);
+			return thread;
+		}
+
 	}
 
 	private class GlobalStateSetter implements Runnable {
@@ -85,17 +142,21 @@ public class ServerGlobalState {
 
 	private static final ThreadLocal<ChannelHandlerContext> myChannelContextStateObj = new ThreadLocal<ChannelHandlerContext>();
 
-	/** Incoming messages from the WS server, or incoming in general, come directly through here.
+	/**
+	 * Incoming messages from the WS server, or incoming in general, come directly through here.
 	 * 
 	 * @param ctx
 	 * @param child
 	 */
 	public void executeChannelMessage(ChannelHandlerContext ctx, String message) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("Sending message to execute on CtxWrapper with " + message);
+		}
 		execute(new CtxWrapper(ctx, message));
 	}
-	
-	public void stop(){
-		server.stop(); 
+
+	public void stop() {
+		server.stop();
 		executor.shutdown();
 	}
 
@@ -109,8 +170,7 @@ public class ServerGlobalState {
 	}
 
 	/**
-	 * For knowing which server we on a member of in multi-server and multi-pool
-	 * simulations.
+	 * For knowing which server we on a member of in multi-server and multi-pool simulations.
 	 * 
 	 * @return
 	 */
@@ -133,36 +193,36 @@ public class ServerGlobalState {
 		public void run() {
 			myChannelContextStateObj.set(ctx);
 			try {
+				if (logger.isTraceEnabled()) {
+					logger.trace("CtxWrapper deserialize  " + message);
+				}
 				Runnable r = ServerGlobalState.deserialize(message);
+				if (logger.isTraceEnabled()) {
+					logger.trace("CtxWrapper running " + r);
+				}
 				r.run();
 			} catch (JsonParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error(message, e);
 			} catch (JsonMappingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error(message, e);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error(message, e);
 			}
 			myChannelContextStateObj.set(null);
-
 		}
-
 	}
-	
+
 	private static final ThreadLocal<String> latestChannel = new ThreadLocal<String>();
 
-	class LocalSubHandler implements PubSub.Handler
-	{
+	class LocalSubHandler implements PubSub.Handler {
 
 		@Override
 		public void handle(String channel, String message) {
-			executor.execute(new ChannelWrapper(channel,message));
+			executor.execute(new ChannelWrapper(channel, message));
 		}
-		
+
 	}
-	
+
 	private static class ChannelWrapper implements Runnable {
 
 		String channel;
@@ -193,30 +253,29 @@ public class ServerGlobalState {
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	static {
 
-		//MAPPER.setVisibility(PropertyAccessor.ALL, Visibility.NONE);
+		// MAPPER.setVisibility(PropertyAccessor.ALL, Visibility.NONE);
 		MAPPER.setVisibility(PropertyAccessor.GETTER, Visibility.NONE);
 		MAPPER.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
 		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@Class");
 	}
 
-	public static Runnable deserialize(String s) throws JsonParseException,
-			JsonMappingException, IOException {
+	public static Runnable deserialize(String s) throws JsonParseException, JsonMappingException, IOException {
 		Runnable obj = MAPPER.readValue(s, Runnable.class);
 		return obj;
 	}
-	
-	public static String serialize( Runnable message ) throws JsonProcessingException{
+
+	public static String serialize(Object message) throws JsonProcessingException {
 		return MAPPER.writeValueAsString(message);
 	}
 
-	static public void reply( Runnable message ){
+	static public void reply(Runnable message) {
 		ChannelHandlerContext ctx = myChannelContextStateObj.get();
-		//System.out.println(" have ctx name = " + ctx.name());
+		// System.out.println(" have ctx name = " + ctx.name());
 		try {
 			String sendme = ServerGlobalState.serialize(message);
 			ctx.channel().writeAndFlush(new TextWebSocketFrame(sendme));
 		} catch (JsonProcessingException e) {
-			//e.printStackTrace();
+			// e.printStackTrace();
 			logger.error("bad message " + message, e);
 		}
 
