@@ -8,12 +8,19 @@ import org.junit.Test;
 import org.messageweb.ServerGlobalState;
 import org.messageweb.messages.PingEcho;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class Serialize {
 
 	private static Logger logger = Logger.getLogger(Serialize.class);
 
 	@Test
 	public void t1() throws IOException {
+		
+		ObjectNode tmp = ServerGlobalState.serialize2node(new PingEcho());
+		System.out.println(tmp);
+
+		
 		PingEcho p = new PingEcho();
 		p.setKey("something11");
 		String s = ServerGlobalState.serialize(p);

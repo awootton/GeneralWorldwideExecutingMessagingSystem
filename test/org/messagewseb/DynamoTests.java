@@ -3,8 +3,8 @@ package org.messagewseb;
 import org.junit.Assert;
 import org.junit.Test;
 import org.messageweb.ServerGlobalState;
-import org.messageweb.rest.AnotherAtwTableItem;
-import org.messageweb.rest.LastTimeItem;
+import org.messageweb.dynamo.AnotherAtwTableItem;
+import org.messageweb.dynamo.LastTimeItem;
 
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;

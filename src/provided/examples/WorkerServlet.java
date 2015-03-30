@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.messageweb.ClusterState;
 import org.messageweb.ServerGlobalState;
-import org.messageweb.rest.LastTimeItem;
+import org.messageweb.dynamo.LastTimeItem;
 
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;

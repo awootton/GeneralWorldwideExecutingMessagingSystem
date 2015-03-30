@@ -13,9 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.messageweb.dynamo.LastTimeItem;
 
 import provided.examples.WorkRequest;
-import provided.examples.WorkerServlet;
 
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
@@ -66,6 +66,8 @@ public class GetLast  extends HttpServlet {
 			IOException {
 
 		try {
+			
+			logger.debug("post");
 
 			// Parse the work to be done from the POST request body.
 
@@ -125,11 +127,11 @@ public class GetLast  extends HttpServlet {
 
 		LastTimeItem b = mapper.load(new LastTimeItem("GetLastUniversalKeyString"));
 		if (b != null) {
-			System.out.println(b.when);
-			last = b.when;
+			System.out.println(b.getWhen());
+			last = b.getWhen();
 		} else
 			b = new LastTimeItem("GetLastUniversalKeyString");
-		b.when = "" + new Date();
+		b.setWhen( "" + new Date());
 		mapper.save(b);
 
 		response.getWriter().write(last);// println( last + " current val is " + now);

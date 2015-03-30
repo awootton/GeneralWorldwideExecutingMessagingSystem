@@ -1,4 +1,4 @@
-package org.messageweb.rest;
+package org.messageweb.dynamo;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;

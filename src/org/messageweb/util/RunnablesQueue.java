@@ -12,9 +12,9 @@ import org.apache.log4j.Logger;
 /**
  * 
  */
-public class SerialRunnables {
+public class RunnablesQueue {
 
-	static Logger logger = Logger.getLogger(SerialRunnables.class);
+	static Logger logger = Logger.getLogger(RunnablesQueue.class);
 
 	protected LinkedList<Runnable> q;
 	protected boolean isRunning;
@@ -22,15 +22,14 @@ public class SerialRunnables {
 	protected String myThread = "off";
 	private Executor executor;
 
-	public SerialRunnables(Executor executor) {
+	public RunnablesQueue(Executor executor) {
 		this.executor = executor;
 		isRunning = false;
 		q = new LinkedList<Runnable>();
-		myRunner = new MyLocalRunner();
+		myRunner = getLocalRunner();
 	}
 
 	public void run(Runnable runnable) {
-
 		synchronized (this) {
 			q.add(runnable);
 			if (!isRunning) {
@@ -38,6 +37,10 @@ public class SerialRunnables {
 				executor.execute(myRunner);// send myself to thread pool
 			}
 		}
+	}
+
+	protected Runnable getLocalRunner() {
+		return new MyLocalRunner();
 	}
 
 	protected synchronized Runnable hasMore() {
@@ -49,7 +52,7 @@ public class SerialRunnables {
 		}
 	}
 
-	private class MyLocalRunner implements Runnable {
+	protected class MyLocalRunner implements Runnable {
 		@Override
 		public void run() {
 			myThread = Thread.currentThread().getName();

@@ -3,22 +3,27 @@ package org.messagewseb.chat;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import org.messageweb.dynamo.AtwTableBase;
+
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
 @DynamoDBTable(tableName = "AtwTable2")
-public class Room {
+public class Room extends AtwTableBase {
 	
+
 	final String context = "Agents:demo:chat1:";
 	
 	String name = "Room#1";
 
-	String id = "none";
-	
 	List<String> users = new ArrayList<>();
 	
 	// List<Message> messages = new ArrayList<>();
 	List<String> messages = new ArrayList<>();
+	
+	public Room(String key) {
+		super(key);
+	}
+
 
 	public String getName() {
 		return name;
@@ -28,14 +33,6 @@ public class Room {
 		this.name = name;
 	}
 
-	@DynamoDBHashKey(attributeName = "id")
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public List<String> getUsers() {
 		return users;

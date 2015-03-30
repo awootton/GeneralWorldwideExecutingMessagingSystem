@@ -1,4 +1,4 @@
-package org.messageweb.rest;
+package org.messageweb.dynamo;
 
 import java.util.ArrayList;
 import java.util.List;
