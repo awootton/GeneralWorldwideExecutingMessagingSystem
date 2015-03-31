@@ -27,7 +27,7 @@ public class ExecutionContext {
 	}
 
 	// this should NEVER be null
-	public ServerGlobalState global;
+	public Global global;
 	
 	public Optional<ChannelHandlerContext> ctx = Optional.empty();
 	

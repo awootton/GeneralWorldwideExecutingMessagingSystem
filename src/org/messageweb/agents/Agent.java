@@ -4,7 +4,7 @@ import java.util.Base64;
 import java.util.Optional;
 
 import org.messageweb.ExecutionContext;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 import org.messageweb.util.AgentRunnablesQueue;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
@@ -35,13 +35,13 @@ public abstract class Agent implements Comparable<Agent> {
 	public AgentRunnablesQueue messageQ = null;
 
 	public String sub = "";// aka the subscription channel
-	public String pub = "";// aka the publish channel
+//	public String pub = "";// aka the publish channel
 
 	public Agent(String key) {
 		sub = key;
-		byte[] bytes = ServerGlobalState.getContext().sha256.digest((sub + "publish").getBytes());
-		String publishchannel = Base64.getEncoder().encodeToString(bytes);
-		pub = publishchannel;
+//		byte[] bytes = Global.getContext().sha256.digest((sub + "publish").getBytes());
+//		String publishchannel = Base64.getEncoder().encodeToString(bytes);
+//		pub = publishchannel;
 	}
 
 	@DynamoDBHashKey(attributeName = "sub")
@@ -53,14 +53,14 @@ public abstract class Agent implements Comparable<Agent> {
 		this.sub = sub;
 	}
 
-	@DynamoDBHashKey(attributeName = "sub")
-	public String getPub() {
-		return pub;
-	}
-
-	public void setPub(String pub) {
-		this.pub = pub;
-	}
+//	@DynamoDBHashKey(attributeName = "sub")
+//	public String getPub() {
+//		return pub;
+//	}
+//
+//	public void setPub(String pub) {
+//		this.pub = pub;
+//	}
 
 	/**
 	 * Sometimes the agent might want to filter the messages.
@@ -86,12 +86,12 @@ public abstract class Agent implements Comparable<Agent> {
 	 * @return
 	 */
 	public static Optional<Agent> getCtxSessionAgent() {
-		ExecutionContext ec = ServerGlobalState.getContext();
+		ExecutionContext ec = Global.getContext();
 		return ec.agent;
 	}
 
-	public static ServerGlobalState getGlobal() {
-		ExecutionContext ec = ServerGlobalState.getContext();
+	public static Global getGlobal() {
+		ExecutionContext ec = Global.getContext();
 		return ec.global;
 	}
 
@@ -101,7 +101,7 @@ public abstract class Agent implements Comparable<Agent> {
 	 * @return
 	 */
 	public static Optional<String> getChannelSubscriptionString() {
-		ExecutionContext ec = ServerGlobalState.getContext();
+		ExecutionContext ec = Global.getContext();
 		return ec.subscribedChannel;
 	}
 

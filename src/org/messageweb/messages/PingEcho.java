@@ -6,7 +6,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 import org.messageweb.WsClientImpl;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -31,7 +31,7 @@ public class PingEcho implements Runnable {
 		// this happened on the arrival of the message.
 		
 
-		ChannelHandlerContext ctx = ServerGlobalState.getCtx().get();
+		ChannelHandlerContext ctx = Global.getCtx().get();
 		if ( ctx == null ){
 			logger.info(" PingEcho null context ");
 			// this would mean that we are inside of the client
@@ -47,7 +47,7 @@ public class PingEcho implements Runnable {
 		logger.info(" PingEcho running -- have ctx name = " + ctx.name());
 
 		try {
-			String sendme = ServerGlobalState.serialize(this);
+			String sendme = Global.serialize(this);
 			// TODO: just call ServerGlobalState.reply(this); instead of 
 			ctx.channel().writeAndFlush(new TextWebSocketFrame(sendme));
 		} catch (JsonProcessingException e) {

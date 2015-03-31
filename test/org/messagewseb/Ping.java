@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.messageweb.ClusterState;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 import org.messageweb.WsClientImpl;
 import org.messageweb.impl.MyWebSocketClientHandler;
 import org.messageweb.messages.PingEcho;
@@ -32,7 +32,7 @@ public class Ping {
 		PingEcho.logger.setLevel(Level.TRACE);
 		TimeoutCache.logger.setLevel(Level.TRACE);
 
-		ServerGlobalState global = new ServerGlobalState(8081, new ClusterState());// starts a ws server
+		Global global = new Global(8081, new ClusterState());// starts a ws server
 		WsClientImpl client = new WsClientImpl(8081);// start a client
 
 		PingEcho p = new PingEcho();

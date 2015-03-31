@@ -1,7 +1,7 @@
 package org.messageweb.agents;
 
 import org.apache.log4j.Logger;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 import org.messageweb.util.AgentRunnablesQueue;
 import org.messageweb.util.SessionRunnablesQueue;
 
@@ -33,7 +33,7 @@ public class SessionAgent extends Agent {
 	@JsonIgnore
 	public SessionRunnablesQueue socketMessageQ = null;
 
-	public SessionAgent(ServerGlobalState global, String sub) {
+	public SessionAgent(Global global, String sub) {
 		super(sub);
 		messageQ = new AgentRunnablesQueue(global, this);
 
@@ -68,7 +68,7 @@ public class SessionAgent extends Agent {
 	 
 	public void runSocketMessage(Runnable message) {
 		if ( validated ){
-			getGlobal().publish(this.pub, message);
+			//getGlobal().publish(this.pub, message);
 		} else {
 		  message.run();
 		}

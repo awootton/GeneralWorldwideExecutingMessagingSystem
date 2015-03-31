@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 import org.messageweb.WsClientImpl;
 import org.messageweb.agents.SessionAgent;
 import org.messageweb.agents.SimpleAgent;
@@ -35,16 +35,50 @@ public class TempDataLogger extends StartServers {
 	 * 
 	 */
 
+	@Test
+	public void demoOne() throws IOException {
+
+		// ping for agent. Should fail.
+
+		String channel = "AbcDefHijQQQQQ";
+
+		AgentFinder finder = new AgentFinder(global1, channel);
+
+		AgentFinder.Response response = finder.goAndWait();
+
+		System.out.println("found agent Info " + response.agentInfo + " from server " + response.globalInfo);
+
+		// now, install an agent on server @2 
+		
+		SimpleAgent sagent = new SimpleAgent(channel, global2);
+		// install into global2
+		global2.timeoutCache.put("sagent", sagent, 1 * 1000, () -> {
+			System.out.println(" SimpleAgent #2 timed out ! called from " + Thread.currentThread());
+		});
+		global2.subscribe(sagent, sagent.sub);
+		
+		// try the finder again
+		
+		  finder = new AgentFinder(global1, channel);
+
+		  response = finder.goAndWait();
+
+		System.out.println("found agent Info " + response.agentInfo + " from server " + response.globalInfo);
+
+	}
+
 	boolean failed = false;
 
 	boolean received = false;
 
 	@Test
-	public void demoOne() throws IOException {
+	public void demoOneX() throws IOException {
 
 		// in this thread, echo for a channel.
 
 		String channel = "AbcDefHijQQQQQ";
+
+		String someReplyChannel = "DearJohnIveBeenSoBusy";
 
 		SimpleAgent localWatcher = new SimpleAgent(channel, global1) {
 			public void run(Runnable message) {
@@ -56,10 +90,10 @@ public class TempDataLogger extends StartServers {
 			}
 		};
 
-		AgentEcho echo = new AgentEcho();
+		AgentEcho echo = new AgentEcho(someReplyChannel);
 
 		// subscribe to back channel
-		global1.subscribe(localWatcher, localWatcher.pub);
+		global1.subscribe(localWatcher, someReplyChannel);
 		global1.timeoutCache.put("localWatcher", localWatcher, 10, () -> {
 			failed = true;
 			System.out.println(" timeoutCache called from " + Thread.currentThread());
@@ -108,13 +142,13 @@ public class TempDataLogger extends StartServers {
 			} catch (InterruptedException e) {
 			}
 		}
-		// 
+		//
 		global1.timeoutCache.remove("localWatcher");
 
 		System.out.println(" failed 2 = " + failed);
 		System.out.println(" received 2 = " + received);
-	//	 Assert.assertFalse(failed);
-	//	 Assert.assertTrue(received);
+		// Assert.assertFalse(failed);
+		// Assert.assertTrue(received);
 
 	}
 
@@ -125,7 +159,8 @@ public class TempDataLogger extends StartServers {
 		//
 		// global1.dynamoHelper.delete(tmp);
 		//
-		// ReceiveTemperatureDateLoggingAgent agent = (ReceiveTemperatureDateLoggingAgent) global1.dynamoHelper.read(tmp);
+		// ReceiveTemperatureDateLoggingAgent agent = (ReceiveTemperatureDateLoggingAgent)
+		// global1.dynamoHelper.read(tmp);
 		// Assert.assertNull(agent);
 
 		// the logger does not exist in the db, or in the RAM, or in the pubsub.
@@ -152,7 +187,7 @@ public class TempDataLogger extends StartServers {
 
 	public static void main(String[] args) throws IOException {
 
-		ServerGlobalState.logger.setLevel(Level.TRACE);
+		Global.logger.setLevel(Level.TRACE);
 		MyWebSocketServer.logger.setLevel(Level.TRACE);
 		WsClientImpl.logger.setLevel(Level.TRACE);
 		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
@@ -168,7 +203,7 @@ public class TempDataLogger extends StartServers {
 
 		TempDataLogger test = new TempDataLogger();
 
-		 setup();
+		setup();
 
 		test.demoOne();
 
@@ -177,7 +212,7 @@ public class TempDataLogger extends StartServers {
 		} catch (InterruptedException e) {
 		}
 
-		 closeAll();
+		closeAll();
 	}
 
 }

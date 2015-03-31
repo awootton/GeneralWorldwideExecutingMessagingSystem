@@ -15,7 +15,7 @@ public class ClusterState {
 
 	String name = "" + Regions.US_WEST_2;
 
-	Map<String, ServerGlobalState> name2server = new HashMap<>();
+	Map<String, Global> name2server = new HashMap<>();
 	
 	// it's needs to have some (any!?) entry points for other regions.
 	// it's ok to go through the load-balancers to get there.

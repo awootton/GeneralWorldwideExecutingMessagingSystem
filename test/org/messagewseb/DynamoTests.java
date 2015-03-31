@@ -2,7 +2,7 @@ package org.messagewseb;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 import org.messageweb.dynamo.AnotherAtwTableItem;
 import org.messageweb.dynamo.LastTimeItem;
 
@@ -71,7 +71,7 @@ public class DynamoTests {
 		
 		// really? 
 	
-			String s = ServerGlobalState.serialize(item2);
+			String s = Global.serialize(item2);
 			System.out.println(s);
 		
 		

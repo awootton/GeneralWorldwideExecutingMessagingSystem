@@ -1,10 +1,7 @@
 package org.messageweb.util;
 
-import java.util.Optional;
 import java.util.concurrent.Executor;
 
-import org.messageweb.ExecutionContext;
-import org.messageweb.ServerGlobalState;
 import org.messageweb.agents.SessionAgent;
 
 public class SessionRunnablesQueue  extends RunnablesQueue {

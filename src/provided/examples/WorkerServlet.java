@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.messageweb.ClusterState;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 import org.messageweb.dynamo.LastTimeItem;
 
 import com.amazonaws.auth.AWSCredentialsProviderChain;
@@ -53,7 +53,7 @@ public class WorkerServlet extends HttpServlet {
 		// what is the location of the redis here?
 		// whar are the addresses of the other clusters? (get from db - oops, can't !)
 
-		ServerGlobalState global = new ServerGlobalState(8081, new ClusterState());// starts a ws
+		Global global = new Global(8081, new ClusterState());// starts a ws
 																// server
 		logger.debug(" -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -* Started "
 				+ global);

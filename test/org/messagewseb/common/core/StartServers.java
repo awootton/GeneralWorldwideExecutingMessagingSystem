@@ -7,15 +7,15 @@ import org.apache.log4j.Level;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.messageweb.ClusterState;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 import org.messageweb.WsClientImpl;
 
 public class StartServers {
 	
 	// TODO: needs multiple cluster sim
 	
-	protected static ServerGlobalState global1;
-	protected static ServerGlobalState global2;
+	protected static Global global1;
+	protected static Global global2;
 	protected static List<WsClientImpl> clients;
 
 	@BeforeClass
@@ -26,8 +26,8 @@ public class StartServers {
 //		PingEcho.logger.setLevel(Level.TRACE);
 //		TimeoutCache.logger.setLevel(Level.TRACE);
 
-		global1 = new ServerGlobalState(8081, new ClusterState());// starts a ws server
-		global2 = new ServerGlobalState(8082, new ClusterState());// starts a ws server
+		global1 = new Global(8081, new ClusterState());// starts a ws server
+		global2 = new Global(8082, new ClusterState());// starts a ws server
 		// WsClientImpl client = new WsClientImpl(8081);// start a client
 		clients = new ArrayList<>();
 		clients.add(new WsClientImpl(8081));

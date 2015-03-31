@@ -10,7 +10,7 @@ public  class Util {
 
 	public static String serialize( Object that)  {
 		try {
-			return ServerGlobalState.serialize(that);
+			return Global.serialize(that);
 		} catch (JsonProcessingException e) {
 		 
 		}
@@ -19,7 +19,7 @@ public  class Util {
 	
 	public static Object deserialize(String src)  {
 		try {
-			return ServerGlobalState.deserialize(src);
+			return Global.deserialize(src);
 		} catch (JsonParseException e) {
 		} catch (JsonMappingException e) {
 		} catch (IOException e) {

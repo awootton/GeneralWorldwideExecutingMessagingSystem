@@ -29,7 +29,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import io.netty.util.CharsetUtil;
 
 import org.apache.log4j.Logger;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 
 public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
 
@@ -39,9 +39,9 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 
 	private WebSocketServerHandshaker handshaker;
 
-	private final ServerGlobalState global;
+	private final Global global;
 
-	public MyWebSocketServerHandler(ServerGlobalState global) {
+	public MyWebSocketServerHandler(Global global) {
 		super();
 		this.global = global;
 	}

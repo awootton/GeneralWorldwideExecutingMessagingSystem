@@ -1,6 +1,6 @@
 package org.messagewseb.chat;
 
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 
 /** make one of these and just send it to any server
  * 
@@ -13,7 +13,7 @@ public class CreateAgentMessage implements Runnable {
 	
 	public void run() {
 		// we're here.
-		System.out.println("CreateAgentMessage CreateAgentMessage CreateAgentMessage on server " + ServerGlobalState.getGlobal().id);
+		System.out.println("CreateAgentMessage CreateAgentMessage CreateAgentMessage on server " + Global.getGlobal().id);
 		
 		// check for channel existing. 
 		

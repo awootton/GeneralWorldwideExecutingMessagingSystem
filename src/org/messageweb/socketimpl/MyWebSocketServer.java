@@ -42,7 +42,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 
 /**
  * A HTTP server which serves Web Socket requests at:
@@ -72,12 +72,12 @@ public final class MyWebSocketServer {
 
 	static Set<Integer> portsStarted = new HashSet<Integer>();// doesn't work in reload
 
-	ServerGlobalState global;
+	Global global;
 
 	EventLoopGroup bossGroup;
 	EventLoopGroup workerGroup;
 
-	public MyWebSocketServer(ServerGlobalState global) {
+	public MyWebSocketServer(Global global) {
 		super();
 		this.global = global;
 	}
@@ -96,9 +96,9 @@ public final class MyWebSocketServer {
 	public class Starter implements Runnable {
 
 		int port;
-		ServerGlobalState global;
+		Global global;
 
-		public Starter(int port, ServerGlobalState global) {
+		public Starter(int port, Global global) {
 
 			this.port = port;
 			this.global = global;
@@ -114,7 +114,7 @@ public final class MyWebSocketServer {
 		}
 	}
 
-	private void start(int port, ServerGlobalState global) throws Exception {
+	private void start(int port, Global global) throws Exception {
 
 		synchronized (portsStarted) {
 			if (portsStarted.contains(port))
@@ -159,9 +159,9 @@ public final class MyWebSocketServer {
 	static class MyWebSocketServerInitializer extends ChannelInitializer<SocketChannel> {
 
 		private final SslContext sslCtx;
-		ServerGlobalState global;
+		Global global;
 
-		public MyWebSocketServerInitializer(SslContext sslCtx, ServerGlobalState global) {
+		public MyWebSocketServerInitializer(SslContext sslCtx, Global global) {
 			this.sslCtx = sslCtx;
 			this.global = global;
 		}

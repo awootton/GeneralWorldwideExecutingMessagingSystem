@@ -2,7 +2,7 @@ package org.messagewseb.chat;
 
 import org.apache.log4j.Level;
 import org.junit.Test;
-import org.messageweb.ServerGlobalState;
+import org.messageweb.Global;
 import org.messageweb.WsClientImpl;
 import org.messageweb.impl.MyWebSocketClientHandler;
 import org.messageweb.messages.PingEcho;
@@ -91,7 +91,7 @@ public class ChatDemoMain extends StartServers {
 
 	public static void main(String[] args) {
 
-		ServerGlobalState.logger.setLevel(Level.TRACE);
+		Global.logger.setLevel(Level.TRACE);
 		MyWebSocketServer.logger.setLevel(Level.TRACE);
 		WsClientImpl.logger.setLevel(Level.TRACE);
 		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);

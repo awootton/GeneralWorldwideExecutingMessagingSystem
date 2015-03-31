@@ -36,25 +36,36 @@ import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
- * TODO: make an interface and an impl. Hide the helper classes.
+ * This represents one 'server' and by that I mean a web socket (ws) port that is accepting incoming connections.
+ * 
+ * There is a ThreadLocal containing a reference to one of these at all times. We would just make it a static singleton except
+ * that we desire to run several of these, on different ports, in a single JVM for debugging and simulation.
+ * 
+ * As a central object (in a situation where no singletons are allowed) it is natural for various and sundry services
+ * that would be distinct from other servers to congregate here. In particular there is a thread pool, the pub/sub maps,
+ * the timeout cache, the redis connection, and the nio port acceptor. 
+ * 
+ * TODO: make an interface and an impl. Hide the helper classes. Clean it up.
  * 
  * @author awootton
  *
  */
-public class ServerGlobalState implements Executor {
+public class Global implements Executor {
 
-	public static Logger logger = Logger.getLogger(ServerGlobalState.class);
+	public static Logger logger = Logger.getLogger(Global.class);
 
-	ExecutorService executor = null;
+	private ExecutorService executor = null;
 
-	public String id = "Server" + ("" + Math.random()).substring(2);
+	private static int serveIdCounter = 0;
+	public String id = "Server" + serveIdCounter++;// ("" + Math.random()).substring(2);
 	// FIXME: more random here
 
-	MyWebSocketServer server;
+	private MyWebSocketServer server;
 
 	public TimeoutCache timeoutCache;
 
-	Thread serverThread;
+	// The thread that watches the NIO acceptor.
+	private Thread serverThread;
 
 	private PubSub redis;
 
@@ -64,9 +75,10 @@ public class ServerGlobalState implements Executor {
 
 	TwoWayMapping<Agent, String> session2channel = new TwoWayMapping<Agent, String>();
 
-	public ServerGlobalState(int port, ClusterState cluster) {
+	public Global(int port, ClusterState cluster) {
 
 		this.cluster = cluster;
+		cluster.name2server.put(id, this);
 
 		dynamoHelper = new DynamoHelper();
 
@@ -80,11 +92,11 @@ public class ServerGlobalState implements Executor {
 		serverThread.setDaemon(true);
 		serverThread.start();
 
+		// start the timeout cache. 
 		timeoutCache = new TimeoutCache(executor, id);
 
+		// Start the redis pub/sub thread.
 		redis = new JedisRedisPubSubImpl("localhost", new LocalSubscriberHandler());
-
-		cluster.name2server.put(id, this);
 
 		// how do we wait for server to start up?
 		while (server.startedChannel == false) {
@@ -130,7 +142,7 @@ public class ServerGlobalState implements Executor {
 		// executor.execute(new GlobalStateSetter(r));
 		executor.execute(() -> {
 			ExecutionContext ec = context.get();
-			ec.global = ServerGlobalState.this;
+			ec.global = Global.this;
 			r.run();
 			ec.global = null;
 		});
@@ -189,7 +201,7 @@ public class ServerGlobalState implements Executor {
 	 * 
 	 * @return
 	 */
-	public static ServerGlobalState getGlobal() {
+	public static Global getGlobal() {
 		return context.get().global;
 	}
 
@@ -216,7 +228,7 @@ public class ServerGlobalState implements Executor {
 				if (logger.isTraceEnabled()) {
 					logger.trace("CtxWrapper deserialize  " + message);
 				}
-				Runnable r = ServerGlobalState.deserialize(message);
+				Runnable r = Global.deserialize(message);
 				if (logger.isTraceEnabled()) {
 					logger.trace("CtxWrapper running " + r);
 				}
@@ -241,7 +253,7 @@ public class ServerGlobalState implements Executor {
 		public void handle(String channel, String message) {
 			executor.execute(() -> {
 				try {
-					Runnable runme = ServerGlobalState.deserialize(message);
+					Runnable runme = Global.deserialize(message);
 					// get all the local subscribers
 					Set<Agent> agents = session2channel.thing2items_get(channel);
 					for (Agent agent : agents) {
@@ -253,7 +265,7 @@ public class ServerGlobalState implements Executor {
 							runme.run();
 							ec.subscribedChannel = Optional.empty();
 							ec.agent = Optional.empty();
-					}); 
+						});
 					}
 
 				} catch (JsonProcessingException e) {
@@ -339,7 +351,7 @@ public class ServerGlobalState implements Executor {
 	static public void reply(Runnable message) {
 		ChannelHandlerContext ctx = context.get().ctx.get();
 		try {
-			String sendme = ServerGlobalState.serialize(message);
+			String sendme = Global.serialize(message);
 			ctx.channel().writeAndFlush(new TextWebSocketFrame(sendme));
 		} catch (JsonProcessingException e) {
 			logger.error("bad message " + message, e);
@@ -357,7 +369,7 @@ public class ServerGlobalState implements Executor {
 			ExecutionContext ec = context.get();
 			ec.subscribedChannel = Optional.of(channel);
 			try {
-				Runnable runme = ServerGlobalState.deserialize(message);
+				Runnable runme = Global.deserialize(message);
 				// get all the local subscribers
 				Set<Agent> agents = session2channel.thing2items_get(channel);
 				for (Agent agent : agents) {

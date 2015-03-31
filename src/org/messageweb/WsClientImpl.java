@@ -44,14 +44,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
- * This is an example of a WebSocket client.
+ * This is an example of a WebSocket client. Messages the be sent are placed in the commands4serverQ Q and picked up by
+ * the main thread later.
+ * 
+ * (atw) Messages incoming are passed to executeChannelMessage here and are usually just executed immediately.
  * <p>
- * In order to run this example you need a compatible WebSocket server. Therefore you can either start the WebSocket server from the examples by running
- * {@link io.netty.example.http.websocketx.server.WebSocketServer} or connect to an existing WebSocket server such as <a
- * href="http://www.websocket.org/echo.html">ws://echo.websocket.org</a>.
+ * In order to run this example you need a compatible WebSocket server. Therefore you can either start the WebSocket
+ * server from the examples by running {@link io.netty.example.http.websocketx.server.WebSocketServer} or connect to an
+ * existing WebSocket server such as <a href="http://www.websocket.org/echo.html">ws://echo.websocket.org</a>.
  * <p>
- * The client will attempt to connect to the URI passed to it as the first argument. You don't have to specify any arguments if you want to connect to the
- * example WebSocket server, as this is the default.
+ * The client will attempt to connect to the URI passed to it as the first argument. You don't have to specify any
+ * arguments if you want to connect to the example WebSocket server, as this is the default.
  */
 public final class WsClientImpl {
 
@@ -77,36 +80,45 @@ public final class WsClientImpl {
 
 	private BlockingQueue<String> commands4serverQ = new ArrayBlockingQueue<String>(16);
 
+	private static int clientInstanceCounter = 0;
+
 	public WsClientImpl(int port) {
 		super();
 		this.port = port;
 
-		Runnable starter = new ClientStarter(port);
-		Thread thread = new Thread(starter);
-		thread.setName("id");
+		// Runnable starter = new ClientStarter(port);
+		Thread thread = new Thread(() -> {
+			try {
+				startUp(port);
+			} catch (Exception e) {
+				logger.error(e);
+			}
+
+		});
+		thread.setName("Client#" + clientInstanceCounter++);
 		thread.setDaemon(true);
 		thread.start();
 		logger.info("Web CLient started port= " + port);
 	}
 
-	class ClientStarter implements Runnable {
-
-		int port;
-
-		public ClientStarter(int port) {
-
-			this.port = port;
-		}
-
-		public void run() {
-			WsClientImpl server = WsClientImpl.this;
-			try {
-				server.startUp(port);
-			} catch (Exception e) {
-				logger.error(e);
-			}
-		}
-	}
+	// class ClientStarter implements Runnable {
+	//
+	// int port;
+	//
+	// public ClientStarter(int port) {
+	//
+	// this.port = port;
+	// }
+	//
+	// public void run() {
+	// WsClientImpl server = WsClientImpl.this;
+	// try {
+	// server.startUp(port);
+	// } catch (Exception e) {
+	// logger.error(e);
+	// }
+	// }
+	// }
 
 	// hangs the thread lower down.
 	private void startUp(int theport) throws Exception {
@@ -198,6 +210,12 @@ public final class WsClientImpl {
 		return port;
 	}
 
+	/**
+	 * There is an Http header thing added here that I don't understand. (atw)
+	 * 
+	 * @author awootton
+	 *
+	 */
 	private class MyChannelInitializer extends ChannelInitializer<SocketChannel> {
 		@Override
 		protected void initChannel(SocketChannel ch) {
@@ -213,11 +231,11 @@ public final class WsClientImpl {
 	private static final ThreadLocal<ChannelHandlerContext> myClientContext = new ThreadLocal<ChannelHandlerContext>();
 	private static final ThreadLocal<WsClientImpl> myClient = new ThreadLocal<WsClientImpl>();
 
-	static public void reply(Runnable message) {
+	static public void Xreply(Runnable message) {
 		ChannelHandlerContext ctx = myClientContext.get();
 		// logger.info(" have ctx name = " + ctx.name());
 		try {
-			String sendme = ServerGlobalState.serialize(message);
+			String sendme = Global.serialize(message);
 			ctx.channel().write(new TextWebSocketFrame(sendme));
 		} catch (JsonProcessingException e) {
 			// e.printStackTrace();
@@ -233,45 +251,58 @@ public final class WsClientImpl {
 	 * @param child
 	 */
 	public void executeChannelMessage(ChannelHandlerContext ctx, String message) {
-		
-		executor.execute(new ClientCtxWrapper(ctx, message));
-	}
 
-	private class ClientCtxWrapper implements Runnable {
-
-		ChannelHandlerContext ctx;
-		String message;
-
-		public ClientCtxWrapper(ChannelHandlerContext ctx, String message) {
-			super();
-			this.ctx = ctx;
-			this.message = message;
-		}
-
-		@Override
-		public void run() {
+		// executor.execute(new ClientCtxWrapper(ctx, message));
+		executor.execute(() -> {
 			myClientContext.set(ctx);
 			myClient.set(WsClientImpl.this);
 			Runnable child;
 			try {
-				child = ServerGlobalState.deserialize(message);
+				child = Global.deserialize(message);
 				child.run();
 			} catch (JsonParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("bad message", e);
 			} catch (JsonMappingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("bad message", e);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("bad message", e);
 			}
 			myClientContext.set(null);
 			myClient.set(null);
 
-		}
-
+		});
 	}
+
+//	private class ClientCtxWrapper implements Runnable {
+//
+//		ChannelHandlerContext ctx;
+//		String message;
+//
+//		public ClientCtxWrapper(ChannelHandlerContext ctx, String message) {
+//			super();
+//			this.ctx = ctx;
+//			this.message = message;
+//		}
+//
+//		@Override
+//		public void run() {
+//			myClientContext.set(ctx);
+//			myClient.set(WsClientImpl.this);
+//			Runnable child;
+//			try {
+//				child = Global.deserialize(message);
+//				child.run();
+//			} catch (JsonParseException e) {
+//				logger.error("bad message", e);
+//			} catch (JsonMappingException e) {
+//				logger.error("bad message", e);
+//			} catch (IOException e) {
+//				logger.error("bad message", e);
+//			}
+//			myClientContext.set(null);
+//			myClient.set(null);
+//		}
+//	}
 
 	/**
 	 * Kills everything - all FIXME: should kill all the clients. Not just this one.
@@ -294,7 +325,7 @@ public final class WsClientImpl {
 	public void enqueueRunnable(Runnable r) {
 		String s;
 		try {
-			s = ServerGlobalState.serialize(r);
+			s = Global.serialize(r);
 			enqueueString(s);
 		} catch (JsonProcessingException e) {
 			logger.error(e);
@@ -315,6 +346,13 @@ public final class WsClientImpl {
 		}
 	}
 
+	/**
+	 * When you run this is tries to connect to localhost on 8081 and then you can try various commands in the console.
+	 * Only correct serializations of Runnables actually do anything on a Global server.
+	 * 
+	 * @param args
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception {
 
 		WsClientImpl.logger.setLevel(Level.TRACE);
@@ -342,6 +380,6 @@ public final class WsClientImpl {
 			}
 			test.enqueueString(msg);
 		}
-		logger.info("777777777  main finishing 777777777  main finishing 777777777  main finishing 777777777  main finishing ");
+		logger.warn("777777777  main finishing 777777777  main finishing 777777777  main finishing 777777777  main finishing ");
 	}
 }
