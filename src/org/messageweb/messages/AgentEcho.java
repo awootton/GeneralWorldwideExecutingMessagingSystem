@@ -9,9 +9,7 @@ public class AgentEcho implements Runnable {
 
 	public static Logger logger = Logger.getLogger(AgentEcho.class);
 
-	public String agentInfo = "";
-	public String globalInfo = "";
-
+	// Is also the random id of caller agent. See AgentFinder.
 	public String replyChannel;
 
 	public AgentEcho(String replyChannel) {
@@ -24,21 +22,26 @@ public class AgentEcho implements Runnable {
 	@Override
 	public void run() {
 
+		AgentReply reply = new AgentReply(replyChannel);
+
 		// things we know when arriving at the end of publish
 		// and making our way through an Agent messageQ
 		ExecutionContext ec = Global.getContext();
 		Global global = ec.global;
+
 		Agent agent = ec.agent.get();
 		String incoming = ec.subscribedChannel.get();
 
 		if (logger.isTraceEnabled())
 			logger.trace("found agent. does " + incoming + " == " + agent.sub + " ?  with agent=" + agent);
 
-		agentInfo = "" + agent;
-		globalInfo = global.id;
+		reply.agentInfo = "" + agent;
+		reply.globalInfo = global.id;
 
+		if (logger.isTraceEnabled())
+			logger.trace("Sending reply on channel " + replyChannel);
 		// publish it again, reply, on a different channel
-		global.publish(replyChannel, this);
+		global.publish(replyChannel, reply);
 
 	}
 

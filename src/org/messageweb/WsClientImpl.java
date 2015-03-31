@@ -29,12 +29,13 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.messageweb.impl.MyRejectedExecutionHandler;
 import org.messageweb.impl.MyWebSocketClientHandler;
 import org.messageweb.messages.PingEcho;
 import org.messageweb.util.TimeoutCache;
@@ -67,12 +68,9 @@ public final class WsClientImpl {
 	public boolean running = true;// just this server
 	// System.setProperty("catalina.base", ".."); // so logger won't npe
 
-	private static ExecutorService executor = Executors.newCachedThreadPool();// all clients in test share this
+	private ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newCachedThreadPool(); 
 
-	public static TimeoutCache cache;// all clients in test share this
-	static {
-		cache = new TimeoutCache(executor, "AllClients");
-	}
+	public   TimeoutCache cache; 
 
 	private int port;
 	private String host;
@@ -85,15 +83,15 @@ public final class WsClientImpl {
 	public WsClientImpl(int port) {
 		super();
 		this.port = port;
+		
+		cache = new TimeoutCache(executor, "AllClients");
 
-		// Runnable starter = new ClientStarter(port);
 		Thread thread = new Thread(() -> {
 			try {
 				startUp(port);
 			} catch (Exception e) {
 				logger.error(e);
 			}
-
 		});
 		thread.setName("Client#" + clientInstanceCounter++);
 		thread.setDaemon(true);
@@ -230,6 +228,10 @@ public final class WsClientImpl {
 
 	private static final ThreadLocal<ChannelHandlerContext> myClientContext = new ThreadLocal<ChannelHandlerContext>();
 	private static final ThreadLocal<WsClientImpl> myClient = new ThreadLocal<WsClientImpl>();
+	
+	public static WsClientImpl getClient(){ // if any
+		return myClient.get();
+	}
 
 	static public void Xreply(Runnable message) {
 		ChannelHandlerContext ctx = myClientContext.get();
@@ -308,6 +310,7 @@ public final class WsClientImpl {
 	 * Kills everything - all FIXME: should kill all the clients. Not just this one.
 	 */
 	public void stop() {
+		executor.setRejectedExecutionHandler(new MyRejectedExecutionHandler());
 		running = false;
 		try {
 			executor.awaitTermination(5, TimeUnit.MILLISECONDS);

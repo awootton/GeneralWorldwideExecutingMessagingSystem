@@ -12,6 +12,8 @@ import org.messageweb.util.AgentRunnablesQueue;
 public class SimpleAgent extends Agent {
 
 	public static Logger logger = Logger.getLogger(SimpleAgent.class);
+	
+	public Object object;
 
 	public SimpleAgent(String subChannel, Global global) {
 		super(subChannel);

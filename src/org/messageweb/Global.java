@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.messageweb.agents.Agent;
 import org.messageweb.agents.SessionAgent;
 import org.messageweb.impl.JedisRedisPubSubImpl;
+import org.messageweb.impl.MyRejectedExecutionHandler;
 import org.messageweb.socketimpl.MyWebSocketServer;
 import org.messageweb.util.PubSub;
 import org.messageweb.util.TimeoutCache;
@@ -38,12 +39,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /**
  * This represents one 'server' and by that I mean a web socket (ws) port that is accepting incoming connections.
  * 
- * There is a ThreadLocal containing a reference to one of these at all times. We would just make it a static singleton except
- * that we desire to run several of these, on different ports, in a single JVM for debugging and simulation.
+ * There is a ThreadLocal containing a reference to one of these at all times. We would just make it a static singleton
+ * except that we desire to run several of these, on different ports, in a single JVM for debugging and simulation.
  * 
  * As a central object (in a situation where no singletons are allowed) it is natural for various and sundry services
  * that would be distinct from other servers to congregate here. In particular there is a thread pool, the pub/sub maps,
- * the timeout cache, the redis connection, and the nio port acceptor. 
+ * the timeout cache, the redis connection, and the nio port acceptor.
  * 
  * TODO: make an interface and an impl. Hide the helper classes. Clean it up.
  * 
@@ -54,7 +55,7 @@ public class Global implements Executor {
 
 	public static Logger logger = Logger.getLogger(Global.class);
 
-	private ExecutorService executor = null;
+	private ThreadPoolExecutor executor = null;
 
 	private static int serveIdCounter = 0;
 	public String id = "Server" + serveIdCounter++;// ("" + Math.random()).substring(2);
@@ -88,15 +89,15 @@ public class Global implements Executor {
 		server = new MyWebSocketServer(this);
 		Runnable starter = server.new Starter(port, this);
 		serverThread = new Thread(starter);
-		serverThread.setName("id");
+		serverThread.setName(id + ":" + port);
 		serverThread.setDaemon(true);
 		serverThread.start();
 
-		// start the timeout cache. 
+		// start the timeout cache.
 		timeoutCache = new TimeoutCache(executor, id);
 
 		// Start the redis pub/sub thread.
-		redis = new JedisRedisPubSubImpl("localhost", new LocalSubscriberHandler());
+		redis = new JedisRedisPubSubImpl("localhost", new LocalSubscriberHandler(), id);
 
 		// how do we wait for server to start up?
 		while (server.startedChannel == false) {
@@ -114,8 +115,9 @@ public class Global implements Executor {
 		@Override
 		public Thread newThread(Runnable r) {
 			Thread thread = new Thread(r);
-			String name = "GWEMS" + cluster.name + ":" + id + ":" + count++;
+			String name = "Global_Worker:" + id + ":" + count++;
 			thread.setName(name);
+			thread.setDaemon(true);
 			return thread;
 		}
 
@@ -184,6 +186,7 @@ public class Global implements Executor {
 
 	public void stop() {
 		server.stop();
+		executor.setRejectedExecutionHandler(new MyRejectedExecutionHandler());
 		executor.shutdown();
 	}
 
@@ -256,16 +259,10 @@ public class Global implements Executor {
 					Runnable runme = Global.deserialize(message);
 					// get all the local subscribers
 					Set<Agent> agents = session2channel.thing2items_get(channel);
+
 					for (Agent agent : agents) {
 						// give them the message
-						agent.messageQ.run(() -> {
-							ExecutionContext ec = context.get();
-							ec.subscribedChannel = Optional.of(channel);
-							ec.agent = Optional.of(agent);
-							runme.run();
-							ec.subscribedChannel = Optional.empty();
-							ec.agent = Optional.empty();
-						});
+						agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
 					}
 
 				} catch (JsonProcessingException e) {
@@ -278,38 +275,39 @@ public class Global implements Executor {
 		}
 	}
 
-	// private class ChannelSunscriberWrapper implements Runnable {
-	//
-	// String channel;
-	// String message;
-	//
-	// public ChannelSunscriberWrapper(String channel, String message) {
-	// this.channel = channel;
-	// this.message = message;
-	// }
-	//
-	// @Override
-	// public void run() {
-	// ExecutionContext ec = context.get();
-	// ec.subscribedChannel.of(channel);
-	// try {
-	// Runnable runme = ServerGlobalState.deserialize(message);
-	// // get all the local subscribers
-	// Set<Agent> agents = session2channel.thing2items_get(channel);
-	// for (Agent agent : agents) {
-	// // give them the message
-	// agent.messageQ.run(runme);
-	// }
-	//
-	// } catch (JsonProcessingException e) {
-	// logger.error("bad message " + message, e);
-	// } catch (IOException e) {
-	// logger.error("bad message io " + message, e);
-	// } finally {
-	// ec.subscribedChannel.empty();
-	// }
-	// }
-	// }
+	/**
+	 * This was a lambda but it's used in several places here. Both in the receiver of redis (LocalSubscriberHandler
+	 * above) and also in the publish.
+	 * 
+	 * @author awootton
+	 *
+	 */
+	private static class ChannelSunscriberWrapper implements Runnable {
+
+		String channel;
+		Agent agent;
+		Runnable runme;
+
+		public ChannelSunscriberWrapper(String channel, Agent agent, Runnable runme) {
+			super();
+			this.channel = channel;
+			this.agent = agent;
+			this.runme = runme;
+		}
+
+		@Override
+		public void run() {
+
+			ExecutionContext ec = context.get();
+			ec.subscribedChannel = Optional.of(channel);
+			System.out.println(" ######### SEtting context for " + channel);
+			ec.agent = Optional.of(agent);
+			runme.run();
+			ec.subscribedChannel = Optional.empty();
+			ec.agent = Optional.empty();
+
+		}
+	}
 
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	static {
@@ -364,27 +362,30 @@ public class Global implements Executor {
 		if (channel.length() == 0)
 			return;
 		redis.publish(channel, message);
-		// tell the local subscribers
-		executor.execute(() -> {
-			ExecutionContext ec = context.get();
-			ec.subscribedChannel = Optional.of(channel);
-			try {
-				Runnable runme = Global.deserialize(message);
-				// get all the local subscribers
-				Set<Agent> agents = session2channel.thing2items_get(channel);
-				for (Agent agent : agents) {
-					// give them the message
-					agent.messageQ.run(runme);
-				}
+		// this is not a good idea because things will end up
+		// running twice
 
-			} catch (JsonProcessingException e) {
-				logger.error("bad message " + message, e);
-			} catch (IOException e) {
-				logger.error("bad message io " + message, e);
-			} finally {
-				ec.subscribedChannel = Optional.empty();
-			}
-		});
+		// tell the local subscribers
+		// executor.execute(() -> {
+		// ExecutionContext ec = context.get();
+		// ec.subscribedChannel = Optional.of(channel);
+		// try {
+		// Runnable runme = Global.deserialize(message);
+		// // get all the local subscribers
+		// Set<Agent> agents = session2channel.thing2items_get(channel);
+		// for (Agent agent : agents) {
+		// // give them the message
+		// agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
+		// }
+		//
+		// } catch (JsonProcessingException e) {
+		// logger.error("bad message " + message, e);
+		// } catch (IOException e) {
+		// logger.error("bad message io " + message, e);
+		// } finally {
+		// ec.subscribedChannel = Optional.empty();
+		// }
+		// });
 	}
 
 	public void publish(String channel, Runnable runme) {
@@ -402,17 +403,21 @@ public class Global implements Executor {
 			return;
 		redis.publish(channel, str);
 		// tell the local subscribers
-		executor.execute(() -> {
-			ExecutionContext ec = context.get();
-			ec.subscribedChannel = Optional.of(channel);
-			// get all the local subscribers
-			Set<Agent> agents = session2channel.thing2items_get(channel);
-			for (Agent agent : agents) {
-				// give them the message
-				agent.messageQ.run(runme);
-			}
-			ec.subscribedChannel = Optional.empty();
-		});
+		// This is a bad idea because this same thing is going
+		// to happen when the redis pub arrives and it's awkward to
+		// prevent that.
+
+		// executor.execute(() -> {
+		// ExecutionContext ec = context.get();
+		// ec.subscribedChannel = Optional.of(channel);
+		// // get all the local subscribers
+		// Set<Agent> agents = session2channel.thing2items_get(channel);
+		// for (Agent agent : agents) {
+		// // give them the message
+		// agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
+		// }
+		// ec.subscribedChannel = Optional.empty();
+		// });
 	}
 
 	public void subscribe(Agent agent, String channel) {

@@ -1,8 +1,7 @@
-package org.messagewseb.temperature;
+package org.messageweb.experiments;
 
 import org.apache.log4j.Logger;
 import org.messageweb.Global;
-import org.messageweb.WsClientImpl;
 import org.messageweb.agents.SimpleAgent;
 import org.messageweb.messages.AgentEcho;
 
@@ -43,10 +42,14 @@ public class AgentFinder {
 	}
 
 	public class Response {
-		boolean success = false;
-		boolean failed = false;
+		public boolean success = false;
+		public boolean failed = false;
 		public String agentInfo = "none";// use Optional?
 		public String globalInfo = "none";
+	}
+	
+	public Response getResponse(){
+		return response;
 	}
 
 	// TODO: return a future.
@@ -54,20 +57,24 @@ public class AgentFinder {
 	public Response goAndWait() {
 		response = new Response();
 
-		SimpleAgent localWatcher = new SimpleAgent(agentSubscribeChannel, global) {
-			public void run(Runnable message) {
-				if (message instanceof AgentEcho) {
-					AgentEcho ae = (AgentEcho)message;
-					response.agentInfo = ae.agentInfo;
-					response.globalInfo = ae.globalInfo;
-					response.success = true;
-					if (logger.isTraceEnabled())
-						logger.trace(" localWatcher called from " + Thread.currentThread());
-				} else {
-					logger.error("Have unexpected message " + message);
-				}
-			}
-		};
+		SimpleAgent localWatcher = new SimpleAgent(agentSubscribeChannel, global);
+		localWatcher.object = this;
+	
+		// this doesn't work because it's actually a wrapper that arrives. 
+//		{
+//			public void run(Runnable message) {
+//				if (message instanceof AgentEcho) {
+//					AgentEcho ae = (AgentEcho)message;
+//					response.agentInfo = ae.agentInfo;
+//					response.globalInfo = ae.globalInfo;
+//					response.success = true;
+//					if (logger.isTraceEnabled())
+//						logger.trace(" localWatcher called from " + Thread.currentThread());
+//				} else {
+//					logger.error("Have unexpected message " + message);
+//				}
+//			}
+//		};
 		global.subscribe(localWatcher, listenHere);
 		global.timeoutCache.put(localAgentId, localWatcher, ttl, () -> {
 			response.success = false;

@@ -1,6 +1,7 @@
 package org.messageweb.impl;
 
 import org.apache.log4j.Logger;
+import org.messageweb.Global;
 import org.messageweb.util.PubSub;
 
 import redis.clients.jedis.Jedis;
@@ -19,7 +20,7 @@ public class JedisRedisPubSubImpl extends PubSub {
 
 	private final String dummyChannel = "AHUAp4xu9FqRobj8zwn2vBI6Anag1t8Z5z6SWjn8_neverUseThisChannel";// random.org
 
-	public JedisRedisPubSubImpl(String server, Handler handler) {
+	public JedisRedisPubSubImpl(String server, Handler handler, String globalName) {
 		this.server = server;
 		// jedis = new Jedis(server);
 		myPubSub = new MyRedisPubSub();
@@ -28,7 +29,7 @@ public class JedisRedisPubSubImpl extends PubSub {
 		subscribingRedis = new Jedis(server);
 
 		Thread thread = new Thread(new RunPS());
-		thread.setName("Redis_Sub_Runner");
+		thread.setName("Redis_Sub_Runner" + globalName);
 		thread.setDaemon(true);
 		thread.start();
 		while (!myPubSub.isSubscribed()) {

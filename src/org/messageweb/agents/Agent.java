@@ -1,6 +1,5 @@
 package org.messageweb.agents;
 
-import java.util.Base64;
 import java.util.Optional;
 
 import org.messageweb.ExecutionContext;

@@ -1,7 +1,10 @@
 package org.messageweb.util;
 
+import java.util.Optional;
 import java.util.concurrent.Executor;
 
+import org.messageweb.ExecutionContext;
+import org.messageweb.Global;
 import org.messageweb.agents.Agent;
 
 public class AgentRunnablesQueue extends RunnablesQueue {
@@ -20,8 +23,11 @@ public class AgentRunnablesQueue extends RunnablesQueue {
 	private class MyAgentLocalRunner extends MyLocalRunner {
 		@Override
 		public void run() {
-			//ExecutionContext context = ServerGlobalState.getContext();
-			// was wrapped by caller context.agent = Optional.of(agent);
+			ExecutionContext context = Global.getContext();
+			// was wrapped by caller 
+			// do it again anyway.
+			context.agent = Optional.of(agent);
+			//System.out.println(" ######### SEtting context for " + agent);
 			myThread = Thread.currentThread().getName();
 			Runnable r;
 			while ((r = hasMore()) != null) {
