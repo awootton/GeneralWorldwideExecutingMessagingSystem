@@ -5,13 +5,13 @@ import java.util.concurrent.Executor;
 
 import org.messageweb.ExecutionContext;
 import org.messageweb.ServerGlobalState;
-import org.messageweb.agents.Agent;
+import org.messageweb.agents.SessionAgent;
 
-public class AgentRunnablesQueue extends RunnablesQueue {
+public class SessionRunnablesQueue  extends RunnablesQueue {
 
-	Agent agent;
+	SessionAgent agent;
 
-	public AgentRunnablesQueue(Executor executor, Agent agent) {
+	public SessionRunnablesQueue(Executor executor, SessionAgent agent) {
 		super(executor);
 		this.agent = agent;
 	}
@@ -24,18 +24,20 @@ public class AgentRunnablesQueue extends RunnablesQueue {
 		@Override
 		public void run() {
 			//ExecutionContext context = ServerGlobalState.getContext();
-			// was wrapped by caller context.agent = Optional.of(agent);
+			// was wrapped by caller context.agent  = Optional.of(agent);
+			// super.run();
 			myThread = Thread.currentThread().getName();
 			Runnable r;
 			while ((r = hasMore()) != null) {
 				try {
-					agent.run(r);
+					// r.run();
+					agent.runSocketMessage(r);
 				} catch (Exception e) {
 					logger.error("badness", e);
 				}
 			}
 			myThread = "off";
-			//context.agent = Optional.empty();
+			// context.agent = Optional.empty();
 		}
 	}
 }

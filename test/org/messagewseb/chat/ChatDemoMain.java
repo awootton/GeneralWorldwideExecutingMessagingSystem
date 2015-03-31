@@ -12,7 +12,7 @@ import org.messageweb.util.TimeoutCache;
 import org.messagewseb.Ping;
 import org.messagewseb.common.core.StartServers;
 
-public class ChatDemoMain extends StartServers{
+public class ChatDemoMain extends StartServers {
 
 	/**
 	 * Chat has a board name. A list of users who are online. A list of messages and times.
@@ -38,32 +38,32 @@ public class ChatDemoMain extends StartServers{
 	 * 
 	 */
 
-//	ServerGlobalState global;
-//	List<WsClientImpl> clients;
-//
-//	@BeforeClass
-//	public void setup() {
-//		WsClientImpl.logger.setLevel(Level.TRACE);
-//		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
-//		Ping.logger.setLevel(Level.TRACE);
-//		PingEcho.logger.setLevel(Level.TRACE);
-//		TimeoutCache.logger.setLevel(Level.TRACE);
-//
-//		global = new ServerGlobalState(8081, new ClusterState());// starts a ws server
-//		// WsClientImpl client = new WsClientImpl(8081);// start a client
-//		clients = new ArrayList<>();
-//		clients.add(new WsClientImpl(8081));
-//		clients.add(new WsClientImpl(8081));
-//		clients.add(new WsClientImpl(8081));
-//	}
-//
-//	@AfterClass
-//	public void closeAll() {
-//		global.stop();
-//		for (WsClientImpl client : clients) {
-//			client.stop();// aka client.running = false;
-//		}
-//	}
+	// ServerGlobalState global;
+	// List<WsClientImpl> clients;
+	//
+	// @BeforeClass
+	// public void setup() {
+	// WsClientImpl.logger.setLevel(Level.TRACE);
+	// MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
+	// Ping.logger.setLevel(Level.TRACE);
+	// PingEcho.logger.setLevel(Level.TRACE);
+	// TimeoutCache.logger.setLevel(Level.TRACE);
+	//
+	// global = new ServerGlobalState(8081, new ClusterState());// starts a ws server
+	// // WsClientImpl client = new WsClientImpl(8081);// start a client
+	// clients = new ArrayList<>();
+	// clients.add(new WsClientImpl(8081));
+	// clients.add(new WsClientImpl(8081));
+	// clients.add(new WsClientImpl(8081));
+	// }
+	//
+	// @AfterClass
+	// public void closeAll() {
+	// global.stop();
+	// for (WsClientImpl client : clients) {
+	// client.stop();// aka client.running = false;
+	// }
+	// }
 
 	@Test
 	public void demoOne() {
@@ -74,24 +74,23 @@ public class ChatDemoMain extends StartServers{
 		{ // insert the object.
 			Room room = new Room("xx");
 			room.name = "Room#2";
-			  channel = room.context + room.name;
+			channel = room.context + room.name;
 			room.setId(channel);
 			global1.dynamoHelper.save(room);
 		}
-		
+
 		CreateAgentMessage msg = new CreateAgentMessage();
 		msg.channel = channel;
 		clients.get(0).enqueueRunnable(msg);
-		
-		// TBD
-		
-		// send join message, etc. 
 
+		// TBD
+
+		// send join message, etc.
 
 	}
 
 	public static void main(String[] args) {
-		
+
 		ServerGlobalState.logger.setLevel(Level.TRACE);
 		MyWebSocketServer.logger.setLevel(Level.TRACE);
 		WsClientImpl.logger.setLevel(Level.TRACE);
@@ -103,17 +102,16 @@ public class ChatDemoMain extends StartServers{
 
 		ChatDemoMain test = new ChatDemoMain();
 
-		test.setup();
+		 setup();
 
 		test.demoOne();
-		
+
 		try {
 			Thread.sleep(5 * 1000);
 		} catch (InterruptedException e) {
 		}
 
-
-		test.closeAll();
+		 closeAll();
 
 	}
 

@@ -37,7 +37,7 @@ public class DynamoTests {
 		mapper.save(item1);
 
 		LastTimeItem item2 = mapper.load(new LastTimeItem("dumyTimeItem8287dhdkdld"));
-
+		
 		Assert.assertEquals(item1, item2);
 
 	}

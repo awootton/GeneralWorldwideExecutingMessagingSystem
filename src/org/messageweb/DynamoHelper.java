@@ -1,5 +1,7 @@
 package org.messageweb;
 
+import org.apache.log4j.Logger;
+import org.messageweb.agents.Agent;
 import org.messageweb.dynamo.AtwTableBase;
 
 import com.amazonaws.auth.AWSCredentialsProviderChain;
@@ -13,6 +15,8 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 
 public class DynamoHelper {
+	
+	public static Logger logger = Logger.getLogger(DynamoHelper.class);
 
 	private AmazonDynamoDBClient dynamo;
 	private DynamoDBMapper mapper;
@@ -50,5 +54,18 @@ public class DynamoHelper {
 	public void delete(AtwTableBase object) {
 		mapper.delete(object);
 	}
+
+	public void save(Agent object) {
+		mapper.save(object);
+	}
+
+	public Agent read(Agent object) {
+		return mapper.load(object);
+	}
+
+	public void delete(Agent object) {
+		mapper.delete(object);
+	}
+
 
 }

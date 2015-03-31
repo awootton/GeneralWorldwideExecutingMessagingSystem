@@ -19,7 +19,7 @@ public class CreateAgentMessage implements Runnable {
 		
 		
 		// else, make it here!! 
-		ServerGlobalState global = ServerGlobalState.getGlobal();
+		//ServerGlobalState global = ServerGlobalState.getGlobal();
 		
 		
 	}

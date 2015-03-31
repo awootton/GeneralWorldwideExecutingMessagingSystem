@@ -9,27 +9,22 @@ import org.junit.BeforeClass;
 import org.messageweb.ClusterState;
 import org.messageweb.ServerGlobalState;
 import org.messageweb.WsClientImpl;
-import org.messageweb.dynamo.MyUser;
-import org.messageweb.impl.MyWebSocketClientHandler;
-import org.messageweb.messages.PingEcho;
-import org.messageweb.util.TimeoutCache;
-import org.messagewseb.Ping;
 
 public class StartServers {
 	
 	// TODO: needs multiple cluster sim
 	
-	protected ServerGlobalState global1;
-	protected ServerGlobalState global2;
-	protected List<WsClientImpl> clients;
+	protected static ServerGlobalState global1;
+	protected static ServerGlobalState global2;
+	protected static List<WsClientImpl> clients;
 
 	@BeforeClass
-	public void setup() {
+	public static void setup() {
 		WsClientImpl.logger.setLevel(Level.TRACE);
-		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
-		Ping.logger.setLevel(Level.TRACE);
-		PingEcho.logger.setLevel(Level.TRACE);
-		TimeoutCache.logger.setLevel(Level.TRACE);
+//		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
+//		Ping.logger.setLevel(Level.TRACE);
+//		PingEcho.logger.setLevel(Level.TRACE);
+//		TimeoutCache.logger.setLevel(Level.TRACE);
 
 		global1 = new ServerGlobalState(8081, new ClusterState());// starts a ws server
 		global2 = new ServerGlobalState(8082, new ClusterState());// starts a ws server
@@ -41,7 +36,7 @@ public class StartServers {
 		clients.add(new WsClientImpl(8082));
 	}
 	
-	public void signIn( WsClientImpl client, MyUser user ){
+//	public static void signIn( WsClientImpl client, MyUser user ){
 		
 		// FIXME 
 		
@@ -56,10 +51,10 @@ public class StartServers {
 //		
 //		//clients.get(0).enqueueRunnable(r);
 
-	}
+//	}
 
 	@AfterClass
-	public void closeAll() {
+	public static void closeAll() {
 		global1.stop();
 		global2.stop();
 		for (WsClientImpl client : clients) {

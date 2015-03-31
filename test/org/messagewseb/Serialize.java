@@ -17,8 +17,12 @@ public class Serialize {
 	@Test
 	public void t1() throws IOException {
 		
+		System.out.println(ServerGlobalState.getRandom());
+		System.out.println(ServerGlobalState.getRandom());
+		System.out.println(ServerGlobalState.getRandom());
+		
 		ObjectNode tmp = ServerGlobalState.serialize2node(new PingEcho());
-		System.out.println(tmp);
+		System.out.println("node = " + tmp);
 
 		
 		PingEcho p = new PingEcho();

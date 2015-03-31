@@ -13,10 +13,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.CharsetUtil;
 
-import java.util.concurrent.Executor;
-
 import org.apache.log4j.Logger;
-import org.messageweb.ServerGlobalState;
 import org.messageweb.WsClientImpl;
 
 public class MyWebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
@@ -71,14 +68,8 @@ public class MyWebSocketClientHandler extends SimpleChannelInboundHandler<Object
 		WebSocketFrame frame = (WebSocketFrame) msg;
 		if (frame instanceof TextWebSocketFrame) {
 			TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-
 			logger.trace("WebSocket Client atw received textFrame message: " + textFrame.text());
-
-			// change into a runnable.
-			Runnable r;
 			try {
-				// deserialize in a new thread - note here!
-				// r = ServerGlobalState.deserialize(textFrame.text());
 				client.executeChannelMessage(ctx, textFrame.text());
 			} catch (Exception e) {
 				logger.error(e);

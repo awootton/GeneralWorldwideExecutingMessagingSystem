@@ -233,6 +233,7 @@ public final class WsClientImpl {
 	 * @param child
 	 */
 	public void executeChannelMessage(ChannelHandlerContext ctx, String message) {
+		
 		executor.execute(new ClientCtxWrapper(ctx, message));
 	}
 

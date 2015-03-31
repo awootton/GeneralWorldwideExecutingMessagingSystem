@@ -27,14 +27,14 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
-
-/** An example of using DynamoDB and also S3
+/**
+ * An example of using DynamoDB and also S3
  * 
  * @author awootton
  *
  */
-@WebServlet(urlPatterns = {"/getLast"} )
-public class GetLast  extends HttpServlet {
+@WebServlet(urlPatterns = { "/getLast" })
+public class GetLast extends HttpServlet {
 
 	private static Logger logger = Logger.getLogger(GetLast.class);
 
@@ -45,34 +45,26 @@ public class GetLast  extends HttpServlet {
 	}
 
 	/**
-	 * A client to use to access Amazon S3. Pulls credentials from the
-	 * {@code AwsCredentials.properties} file if found on the classpath,
-	 * otherwise will attempt to obtain credentials based on the IAM Instance
-	 * Profile associated with the EC2 instance on which it is run.
+	 * A client to use to access Amazon S3. Pulls credentials from the {@code AwsCredentials.properties} file if found on the classpath, otherwise will attempt
+	 * to obtain credentials based on the IAM Instance Profile associated with the EC2 instance on which it is run.
 	 */
-	private final AmazonS3Client s3 = new AmazonS3Client(
-			new AWSCredentialsProviderChain(
-					new InstanceProfileCredentialsProvider(),
-					new ClasspathPropertiesFileCredentialsProvider()));
+	private final AmazonS3Client s3 = new AmazonS3Client(new AWSCredentialsProviderChain(new InstanceProfileCredentialsProvider(),
+			new ClasspathPropertiesFileCredentialsProvider()));
 
 	/**
-	 * This method is invoked to handle POST requests from the local SQS daemon
-	 * when a work item is pulled off of the queue. The body of the request
-	 * contains the message pulled off the queue. Delete me. 
+	 * This method is invoked to handle POST requests from the local SQS daemon when a work item is pulled off of the queue. The body of the request contains
+	 * the message pulled off the queue. Delete me.
 	 */
 	@Override
-	protected void doPost(final HttpServletRequest request,
-			final HttpServletResponse response) throws ServletException,
-			IOException {
+	protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
 
 		try {
-			
+
 			logger.debug("post");
 
 			// Parse the work to be done from the POST request body.
 
-			WorkRequest workRequest = WorkRequest.fromJson(request
-					.getInputStream());
+			WorkRequest workRequest = WorkRequest.fromJson(request.getInputStream());
 
 			// Simulate doing some work.
 
@@ -82,8 +74,7 @@ public class GetLast  extends HttpServlet {
 
 			byte[] message = workRequest.getMessage().getBytes(UTF_8);
 
-			s3.putObject(workRequest.getBucket(), workRequest.getKey(),
-					new ByteArrayInputStream(message), new ObjectMetadata());
+			s3.putObject(workRequest.getBucket(), workRequest.getKey(), new ByteArrayInputStream(message), new ObjectMetadata());
 
 			// Signal to beanstalk that processing was successful so this work
 			// item should not be retried.
@@ -98,32 +89,28 @@ public class GetLast  extends HttpServlet {
 			// when writing to Amazon S3).
 
 			response.setStatus(500);
-			try (PrintWriter writer = new PrintWriter(
-					response.getOutputStream())) {
+			try (PrintWriter writer = new PrintWriter(response.getOutputStream())) {
 				exception.printStackTrace(writer);
 			}
 		}
 	}
 
-	/** An Ajax test and an DynamoDb test
+	/**
+	 * An Ajax test and a DynamoDb test
 	 * 
 	 */
-	protected void doGet(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String path = request.getParameter("path");//
 		System.out.println("Str is " + path);
 
-		AmazonDynamoDBClient dynamo = new AmazonDynamoDBClient(
-				new AWSCredentialsProviderChain(
-						new InstanceProfileCredentialsProvider(),
-						new ClasspathPropertiesFileCredentialsProvider()));
+		AmazonDynamoDBClient dynamo = new AmazonDynamoDBClient(new AWSCredentialsProviderChain(new InstanceProfileCredentialsProvider(),
+				new ClasspathPropertiesFileCredentialsProvider()));
 
 		dynamo.setRegion(Region.getRegion(Regions.US_WEST_2));
-		
+
 		DynamoDBMapper mapper = new DynamoDBMapper(dynamo);
-		
+
 		String last = "none";
-		String now = "" + new Date();
 
 		LastTimeItem b = mapper.load(new LastTimeItem("GetLastUniversalKeyString"));
 		if (b != null) {
@@ -131,10 +118,10 @@ public class GetLast  extends HttpServlet {
 			last = b.getWhen();
 		} else
 			b = new LastTimeItem("GetLastUniversalKeyString");
-		b.setWhen( "" + new Date());
+		b.setWhen("" + new Date());
 		mapper.save(b);
 
-		response.getWriter().write(last);// println( last + " current val is " + now);
+		response.getWriter().write(last);
 	}
 
 }

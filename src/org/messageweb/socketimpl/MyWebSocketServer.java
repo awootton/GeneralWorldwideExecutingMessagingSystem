@@ -122,7 +122,7 @@ public final class MyWebSocketServer {
 			portsStarted.add(port);
 		}
 
-		logger.info(" &@^@%   &@^@%   &@^@%   &@^@%   &@^@%   &@^@%   Starting " + global + " on " + port);
+		logger.info("Starting " + global + " on " + port);
 		// Configure SSL.
 		final SslContext sslCtx;
 		if (SSL) {

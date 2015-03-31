@@ -1,18 +1,19 @@
 package org.messageweb.util;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.concurrent.Executor;
 
 import org.apache.log4j.Logger;
-import org.messageweb.WsClientImpl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 /**
+ * This is a basic key value cache with the addition of a time-to-live for every key/value. There is an ordered collection of runnables that will execute if the
+ * key/value expire. Also, the ttl can be extended and that is expected to be a major use case so that needs to be efficient.
+ * 
  * FIXME: this will be a bottleneck at high volume.
  * 
  * @author awootton
@@ -31,20 +32,32 @@ public class TimeoutCache {
 	Thread watcher;
 	Executor pool;
 	Thread thread;
+	boolean running = true;
 
 	public TimeoutCache(Executor pool, String name) {
 		this.pool = pool;
-		// timedQ = new PriorityQueue<TimeoutCache.TimedKey>(1024, new TimedCompare());
-		timedQ = new TreeSet<TimeoutCache.TimedKey>(new TimedCompare());
+		timedQ = new TreeSet<TimeoutCache.TimedKey>((TimedKey o1, TimedKey o2) -> {
+			long val = o1.expires - o2.expires;
+			if (val > 0) {
+				return 1;
+			} else if (val < 0) {
+				return -1;
+			}
+			return o1.key.compareTo(o2.key);
+		});
 
 		String timerThreadName = "TimeoutCache.time.runner " + name;
-		
+
 		thread = new Thread(new RunTimer());
 		thread.setName(timerThreadName);
 		thread.setDaemon(true);
 		thread.start();
 		logger.debug("Started " + timerThreadName);
 
+	}
+
+	public void stop() {
+		running = false;
 	}
 
 	TimeoutCache getSyncObject() {
@@ -60,8 +73,11 @@ public class TimeoutCache {
 
 			while (true) {
 				try {
-					Thread.sleep(10);
+					Thread.sleep(1);
 				} catch (InterruptedException e) {
+				}
+				if ( ! running ){
+					return;
 				}
 				long time = System.currentTimeMillis() - delta;
 				while (timedQ.size() != 0 && timedQ.first().expires <= time) {
@@ -69,49 +85,60 @@ public class TimeoutCache {
 					synchronized (getSyncObject()) {
 						head = timedQ.pollFirst();
 						if (logger.isTraceEnabled()) {
-							logger.trace("popped = " + head.key + " " + timedQ.size() + " remaining" );
+							logger.trace("popped = " + head.key + " " + timedQ.size() + " remaining");
 						}
 					}
 					if (logger.isTraceEnabled()) {
 						logger.trace("sending key to pool = " + head.key);
 					}
-					pool.execute(new RunTimerList(head));
+					// pool.execute(new RunTimerList(head));
+					pool.execute(() -> {
+						if (logger.isTraceEnabled()) {
+							logger.trace("timing out key = " + head.key + " calling " + head.runners.size() + " watchers");
+						}
+						for (Runnable r : head.runners) {
+							r.run();
+						}
+						synchronized (getSyncObject()) {
+							cache.invalidate(head);
+						}
+					});
 				}
 			}
 		}
 	}
 
-	private class RunTimerList implements Runnable {
-		TimedKey key;
+	// private class RunTimerList implements Runnable {
+	// TimedKey key;
+	//
+	// public RunTimerList(TimedKey key) {
+	// this.key = key;
+	// }
+	//
+	// @Override
+	// public void run() {
+	// if (logger.isTraceEnabled()) {
+	// logger.trace("timing out key = " + key.key + " calling " + key.runners.size() + " watchers");
+	// }
+	//
+	// for (Runnable r : key.runners) {
+	// r.run();
+	// }
+	// synchronized (getSyncObject()) {
+	// cache.invalidate(key);
+	// }
+	// }
+	// }
 
-		public RunTimerList(TimedKey key) {
-			this.key = key;
-		}
-
-		@Override
-		public void run() {
-			if (logger.isTraceEnabled()) {
-				logger.trace("timing out key = " + key.key + " calling " + key.runners.size() + " watchers");
-			}
-
-			for (Runnable r : key.runners) {
-				r.run();
-			}
-			synchronized (getSyncObject()) {
-				cache.invalidate(key);
-			}
-		}
-	}
-
-	private static class TimedCompare implements Comparator<TimedKey> {
-		@Override
-		public int compare(TimedKey o1, TimedKey o2) {
-			long val = o1.expires - o2.expires;
-			if (val != 0)
-				return (int) (val >> 32);
-			return o1.key.compareTo(o2.key);
-		}
-	}
+	// private static class TimedCompare implements Comparator<TimedKey> {
+	// @Override
+	// public int compare(TimedKey o1, TimedKey o2) {
+	// long val = o1.expires - o2.expires;
+	// if (val != 0)
+	// return (int) (val >> 32);
+	// return o1.key.compareTo(o2.key);
+	// }
+	// }
 
 	private static class ObjectHolder {
 		TimedKey key;
@@ -169,10 +196,10 @@ public class TimeoutCache {
 	 * @param ttl
 	 *            - time to live in ms. 1000 means call the notifiers in 1 sec.
 	 * @param notified
-	 *            these get called when the ttl runs out
+	 *            these get called if the ttl runs out
 	 */
 	public synchronized void put(String key, Object value, int ttl, Runnable... notified) {
-		// check for existing ! 
+		// check for existing !
 		ObjectHolder holder = cache.getIfPresent(key);
 		TimedKey tkey;
 		if (holder != null) {
@@ -203,7 +230,7 @@ public class TimeoutCache {
 	}
 
 	/**
-	 * Reset the ttl. Aka refresh the object. IF it's not present then do nothing
+	 * Reset the ttl. Aka refresh the object. If it's not present then do nothing
 	 * 
 	 * @param key
 	 * @param ttl
@@ -223,7 +250,7 @@ public class TimeoutCache {
 	}
 
 	/**
-	 * We don't really remove it. We just set the timeout to -1 and let it expire without the watchers.
+	 * We don't really remove it. We just set the timeout to -1 and let it expire without the watchers. No expire routines are run.
 	 * 
 	 * @param key
 	 */
@@ -238,11 +265,7 @@ public class TimeoutCache {
 			if (logger.isTraceEnabled()) {
 				logger.trace("Removed key = " + key);
 			}
-
 		}
 	}
 
-	public static void main(String[] args) {
-
-	}
 }

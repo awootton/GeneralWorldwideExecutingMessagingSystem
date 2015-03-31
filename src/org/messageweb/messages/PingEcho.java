@@ -31,7 +31,7 @@ public class PingEcho implements Runnable {
 		// this happened on the arrival of the message.
 		
 
-		ChannelHandlerContext ctx = ServerGlobalState.getCtx();
+		ChannelHandlerContext ctx = ServerGlobalState.getCtx().get();
 		if ( ctx == null ){
 			logger.info(" PingEcho null context ");
 			// this would mean that we are inside of the client
