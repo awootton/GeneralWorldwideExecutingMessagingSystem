@@ -22,9 +22,10 @@ public class PingAgent extends TempDataLogger {
 
 	@Test
 	public void myDemoOne() throws IOException {
-		//demoAgentPing(global1);// from server1 to server1 - easy
-		//demoAgentPing(global2);// from server1 to server2 - a little harder
-		demoAgentPing(global4);// from server1 to server3 - different clusters - broken
+		demoAgentPing(global1);// from server1 to server1 - easy
+		demoAgentPing(global2);// from server1 to server2 - a little harder
+		
+		//demoAgentPing(global4);// from server1 to server3 - different clusters - broken
 	}
 
 	public static void main(String[] args) throws IOException {

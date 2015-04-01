@@ -11,7 +11,6 @@ import java.util.Base64;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -58,9 +57,10 @@ public class Global implements Executor {
 
 	private ThreadPoolExecutor executor = null;
 
+	// We will need for the server id's top be globally unique.
+	// It must never have a { in it, or probably a [ or / either.
 	private static int serveIdCounter = 0;
-	public String id = "Server" + serveIdCounter++;// ("" + Math.random()).substring(2);
-	// FIXME: more random here
+	public String id = "Svr" + serveIdCounter++;// ("" + Math.random()).substring(2);
 
 	private MyWebSocketServer server;
 
@@ -261,7 +261,21 @@ public class Global implements Executor {
 	private class LocalSubscriberHandler implements PubSub.Handler {
 
 		@Override
-		public void handle(String channel, String message) {
+		public void handle(String channel, String str) {
+			// reject the bytes before the '{'
+			// TODO: there's a fancy, optimized, faster, way to do this job.
+			// FIXME: write it. Also, don't slow down this thread.
+			int pos = str.indexOf('{');
+			if (pos < 0) {
+				logger.error("bad message - missing {" + str);
+				return;
+			}
+			String prefix = str.substring(0, pos);
+			if (prefix.equals(id)) {// was sent by us
+				return;// so, we don't need to broadcast again.
+			}
+			String message = str.substring(pos);
+			// don't deserialize in the PubSub thread.
 			executor.execute(() -> {
 				try {
 					Runnable runme = Global.deserialize(message);
@@ -369,31 +383,34 @@ public class Global implements Executor {
 			return;
 		if (channel.length() == 0)
 			return;
-		redisPubSub.publish(channel, message);
-		// this is not a good idea because things will end up
-		// running twice
 
-		// tell the local subscribers
-		// executor.execute(() -> {
-		// ExecutionContext ec = context.get();
-		// ec.subscribedChannel = Optional.of(channel);
-		// try {
-		// Runnable runme = Global.deserialize(message);
-		// // get all the local subscribers
-		// Set<Agent> agents = session2channel.thing2items_get(channel);
-		// for (Agent agent : agents) {
-		// // give them the message
-		// agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
-		// }
-		//
-		// } catch (JsonProcessingException e) {
-		// logger.error("bad message " + message, e);
-		// } catch (IOException e) {
-		// logger.error("bad message io " + message, e);
-		// } finally {
-		// ec.subscribedChannel = Optional.empty();
-		// }
-		// });
+		// Tell the local subscribers
+		// but not in this thread.
+		executor.execute(() -> {
+			ExecutionContext ec = context.get();
+			ec.subscribedChannel = Optional.of(channel);
+			try {
+				Runnable runme = Global.deserialize(message);
+				// get all the local subscribers
+				Set<Agent> agents = session2channel.thing2items_get(channel);
+				for (Agent agent : agents) {
+					// give them the message
+					agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
+				}
+
+			} catch (JsonProcessingException e) {
+				logger.error("bad message " + message, e);
+			} catch (IOException e) {
+				logger.error("bad message io " + message, e);
+			} finally {
+				ec.subscribedChannel = Optional.empty();
+			}
+		});
+
+		// add the server id to the front of the message so that it doesn't
+		// get broadcast locally, again, when it comes back.
+		redisPubSub.publish(channel, id + message);
+
 	}
 
 	public void publish(String channel, Runnable runme) {
@@ -409,23 +426,21 @@ public class Global implements Executor {
 		}
 		if (str.length() == 0)
 			return;
-		redisPubSub.publish(channel, str);
 		// tell the local subscribers
-		// This is a bad idea because this same thing is going
-		// to happen when the redis pub arrives and it's awkward to
-		// prevent that.
 
-		// executor.execute(() -> {
-		// ExecutionContext ec = context.get();
-		// ec.subscribedChannel = Optional.of(channel);
-		// // get all the local subscribers
-		// Set<Agent> agents = session2channel.thing2items_get(channel);
-		// for (Agent agent : agents) {
-		// // give them the message
-		// agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
-		// }
-		// ec.subscribedChannel = Optional.empty();
-		// });
+		executor.execute(() -> {
+			ExecutionContext ec = context.get();
+			ec.subscribedChannel = Optional.of(channel);
+			// get all the local subscribers
+			Set<Agent> agents = session2channel.thing2items_get(channel);
+			for (Agent agent : agents) {
+				// give them the message
+				agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
+			}
+			ec.subscribedChannel = Optional.empty();
+		});
+		// Tack our name on the front so we don't re-broadcast when it arrives.
+		redisPubSub.publish(channel, id + str);
 	}
 
 	public void subscribe(Agent agent, String channel) {
