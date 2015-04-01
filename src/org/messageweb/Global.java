@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.messageweb.agents.Agent;
 import org.messageweb.agents.SessionAgent;
+import org.messageweb.dynamo.DynamoHelper;
 import org.messageweb.impl.JedisRedisPubSubImpl;
 import org.messageweb.impl.MyRejectedExecutionHandler;
 import org.messageweb.socketimpl.MyWebSocketServer;
@@ -68,7 +69,7 @@ public class Global implements Executor {
 	// The thread that watches the NIO acceptor.
 	private Thread serverThread;
 
-	private PubSub redis;
+	private PubSub redisPubSub;
 
 	ClusterState cluster;
 
@@ -76,10 +77,12 @@ public class Global implements Executor {
 
 	TwoWayMapping<Agent, String> session2channel = new TwoWayMapping<Agent, String>();
 
+	int port;
+
 	public Global(int port, ClusterState cluster) {
 
 		this.cluster = cluster;
-		cluster.name2server.put(id, this);
+		this.port = port;
 
 		dynamoHelper = new DynamoHelper();
 
@@ -97,7 +100,7 @@ public class Global implements Executor {
 		timeoutCache = new TimeoutCache(executor, id);
 
 		// Start the redis pub/sub thread.
-		redis = new JedisRedisPubSubImpl("localhost", new LocalSubscriberHandler(), id);
+		redisPubSub = new JedisRedisPubSubImpl(cluster.redis_server, cluster.redis_port, new LocalSubscriberHandler(), id);
 
 		// how do we wait for server to start up?
 		while (server.startedChannel == false) {
@@ -106,6 +109,11 @@ public class Global implements Executor {
 			} catch (InterruptedException e) {
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return this.getClass().getName() + ":" + id + ":" + port;
 	}
 
 	private class MyThreadFactory implements ThreadFactory {
@@ -300,7 +308,7 @@ public class Global implements Executor {
 
 			ExecutionContext ec = context.get();
 			ec.subscribedChannel = Optional.of(channel);
-			System.out.println(" ######### SEtting context for " + channel);
+			// System.out.println(" ######### SEtting context for " + channel);
 			ec.agent = Optional.of(agent);
 			runme.run();
 			ec.subscribedChannel = Optional.empty();
@@ -361,7 +369,7 @@ public class Global implements Executor {
 			return;
 		if (channel.length() == 0)
 			return;
-		redis.publish(channel, message);
+		redisPubSub.publish(channel, message);
 		// this is not a good idea because things will end up
 		// running twice
 
@@ -401,7 +409,7 @@ public class Global implements Executor {
 		}
 		if (str.length() == 0)
 			return;
-		redis.publish(channel, str);
+		redisPubSub.publish(channel, str);
 		// tell the local subscribers
 		// This is a bad idea because this same thing is going
 		// to happen when the redis pub arrives and it's awkward to
@@ -428,7 +436,7 @@ public class Global implements Executor {
 
 		Set<Agent> agents = session2channel.thing2items_get(channel);
 		if (agents.isEmpty()) {
-			redis.subcribe(channel);
+			redisPubSub.subcribe(channel);
 		}
 		session2channel.add(agent, channel);
 	}
@@ -437,7 +445,7 @@ public class Global implements Executor {
 		session2channel.remove(agent, channel);
 		Set<Agent> agents = session2channel.thing2items_get(channel);
 		if (agents.isEmpty()) {
-			redis.unsubcribe(channel);
+			redisPubSub.unsubcribe(channel);
 		}
 	}
 

@@ -1,6 +1,8 @@
-package org.messageweb;
+package org.messageweb.util;
 
 import org.apache.log4j.Logger;
+import org.messageweb.ClusterState;
+import org.messageweb.Global;
 
 public class RunServersLocal {
 

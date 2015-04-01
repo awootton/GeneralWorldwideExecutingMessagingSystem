@@ -1,8 +1,7 @@
-package org.messageweb;
+package org.messageweb.dynamo;
 
 import org.apache.log4j.Logger;
 import org.messageweb.agents.Agent;
-import org.messageweb.dynamo.AtwTableBase;
 
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;

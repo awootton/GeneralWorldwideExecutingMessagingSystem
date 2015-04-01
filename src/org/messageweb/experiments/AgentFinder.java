@@ -24,6 +24,7 @@ public class AgentFinder {
 	 */
 	String agentSubscribeChannel;
 
+	/// this is also how long we wait for a fail.
 	int ttl = 100;// 100ms = how long to wait for reply from agent.
 
 	public String localAgentId;//  our local, tmp, agent will need an id	
@@ -38,7 +39,6 @@ public class AgentFinder {
 		this.agentSubscribeChannel = agentSubscribeChannel;
 		this.localAgentId = Global.getRandom();
 		listenHere = localAgentId;
-		
 	}
 
 	public class Response {
@@ -60,21 +60,7 @@ public class AgentFinder {
 		SimpleAgent localWatcher = new SimpleAgent(agentSubscribeChannel, global);
 		localWatcher.object = this;
 	
-		// this doesn't work because it's actually a wrapper that arrives. 
-//		{
-//			public void run(Runnable message) {
-//				if (message instanceof AgentEcho) {
-//					AgentEcho ae = (AgentEcho)message;
-//					response.agentInfo = ae.agentInfo;
-//					response.globalInfo = ae.globalInfo;
-//					response.success = true;
-//					if (logger.isTraceEnabled())
-//						logger.trace(" localWatcher called from " + Thread.currentThread());
-//				} else {
-//					logger.error("Have unexpected message " + message);
-//				}
-//			}
-//		};
+		// FIXME: formalize agentInstall
 		global.subscribe(localWatcher, listenHere);
 		global.timeoutCache.put(localAgentId, localWatcher, ttl, () -> {
 			response.success = false;

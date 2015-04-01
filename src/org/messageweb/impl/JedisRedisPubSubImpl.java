@@ -16,34 +16,35 @@ public class JedisRedisPubSubImpl extends PubSub {
 
 	Jedis subscribingRedis;
 
-	String server;
+	String hostName;
+
+	int port;
 
 	private final String dummyChannel = "AHUAp4xu9FqRobj8zwn2vBI6Anag1t8Z5z6SWjn8_neverUseThisChannel";// random.org
 
-	public JedisRedisPubSubImpl(String server, Handler handler, String globalName) {
-		this.server = server;
-		// jedis = new Jedis(server);
+	public JedisRedisPubSubImpl(String hostName, int port, Handler handler, String globalName) {
+		this.hostName = hostName;
+		this.port = port;
 		myPubSub = new MyRedisPubSub();
 		myPubSub.handler = handler;
 
-		subscribingRedis = new Jedis(server);
+		subscribingRedis = new Jedis(hostName, port);
 
 		Thread thread = new Thread(new RunPS());
 		thread.setName("Redis_Sub_Runner" + globalName);
 		thread.setDaemon(true);
 		thread.start();
 		while (!myPubSub.isSubscribed()) {
-			// System.out.print (myPubSub.getSubscribedChannels() + " ");
 			try {
 				Thread.sleep(1);
 			} catch (InterruptedException e) {
 			}
 		}
-		System.out.println();
 	}
 
 	class RunPS implements Runnable {
 		public void run() {
+			logger.info("Redis subscriber thread started watching port " + port);
 			logger.trace("MyRedisPubSub starting proceed");
 			subscribingRedis.subscribe(myPubSub, dummyChannel);
 			logger.info("MyRedisPubSub thread finished and quitting");
@@ -52,7 +53,7 @@ public class JedisRedisPubSubImpl extends PubSub {
 	}
 
 	public Jedis getJedis() {// FIXME: needs pool
-		return new Jedis(server);
+		return new Jedis(hostName, port);
 	}
 
 	@Override
@@ -75,7 +76,8 @@ public class JedisRedisPubSubImpl extends PubSub {
 		myPubSub.handler = handler;
 	}
 
-	@Override	public void stop() {
+	@Override
+	public void stop() {
 		myPubSub.unsubscribe(dummyChannel);
 		myPubSub.unsubscribe();
 	}

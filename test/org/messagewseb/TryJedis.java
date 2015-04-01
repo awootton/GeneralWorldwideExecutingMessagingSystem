@@ -27,7 +27,7 @@ public class TryJedis {
 
 	@Test
 	public void t1() {
-		ps = new JedisRedisPubSubImpl("localhost", new Handle(), "noGlobal");
+		ps = new JedisRedisPubSubImpl("localhost", 6380, new Handle(), "noGlobal");
 
 		receivedMessage = "none";
 

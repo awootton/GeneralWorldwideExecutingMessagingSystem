@@ -43,7 +43,7 @@ public class TempDataLogger extends StartServers {
 	public void demoAgentPing(Global targetServer) throws IOException {
 
 		// ping for agent. Should fail.
-		
+
 		String channel = "AbcDefHijQQQQQ";
 		// Don't reuse the id on short notice.
 		// Is this a flaw?
@@ -53,28 +53,30 @@ public class TempDataLogger extends StartServers {
 		AgentFinder.Response response = finder.goAndWait();
 
 		System.out.println("found agent Info " + response.agentInfo + " from server " + response.globalInfo);
+
 		Assert.assertTrue(response.failed);
+		Assert.assertFalse(response.success);
 
 		// now, install an agent on server
 
 		SimpleAgent simpleAgent = new SimpleAgent(channel, targetServer);
-		// install into global2
-		targetServer.timeoutCache.put("simpleAgentAAAA", simpleAgent, 1 * 1000, () -> {
+		// install into globalX
+		// FIXME: formalize agentInstall
+		targetServer.timeoutCache.put("simpleAgentAAAA", simpleAgent, 2500, () -> {
 			System.out.println(" SimpleAgent #2 timed out ! called from " + Thread.currentThread());
 		});
 		targetServer.subscribe(simpleAgent, channel);
 
 		// try the finder again
-		// should succeed 
+		// should succeed
 		finder = new AgentFinder(global1, channel);
 		response = finder.goAndWait();
 
-		Assert.assertTrue(response.success);
-
 		System.out.println("found agent Info " + response.agentInfo + " from server " + response.globalInfo);
 
+		Assert.assertTrue(response.success);
+		Assert.assertFalse(response.failed);
 	}
-
 
 	@Test
 	public void demoTwo() throws IOException {
