@@ -1,7 +1,6 @@
 package org.messageweb.util;
 
 import java.util.Optional;
-import java.util.concurrent.Executor;
 
 import org.messageweb.ExecutionContext;
 import org.messageweb.Global;
@@ -11,8 +10,8 @@ public class AgentRunnablesQueue extends RunnablesQueue {
 
 	Agent agent;
 
-	public AgentRunnablesQueue(Executor executor, Agent agent) {
-		super(executor);
+	public AgentRunnablesQueue(Global global, Agent agent) {
+		super(global);
 		this.agent = agent;
 	}
 

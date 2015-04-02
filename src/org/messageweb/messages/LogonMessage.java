@@ -1,11 +1,15 @@
 package org.messageweb.messages;
 
-import java.util.Base64;
-
 import org.apache.log4j.Logger;
 import org.messageweb.Global;
 import org.messageweb.agents.SessionAgent;
 
+/** We're going to have to delete this if it doesn't get filled out.
+ * Is it ok to block in here? Just for a little bit?  
+ * 
+ * @author awootton
+ *
+ */
 public class LogonMessage implements Runnable {
 
 	public static Logger logger = Logger.getLogger(LogonMessage.class);
@@ -24,10 +28,10 @@ public class LogonMessage implements Runnable {
 
 		// we have to set up the subscription
 
-		String channel = "some lame channel";
-
-		byte[] bytes = Global.getContext().sha256.digest((user + applicationId + instanceid).getBytes());
-		channel = Base64.getEncoder().encodeToString(bytes);
+//		String channel = "some lame channel";
+//
+//		byte[] bytes = Global.getContext().sha256.digest((user + applicationId + instanceid).getBytes());
+//		channel = Base64.getEncoder().encodeToString(bytes);
 
 //		agent.pub = channel;
 		
@@ -42,7 +46,7 @@ public class LogonMessage implements Runnable {
 		
 		
 
-		agent.validated = true;
+//		agent.validated = true;
 
 	}
 

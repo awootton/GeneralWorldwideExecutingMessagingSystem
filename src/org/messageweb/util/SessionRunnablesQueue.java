@@ -1,15 +1,14 @@
 package org.messageweb.util;
 
-import java.util.concurrent.Executor;
-
+import org.messageweb.Global;
 import org.messageweb.agents.SessionAgent;
 
 public class SessionRunnablesQueue  extends RunnablesQueue {
 
 	SessionAgent agent;
 
-	public SessionRunnablesQueue(Executor executor, SessionAgent agent) {
-		super(executor);
+	public SessionRunnablesQueue(Global global, SessionAgent agent) {
+		super(global);
 		this.agent = agent;
 	}
 
@@ -20,21 +19,16 @@ public class SessionRunnablesQueue  extends RunnablesQueue {
 	private class MyAgentLocalRunner extends MyLocalRunner {
 		@Override
 		public void run() {
-			//ExecutionContext context = ServerGlobalState.getContext();
-			// was wrapped by caller context.agent  = Optional.of(agent);
-			// super.run();
 			myThread = Thread.currentThread().getName();
 			Runnable r;
 			while ((r = hasMore()) != null) {
 				try {
-					// r.run();
 					agent.runSocketMessage(r);
 				} catch (Exception e) {
 					logger.error("badness", e);
 				}
 			}
 			myThread = "off";
-			// context.agent = Optional.empty();
 		}
 	}
 }

@@ -165,7 +165,7 @@ public class Global implements Executor {
 		}
 	};
 
-	static final int SessionAgentTTL = 120 * 1000;// in config??
+	static final int SessionAgentTTL = Util.twoMinutes; 
 
 	/**
 	 * Incoming messages from the WS server, or incoming in general, come directly through here.
@@ -189,7 +189,7 @@ public class Global implements Executor {
 		} else {
 			sessionAgent = (SessionAgent) this.timeoutCache.get(sessionStringAttribute.get());
 		}
-		sessionAgent.messageQ.run(new CtxWrapper(ctx, message));
+		sessionAgent.socketMessageQ.run(new CtxWrapper(ctx, message));
 	}
 
 	public void stop() {
@@ -368,6 +368,10 @@ public class Global implements Executor {
 		return (ObjectNode) obj;
 	}
 
+	/** Only ever called by SessionAgent ?
+	 * 
+	 * @param message
+	 */
 	static public void reply(Runnable message) {
 		ChannelHandlerContext ctx = context.get().ctx.get();
 		try {
@@ -464,9 +468,10 @@ public class Global implements Executor {
 		}
 	}
 
+	// For sessions, and such, 128 bits will be enough.
 	public static String getRandom() {
 		ExecutionContext ec = context.get();
-		MessageDigest md = ec.sha256;
+		MessageDigest md = ec.md5;
 		// FIXME: more random.
 		md.update(("" + Math.random()).getBytes());
 		md.update(ec.lastRandom);

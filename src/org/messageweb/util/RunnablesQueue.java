@@ -5,9 +5,9 @@ package org.messageweb.util;
  */
 
 import java.util.LinkedList;
-import java.util.concurrent.Executor;
 
 import org.apache.log4j.Logger;
+import org.messageweb.Global;
 
 /**
  * 
@@ -20,13 +20,17 @@ public class RunnablesQueue {
 	protected boolean isRunning;
 	private Runnable myRunner;
 	protected String myThread = "off";
-	private Executor executor;
+	private Global global;
 
-	public RunnablesQueue(Executor executor) {
-		this.executor = executor;
+	public RunnablesQueue(Global global) {
+		this.global = global;
 		isRunning = false;
 		q = new LinkedList<Runnable>();
 		myRunner = getLocalRunner();
+	}
+	
+	public Global getGlobal(){
+		return global;
 	}
 
 	public void run(Runnable runnable) {
@@ -34,7 +38,7 @@ public class RunnablesQueue {
 			q.add(runnable);
 			if (!isRunning) {
 				isRunning = true;
-				executor.execute(myRunner);// send myself to thread pool
+				global.execute(myRunner);// send myself to thread pool
 			}
 		}
 	}

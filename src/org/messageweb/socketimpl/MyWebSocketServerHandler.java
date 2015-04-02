@@ -26,6 +26,8 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 
 import org.apache.log4j.Logger;
@@ -104,6 +106,15 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 
 		// Check for closing frame
 		if (frame instanceof CloseWebSocketFrame) {
+			// can we just do this here, or do we need to call global?
+			Attribute<String> sessionStringAttribute = ctx.attr(AttributeKey.<String> newInstance("session"));
+			if (sessionStringAttribute.get() == null) {
+				 // wtf? 
+				logger.error("Why are we closing a socket with no sessionAgent?");
+			} else {
+				// and run all the closing routines asap.
+				global.timeoutCache.setTtl(sessionStringAttribute.get(), 0);
+			}
 			handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
 			return;
 		}

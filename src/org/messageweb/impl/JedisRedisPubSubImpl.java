@@ -1,7 +1,6 @@
 package org.messageweb.impl;
 
 import org.apache.log4j.Logger;
-import org.messageweb.Global;
 import org.messageweb.util.PubSub;
 
 import redis.clients.jedis.Jedis;
@@ -9,8 +8,6 @@ import redis.clients.jedis.Jedis;
 public class JedisRedisPubSubImpl extends PubSub {
 
 	public static Logger logger = Logger.getLogger(JedisRedisPubSubImpl.class);
-
-	// Jedis jedis;
 
 	MyRedisPubSub myPubSub;
 
