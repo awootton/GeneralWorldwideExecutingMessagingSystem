@@ -13,12 +13,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.messageweb.dynamo.DynamoHelper;
 import org.messageweb.dynamo.LastTimeItem;
 
 import provided.examples.WorkRequest;
 
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -103,12 +105,19 @@ public class GetLast extends HttpServlet {
 		String path = request.getParameter("path");//
 		System.out.println("Str is " + path);
 
-		AmazonDynamoDBClient dynamo = new AmazonDynamoDBClient(new AWSCredentialsProviderChain(new InstanceProfileCredentialsProvider(),
-				new ClasspathPropertiesFileCredentialsProvider()));
-
-		dynamo.setRegion(Region.getRegion(Regions.US_WEST_2));
-
-		DynamoDBMapper mapper = new DynamoDBMapper(dynamo);
+//		AWSCredentialsProviderChain chain = new AWSCredentialsProviderChain(new InstanceProfileCredentialsProvider(),
+//				new ClasspathPropertiesFileCredentialsProvider());
+//
+//		chain = new DefaultAWSCredentialsProviderChain();
+//
+//		AmazonDynamoDBClient dynamo = new AmazonDynamoDBClient(chain);
+//
+//		dynamo.setRegion(Region.getRegion(Regions.US_WEST_2));
+//
+//		DynamoDBMapper mapper = new DynamoDBMapper(dynamo);
+		
+		DynamoHelper helper = new  DynamoHelper();
+		DynamoDBMapper mapper = helper.getMapper();
 
 		String last = "none";
 

@@ -66,5 +66,22 @@ public class DynamoHelper {
 		mapper.delete(object);
 	}
 
+	public AmazonDynamoDBClient getDynamo() {
+		return dynamo;
+	}
+
+	public void setDynamo(AmazonDynamoDBClient dynamo) {
+		this.dynamo = dynamo;
+	}
+
+	public DynamoDBMapper getMapper() {
+		return mapper;
+	}
+
+	public void setMapper(DynamoDBMapper mapper) {
+		this.mapper = mapper;
+	}
+
+	
 
 }
