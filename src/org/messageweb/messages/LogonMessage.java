@@ -6,7 +6,7 @@ import org.messageweb.agents.SessionAgent;
 
 /** We're going to have to delete this if it doesn't get filled out.
  * Is it ok to block in here? Just for a little bit?  
- * 
+ * No - this is crap - deleteme
  * @author awootton
  *
  */

@@ -21,9 +21,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  *
  */
 // Send this:
-// {"@Class":"org.messageweb.messages.PingEcho"}
+// {"@Cl":"org.messageweb.messages.PingEcho"}
 //
-//  {"@Class":"org.messageweb.messages.PingEcho","key":"someRandomKeyToDoTricksWith"}
+//  {"@Cl":"org.messageweb.messages.PingEcho","key":"someRandomKeyToDoTricksWith"}
 //
 // on a socket.
 

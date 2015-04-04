@@ -55,7 +55,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
  * existing WebSocket server such as <a href="http://www.websocket.org/echo.html">ws://echo.websocket.org</a>.
  * <p>
  * The client will attempt to connect to the URI passed to it as the first argument. You don't have to specify any
- * arguments if you want to connect to the example WebSocket server, as this is the default.
+ * arguments if you want to connect to the example WebSocket server, as this is the default. Copyright 2015 Alan Wootton
+ * see included license.
  */
 public final class WsClientImpl {
 
@@ -68,9 +69,9 @@ public final class WsClientImpl {
 	public boolean running = true;// just this server
 	// System.setProperty("catalina.base", ".."); // so logger won't npe
 
-	private ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newCachedThreadPool(); 
+	private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
-	public   TimeoutCache cache; 
+	public TimeoutCache cache;
 
 	private int port;
 	private String host;
@@ -83,7 +84,7 @@ public final class WsClientImpl {
 	public WsClientImpl(int port) {
 		super();
 		this.port = port;
-		
+
 		cache = new TimeoutCache(executor, "AllClients");
 
 		Thread thread = new Thread(() -> {
@@ -228,8 +229,8 @@ public final class WsClientImpl {
 
 	private static final ThreadLocal<ChannelHandlerContext> myClientContext = new ThreadLocal<ChannelHandlerContext>();
 	private static final ThreadLocal<WsClientImpl> myClient = new ThreadLocal<WsClientImpl>();
-	
-	public static WsClientImpl getClient(){ // if any
+
+	public static WsClientImpl getClient() { // if any
 		return myClient.get();
 	}
 
@@ -249,7 +250,8 @@ public final class WsClientImpl {
 	/**
 	 * Incoming messages to this client, or incoming in general, come directly through here.
 	 * 
-	 * try typing this into command prompt: {"@Class":"org.messageweb.messages.PingEcho","key":"someRandomKeyToDoTricksWith"}
+	 * try typing this into command prompt:
+	 * {"@C":"org.messageweb.messages.PingEcho","key":"someRandomKeyToDoTricksWith"}
 	 * 
 	 * @param ctx
 	 * @param child
@@ -265,11 +267,11 @@ public final class WsClientImpl {
 				child = Global.deserialize(message);
 				child.run();
 			} catch (JsonParseException e) {
-				logger.error("bad message:"+message, e);
+				logger.error("bad message:" + message, e);
 			} catch (JsonMappingException e) {
-				logger.error("bad message:"+message, e);
+				logger.error("bad message:" + message, e);
 			} catch (IOException e) {
-				logger.error("bad message:"+message, e);
+				logger.error("bad message:" + message, e);
 			}
 			myClientContext.set(null);
 			myClient.set(null);
@@ -277,36 +279,36 @@ public final class WsClientImpl {
 		});
 	}
 
-//	private class ClientCtxWrapper implements Runnable {
-//
-//		ChannelHandlerContext ctx;
-//		String message;
-//
-//		public ClientCtxWrapper(ChannelHandlerContext ctx, String message) {
-//			super();
-//			this.ctx = ctx;
-//			this.message = message;
-//		}
-//
-//		@Override
-//		public void run() {
-//			myClientContext.set(ctx);
-//			myClient.set(WsClientImpl.this);
-//			Runnable child;
-//			try {
-//				child = Global.deserialize(message);
-//				child.run();
-//			} catch (JsonParseException e) {
-//				logger.error("bad message", e);
-//			} catch (JsonMappingException e) {
-//				logger.error("bad message", e);
-//			} catch (IOException e) {
-//				logger.error("bad message", e);
-//			}
-//			myClientContext.set(null);
-//			myClient.set(null);
-//		}
-//	}
+	// private class ClientCtxWrapper implements Runnable {
+	//
+	// ChannelHandlerContext ctx;
+	// String message;
+	//
+	// public ClientCtxWrapper(ChannelHandlerContext ctx, String message) {
+	// super();
+	// this.ctx = ctx;
+	// this.message = message;
+	// }
+	//
+	// @Override
+	// public void run() {
+	// myClientContext.set(ctx);
+	// myClient.set(WsClientImpl.this);
+	// Runnable child;
+	// try {
+	// child = Global.deserialize(message);
+	// child.run();
+	// } catch (JsonParseException e) {
+	// logger.error("bad message", e);
+	// } catch (JsonMappingException e) {
+	// logger.error("bad message", e);
+	// } catch (IOException e) {
+	// logger.error("bad message", e);
+	// }
+	// myClientContext.set(null);
+	// myClient.set(null);
+	// }
+	// }
 
 	/**
 	 * Kills everything - all FIXME: should kill all the clients. Not just this one.

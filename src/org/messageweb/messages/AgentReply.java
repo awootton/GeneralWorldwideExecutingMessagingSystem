@@ -6,6 +6,11 @@ import org.messageweb.Global;
 import org.messageweb.agents.SimpleAgent;
 import org.messageweb.experiments.AgentFinder;
 
+/** Used in test. Not for production.
+ * 
+ * @author awootton
+ *
+ */
 public class AgentReply implements Runnable {
 
 	public static Logger logger = Logger.getLogger(AgentReply.class);

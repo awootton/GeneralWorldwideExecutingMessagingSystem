@@ -1,5 +1,8 @@
 package org.messageweb.util;
 
+import java.util.Optional;
+
+import org.messageweb.ExecutionContext;
 import org.messageweb.Global;
 import org.messageweb.agents.SessionAgent;
 
@@ -28,7 +31,10 @@ public class SessionRunnablesQueue  extends RunnablesQueue {
 			Runnable r;
 			while ((r = hasMore()) != null) {
 				try {
+					ExecutionContext ec = Global.getContext();
+					ec.agent = Optional.of(agent);
 					agent.runSocketMessage(r);
+					ec.agent = Optional.empty();
 				} catch (Exception e) {
 					logger.error("badness", e);
 				}

@@ -28,6 +28,7 @@ import org.messageweb.util.TimeoutCache;
 import org.messageweb.util.TwoWayMapping;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -49,6 +50,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * TODO: make an interface and an impl. Hide the helper classes. Clean it up.
  * 
  * @author awootton
+ * 
+ *         Copyright 2015 Alan Wootton see included license.
  *
  */
 public class Global implements Executor {
@@ -75,7 +78,12 @@ public class Global implements Executor {
 
 	public DynamoHelper dynamoHelper;
 
-	TwoWayMapping<Agent, String> session2channel = new TwoWayMapping<Agent, String>();
+	/**
+	 * In order for this to not leak it must be carefully handled. The main defense is that only agents subscribe and
+	 * all agents have a timeout that unsubscribes them
+	 * 
+	 */
+	private TwoWayMapping<Agent, String> session2channel = new TwoWayMapping<Agent, String>();
 
 	int port;
 
@@ -165,7 +173,7 @@ public class Global implements Executor {
 		}
 	};
 
-	static final int SessionAgentTTL = Util.twoMinutes; 
+	static final int SessionAgentTTL = Util.twoMinutes;
 
 	/**
 	 * Incoming messages from the WS server, or incoming in general, come directly through here.
@@ -181,15 +189,19 @@ public class Global implements Executor {
 		Attribute<String> sessionStringAttribute = ctx.attr(key);
 		SessionAgent sessionAgent;
 		if (sessionStringAttribute.get() == null) {
-			sessionAgent = new SessionAgent(this, getRandom());
-			sessionStringAttribute.set(sessionAgent.sub);
-			timeoutCache.put(sessionAgent.sub, sessionAgent, SessionAgentTTL, () -> {
+			sessionAgent = new SessionAgent(this, getRandom(),ctx);
+			sessionAgent.ipAddress = ctx.channel().remoteAddress().toString();
+			logger.info("SessionAgent on " + sessionAgent.ipAddress);
+			sessionStringAttribute.set(sessionAgent.key);
+			timeoutCache.put(sessionAgent.key, sessionAgent, SessionAgentTTL, () -> {
 				ctx.close();
+				unsubscribeAgent(sessionAgent);
 			});
 		} else {
 			sessionAgent = (SessionAgent) this.timeoutCache.get(sessionStringAttribute.get());
 		}
-		assert ctx != null ;
+		assert ctx != null;
+		sessionAgent.byteCount.addAndGet(message.length());
 		sessionAgent.socketMessageQ.run(new CtxWrapper(ctx, message));
 	}
 
@@ -259,6 +271,13 @@ public class Global implements Executor {
 
 	// private static final ThreadLocal<String> latestChannel = new ThreadLocal<String>();
 
+	/**
+	 *  Channels subscribed to come in through here when they come from another server through redis.
+	 *  Local publish messages short circuit redis. 
+	 * 
+	 * @author awootton
+	 *
+	 */
 	private class LocalSubscriberHandler implements PubSub.Handler {
 
 		@Override
@@ -285,7 +304,7 @@ public class Global implements Executor {
 
 					for (Agent agent : agents) {
 						// give them the message
-						agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
+						agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
 					}
 
 				} catch (JsonProcessingException e) {
@@ -300,18 +319,19 @@ public class Global implements Executor {
 
 	/**
 	 * This was a lambda but it's used in several places here. Both in the receiver of redis (LocalSubscriberHandler
-	 * above) and also in the publish.
+	 * above) and also in the two publish methods.
 	 * 
 	 * @author awootton
 	 *
 	 */
-	private static class ChannelSunscriberWrapper implements Runnable {
+	@JsonIgnoreType // never serialize this 
+	private static class ChannelSubscriberWrapper implements Runnable {
 
 		String channel;
 		Agent agent;
 		Runnable runme;
 
-		public ChannelSunscriberWrapper(String channel, Agent agent, Runnable runme) {
+		public ChannelSubscriberWrapper(String channel, Agent agent, Runnable runme) {
 			super();
 			this.channel = channel;
 			this.agent = agent;
@@ -338,7 +358,7 @@ public class Global implements Executor {
 		// MAPPER.setVisibility(PropertyAccessor.ALL, Visibility.NONE);
 		MAPPER.setVisibility(PropertyAccessor.GETTER, Visibility.NONE);
 		MAPPER.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
-		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@Class");
+		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@C");
 	}
 	private static final ObjectMapper plain_mapper = new ObjectMapper();
 
@@ -356,7 +376,7 @@ public class Global implements Executor {
 	}
 
 	/**
-	 * Note that the @Class key will NOT be missing !
+	 * Note that the @C key will NOT be missing !
 	 * 
 	 * @param message
 	 * @return
@@ -365,11 +385,12 @@ public class Global implements Executor {
 	public static ObjectNode serialize2node(Object message) throws IOException {
 		Object obj = plain_mapper.valueToTree(message);
 		ObjectNode node = (ObjectNode) obj;
-		node.put("@Class", message.getClass().getName());
+		node.put("@C", message.getClass().getName());
 		return (ObjectNode) obj;
 	}
 
-	/** Only never called by SessionAgent ?
+	/**
+	 * Only never called by SessionAgent ?
 	 * 
 	 * @param message
 	 */
@@ -400,7 +421,7 @@ public class Global implements Executor {
 				Set<Agent> agents = session2channel.thing2items_get(channel);
 				for (Agent agent : agents) {
 					// give them the message
-					agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
+					agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
 				}
 
 			} catch (JsonProcessingException e) {
@@ -440,7 +461,7 @@ public class Global implements Executor {
 			Set<Agent> agents = session2channel.thing2items_get(channel);
 			for (Agent agent : agents) {
 				// give them the message
-				agent.messageQ.run(new ChannelSunscriberWrapper(channel, agent, runme));
+				agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
 			}
 			ec.subscribedChannel = Optional.empty();
 		});
@@ -466,6 +487,17 @@ public class Global implements Executor {
 		Set<Agent> agents = session2channel.thing2items_get(channel);
 		if (agents.isEmpty()) {
 			redisPubSub.unsubcribe(channel);
+		}
+	}
+
+	public void unsubscribeAgent(Agent agent) {
+		Set<String> channels = session2channel.item2things_get(agent);
+		session2channel.removeItem(agent);
+		for (String channel : channels) {
+			Set<Agent> agents = session2channel.thing2items_get(channel);
+			if (agents.isEmpty()) {
+				redisPubSub.unsubcribe(channel);
+			}
 		}
 	}
 

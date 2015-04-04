@@ -138,13 +138,13 @@ public class WsLoggingHandler extends ChannelDuplexHandler {
 //		logger.debug(format(ctx," READ ") );
 //		super.read(ctx);
 //	}
-
-	@Override
-	public void write(ChannelHandlerContext ctx, Object msg,
-			ChannelPromise promise) throws Exception {
-		logger.debug( "WRITE" +  msg);
-		ctx.write(msg, promise);
-	}
+//
+//	@Override
+//	public void write(ChannelHandlerContext ctx, Object msg,
+//			ChannelPromise promise) throws Exception {
+//		logger.debug( "WRITE ? " +  msg);
+//		ctx.write(msg, promise);
+//	}
 
 	@Override
 	public void flush(ChannelHandlerContext ctx) throws Exception {

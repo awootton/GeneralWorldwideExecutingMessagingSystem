@@ -5,6 +5,11 @@ import org.messageweb.ExecutionContext;
 import org.messageweb.Global;
 import org.messageweb.agents.Agent;
 
+/** Used in a demo in the test folder
+ * 
+ * @author awootton
+ *
+ */
 public class AgentEcho implements Runnable {
 
 	public static Logger logger = Logger.getLogger(AgentEcho.class);
@@ -33,7 +38,7 @@ public class AgentEcho implements Runnable {
 		String incoming = ec.subscribedChannel.get();
 
 		if (logger.isTraceEnabled())
-			logger.trace("found agent. does " + incoming + " == " + agent.sub + " ?  with agent=" + agent);
+			logger.trace("found agent. does " + incoming + " == " + agent.key + " ?  with agent=" + agent);
 
 		reply.agentInfo = "" + agent;
 		reply.globalInfo = global.id;

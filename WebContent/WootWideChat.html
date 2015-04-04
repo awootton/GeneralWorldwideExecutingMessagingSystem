@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>WootWideChat GWEMS client demo.</title>
+
+<script src="http://code.jquery.com/jquery.min.js"></script>
+<script src="js/GWEMS.js" type="text/javascript"></script>
+
+<script>
+	// Open a websocket. 
+	var sock = new GWEMS.WebSocketClient("localhost", 8081, "/");
+
+	var handleIncomingMessage = function(string) {
+		console.log(string);
+		$("#log").prepend("" + string + "<br>");
+	}
+
+	sock.handleMessage = handleIncomingMessage;
+
+	sock.handleOpen = function(event) {
+		$("#status").text("*");
+		// send a subscribe message as a test 
+		var msg = '{"@C":"org.messageweb.messages.Subscribe","channel":"#TimeEveryTenSeconds"}';
+		sock.send(msg);
+		if (restartTimer) {
+			//clearInterval(restartTimer);
+		}
+		restartTimer = undefined;
+	}
+	var restartTimer = undefined;
+	sock.handleClose = function(event) {
+		$("#status").text("Oh crap. The server went down.");
+// 		restartTimer = setInterval(function() {
+// 			sock.start();
+// 		}, 10 * 1000);
+	}
+
+	sock.start();
+
+	// start a timer to keep the socket alive 60 sec
+	var timer = setInterval(function() {
+		if (restartTimer == undefined) {
+			sock.send('{"@C":"Live"}');
+		}
+	}, 10 * 1000);
+</script>
+
+</head>
+<body>
+
+	<div></div>
+	<textarea placeholder="msg here" id="message"></textarea>
+	<input type="submit" id="send" value="send" />
+	<div id="status">Down</div>
+	<div id="log"></div>
+
+	<script>
+		$("#status").css('position', 'absolute');
+		$("#status").css('bottom', '10px');
+		$("#status").css('right', '100px');
+		$("#status").css('zIndex', '100');
+	</script>
+
+</body>
+</html>

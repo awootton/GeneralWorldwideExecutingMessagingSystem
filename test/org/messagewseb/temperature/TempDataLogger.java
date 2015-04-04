@@ -21,6 +21,12 @@ import org.messageweb.util.TimeoutCache;
 import org.messagewseb.Ping;
 import org.messagewseb.common.core.StartServers;
 
+
+/** so like totally wip that it's actually crap that needs to be flushed.
+ * 
+ * @author awootton
+ *
+ */
 public class TempDataLogger extends StartServers {
 
 	/**

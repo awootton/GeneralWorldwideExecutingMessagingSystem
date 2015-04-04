@@ -2,6 +2,11 @@ package org.messageweb.messages;
 
 import org.messageweb.dynamo.AtwTableBase;
 
+/** if this is crap them remove it,
+ * 
+ * @author awootton
+ *
+ */
 public class EnsureAgent implements Runnable{
 
 	AtwTableBase key;

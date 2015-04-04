@@ -33,24 +33,23 @@ public abstract class Agent implements Comparable<Agent> {
 	@JsonIgnore
 	public AgentRunnablesQueue messageQ = null;
 
-	public String sub = "";// aka the subscription channel
-//	public String pub = "";// aka the publish channel
+	public String key = "";// aka the  ?, is unique
 
 	public Agent(String key) {
-		sub = key;
+		this.key = key;
 //		byte[] bytes = Global.getContext().sha256.digest((sub + "publish").getBytes());
 //		String publishchannel = Base64.getEncoder().encodeToString(bytes);
 //		pub = publishchannel;
 	}
 
-	@DynamoDBHashKey(attributeName = "sub")
-	public String getSub() {
-		return sub;
-	}
-
-	public void setSub(String sub) {
-		this.sub = sub;
-	}
+//	@DynamoDBHashKey(attributeName = "sub")
+//	public String getSub() {
+//		return sub;
+//	}
+//
+//	public void setSub(String sub) {
+//		this.sub = sub;
+//	}
 
 //	@DynamoDBHashKey(attributeName = "sub")
 //	public String getPub() {
@@ -76,7 +75,7 @@ public abstract class Agent implements Comparable<Agent> {
 
 	@Override
 	public int compareTo(Agent o) {
-		return sub.compareTo(o.sub);
+		return key.compareTo(o.key);
 	}
 
 	/**
