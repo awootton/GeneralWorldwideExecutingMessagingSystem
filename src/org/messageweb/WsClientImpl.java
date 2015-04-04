@@ -249,6 +249,8 @@ public final class WsClientImpl {
 	/**
 	 * Incoming messages to this client, or incoming in general, come directly through here.
 	 * 
+	 * try typing this into command prompt: {"@Class":"org.messageweb.messages.PingEcho","key":"someRandomKeyToDoTricksWith"}
+	 * 
 	 * @param ctx
 	 * @param child
 	 */
@@ -263,11 +265,11 @@ public final class WsClientImpl {
 				child = Global.deserialize(message);
 				child.run();
 			} catch (JsonParseException e) {
-				logger.error("bad message", e);
+				logger.error("bad message:"+message, e);
 			} catch (JsonMappingException e) {
-				logger.error("bad message", e);
+				logger.error("bad message:"+message, e);
 			} catch (IOException e) {
-				logger.error("bad message", e);
+				logger.error("bad message:"+message, e);
 			}
 			myClientContext.set(null);
 			myClient.set(null);

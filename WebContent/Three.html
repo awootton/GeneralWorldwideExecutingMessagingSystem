@@ -17,20 +17,33 @@ canvas {
 </head>
 <body>
 
-	<div>Hello World Atw</div>
-	
+	<div></div>
+	<textarea placeholder="msg here" id="message"></textarea>
+	<input type="submit" id="send" value="send" />
+
+	<script src="http://code.jquery.com/jquery.min.js"></script>
 	<script src="js/three.js"></script>
 	<script src="js/libs/controls/OrbitControls.js" type="text/javascript"></script>
-	<script src="js/libs/controls/AtwNoMouseFirstPersonControls.js" type="text/javascript"></script>
+	<script src="js/libs/controls/AtwNoMouseFirstPersonControls.js"
+		type="text/javascript"></script>
 	<script src="js/js/atw_stats.js" type="text/javascript"></script>
 
 	<script src="js/QuadSpaces.js" type="text/javascript"></script>
+	<script src="js/GWEMS.js" type="text/javascript"></script>
 
 	<script>
+		$("#send").click(function(event) {
+			event.preventDefault();
+			var msg = $("#message").val();
+			sock.send(msg);
+		});
 
-		var v = new THREE.Vector3( 1, 2, 3 );
+		var sock = new GWEMS.WebSocketClient("localhost", 8081, "/");
+		sock.start();
 
-		var strList = QuadSpaces.decompose(v,0);
+		var v = new THREE.Vector3(1, 2, 3);
+
+		var strList = QuadSpaces.decompose(v, 0);
 
 		console.log(QuadSpaces.listToString(strList));
 
@@ -106,19 +119,19 @@ canvas {
 			renderer.render(scene, camera);
 			controls.update();// needs delta
 			drivecontrols.update(clock.getDelta());// needs delta
-			
+
 			// we need to pin cube.y-0.5 to terrain todo	
-			
+
 			controls.target = cube.position;
-			
+
 			var str = "x=" + camera.position.x + "<br>";
 			str += "y=" + camera.position.y + "<br>";
 			str += "z=" + camera.position.z;
 
-			var strList = QuadSpaces.decompose(camera.position,0);
-			
-			var strList6 = QuadSpaces.decompose(camera.position,6);
-			
+			var strList = QuadSpaces.decompose(camera.position, 0);
+
+			var strList6 = QuadSpaces.decompose(camera.position, 6);
+
 			stats.update(strList + "<br>" + strList6);//str);
 		};
 

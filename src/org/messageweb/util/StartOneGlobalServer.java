@@ -4,10 +4,10 @@ import org.apache.log4j.Logger;
 import org.messageweb.ClusterState;
 import org.messageweb.Global;
 
-public class RunServersLocal {
+public class StartOneGlobalServer {
 
 	@SuppressWarnings("unused")
-	private static Logger logger = Logger.getLogger(RunServersLocal.class);
+	private static Logger logger = Logger.getLogger(StartOneGlobalServer.class);
 
 	public static boolean running = true;
 

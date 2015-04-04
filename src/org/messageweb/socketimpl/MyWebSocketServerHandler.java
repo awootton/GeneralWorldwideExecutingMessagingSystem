@@ -107,7 +107,8 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 		// Check for closing frame
 		if (frame instanceof CloseWebSocketFrame) {
 			// can we just do this here, or do we need to call global?
-			Attribute<String> sessionStringAttribute = ctx.attr(AttributeKey.<String> newInstance("session"));
+			AttributeKey<String> key =  AttributeKey.<String> valueOf("session");
+			Attribute<String> sessionStringAttribute = ctx.attr(key);
 			if (sessionStringAttribute.get() == null) {
 				 // wtf? 
 				logger.error("Why are we closing a socket with no sessionAgent?");

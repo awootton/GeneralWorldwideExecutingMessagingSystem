@@ -311,7 +311,8 @@ THREE.AtwNoMouseFirstPersonControls = function(object, domElement) {
 
 		return function() {
 
-			fn.apply(scope, arguments);
+			if ( fn )
+				fn.apply(scope, arguments);
 
 		};
 

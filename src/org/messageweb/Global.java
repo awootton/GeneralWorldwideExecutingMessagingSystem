@@ -177,8 +177,8 @@ public class Global implements Executor {
 		if (logger.isTraceEnabled()) {
 			logger.trace("Sending message to execute on CtxWrapper with " + message);
 		}
-
-		Attribute<String> sessionStringAttribute = ctx.attr(AttributeKey.<String> newInstance("session"));
+		AttributeKey<String> key = AttributeKey.<String> valueOf("session");
+		Attribute<String> sessionStringAttribute = ctx.attr(key);
 		SessionAgent sessionAgent;
 		if (sessionStringAttribute.get() == null) {
 			sessionAgent = new SessionAgent(this, getRandom());
@@ -369,11 +369,11 @@ public class Global implements Executor {
 		return (ObjectNode) obj;
 	}
 
-	/** Only ever called by SessionAgent ?
+	/** Only never called by SessionAgent ?
 	 * 
 	 * @param message
 	 */
-	static public void reply(Runnable message) {
+	static public void XXreply(Runnable message) {
 		ChannelHandlerContext ctx = context.get().ctx.get();
 		try {
 			String sendme = Global.serialize(message);

@@ -22,6 +22,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  */
 // Send this:
 // {"@Class":"org.messageweb.messages.PingEcho"}
+//
+//  {"@Class":"org.messageweb.messages.PingEcho","key":"someRandomKeyToDoTricksWith"}
+//
 // on a socket.
 
 @JsonAutoDetect
@@ -31,6 +34,9 @@ public class PingEcho implements Runnable {
 
 	@JsonProperty
 	private String key = "someRandomKeyToDoTricksWith";
+
+	@JsonProperty
+	private String info = "none";
 
 	@Override
 	public void run() {
@@ -54,7 +60,8 @@ public class PingEcho implements Runnable {
 			return;
 		}
 		ChannelHandlerContext ctx = Global.getCtx().get();
-		logger.info("PingEcho running -- have ctx name = " + ctx.name());
+		logger.info("PingEcho running on server -- have ctx name = " + ctx.name());
+		this.info = "from server:" + Global.getGlobal().id;
 		try {
 			String sendme = Global.serialize(this);
 			ctx.channel().writeAndFlush(new TextWebSocketFrame(sendme));

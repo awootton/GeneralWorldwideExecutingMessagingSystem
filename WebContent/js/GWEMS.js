@@ -10,31 +10,37 @@ GWEMS.WebSocketClient = function(host, port, uri) {
 
 	this.host = host;
 	this.port = port;
-	this.host = uri;
-
-	this.socket = null;
+	this.uri = uri;
 };
 
-GWEMS.WebSocketClient.protype = {
+GWEMS.WebSocketClient.prototype = {
 
-	start : function(host, port, uri) {
+	constructor : GWEMS.WebSocketClient,
 
-		socket = new WebSocket("ws://" + host + ":" + port + uri);
+	socket:{},
+
+	start : function() {
+
+		 socket = new WebSocket("ws://" + this.host + ":" + this.port + this.uri);
 
 		socket.onmessage = function(event) {
-			this.handleMessage(event);
+			GWEMS.WebSocketClient.prototype.handleMessage(event);
 		};
 		socket.onerror = function(event) {
-			this.handleError(event);
+			GWEMS.WebSocketClient.prototype.handleError(event);
 		};
 		socket.onclose = function(event) {
-			this.handleClose(event);
+			GWEMS.WebSocketClient.prototype.handleClose(event);
 		};
 		socket.onopen = function(event) {
-			this.handleOpen(event);
+			GWEMS.WebSocketClient.prototype.handleOpen(event);
 		};
 	},
 
+	send : function ( string ){
+		socket.send(string);
+	} 
+,
 	handleMessage : function(event) {
 		console.log(event.data);
 	},
@@ -42,10 +48,10 @@ GWEMS.WebSocketClient.protype = {
 		console.log(event.data);
 	},
 	handleOpen : function(event) {
-		console.log(event.data);
+		console.log("Have Open " + event);
 	},
 	handleClose : function(event) {
-		console.log(event.data);
+		console.log("Socket closed " + event);
 	}
 
 };
