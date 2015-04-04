@@ -5,9 +5,9 @@ import java.util.List;
 import javax.vecmath.Vector3d;
 import javax.websocket.EncodeException;
 
+import org.gwems.util.QuadSpaces;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.util.QuadSpaces;
 
 public class QuadSpacesMathTest {
 	

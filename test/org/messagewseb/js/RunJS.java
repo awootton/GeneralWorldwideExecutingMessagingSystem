@@ -7,6 +7,9 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+
+// This is just experimental crap
+
 public class RunJS {
 	
 	static String baseDir = "WebContent/";

@@ -3,19 +3,19 @@ package org.messagewseb;
 import java.io.IOException;
 
 import org.apache.log4j.Level;
+import org.gwems.agents.SessionAgent;
+import org.gwems.agents.SimpleAgent;
+import org.gwems.servers.Global;
+import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.impl.MyWebSocketClientHandler;
+import org.gwems.util.TimeoutCache;
 import org.junit.Test;
-import org.messageweb.Global;
-import org.messageweb.WsClientImpl;
-import org.messageweb.agents.SessionAgent;
-import org.messageweb.agents.SimpleAgent;
 import org.messageweb.experiments.AgentFinder;
-import org.messageweb.impl.MyWebSocketClientHandler;
-import org.messageweb.messages.AgentEcho;
-import org.messageweb.messages.LogonMessage;
-import org.messageweb.messages.PingEcho;
 import org.messageweb.socketimpl.MyWebSocketServer;
 import org.messageweb.socketimpl.MyWebSocketServerHandler;
-import org.messageweb.util.TimeoutCache;
+import org.messageweb.testmessages.AgentEcho;
+import org.messageweb.testmessages.LogonMessage;
+import org.messageweb.testmessages.PingEcho;
 import org.messagewseb.temperature.TempDataLogger;
 
 public class PingAgent extends TempDataLogger {

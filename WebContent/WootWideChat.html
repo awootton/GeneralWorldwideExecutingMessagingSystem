@@ -21,7 +21,7 @@
 	sock.handleOpen = function(event) {
 		$("#status").text("*");
 		// send a subscribe message as a test 
-		var msg = '{"@C":"org.messageweb.messages.Subscribe","channel":"#TimeEveryTenSeconds"}';
+		var msg = '{"@C":"org.gwems.Subscribe","channel":"#TimeEveryTenSeconds"}';
 		sock.send(msg);
 		if (restartTimer) {
 			//clearInterval(restartTimer);

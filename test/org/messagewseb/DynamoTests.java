@@ -1,8 +1,8 @@
 package org.messagewseb;
 
+import org.gwems.servers.Global;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.Global;
 import org.messageweb.dynamo.AnotherAtwTableItem;
 import org.messageweb.dynamo.LastTimeItem;
 

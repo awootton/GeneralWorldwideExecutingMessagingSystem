@@ -42,7 +42,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.messageweb.Global;
+import org.gwems.servers.Global;
 
 /**
  * A HTTP server which serves Web Socket requests at:

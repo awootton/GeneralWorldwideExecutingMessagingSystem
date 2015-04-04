@@ -31,7 +31,7 @@ import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 
 import org.apache.log4j.Logger;
-import org.messageweb.Global;
+import org.gwems.servers.Global;
 
 public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
 

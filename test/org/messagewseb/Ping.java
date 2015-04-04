@@ -4,14 +4,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.gwems.servers.ClusterState;
+import org.gwems.servers.Global;
+import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.impl.MyWebSocketClientHandler;
+import org.gwems.util.TimeoutCache;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.ClusterState;
-import org.messageweb.Global;
-import org.messageweb.WsClientImpl;
-import org.messageweb.impl.MyWebSocketClientHandler;
-import org.messageweb.messages.PingEcho;
-import org.messageweb.util.TimeoutCache;
+import org.messageweb.testmessages.PingEcho;
 
 /**
  * Try to open up sockets, send a ping, close it all up.

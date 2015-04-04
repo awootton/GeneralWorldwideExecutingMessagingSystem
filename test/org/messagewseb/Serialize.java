@@ -3,10 +3,10 @@ package org.messagewseb;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
+import org.gwems.servers.Global;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.Global;
-import org.messageweb.messages.PingEcho;
+import org.messageweb.testmessages.PingEcho;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

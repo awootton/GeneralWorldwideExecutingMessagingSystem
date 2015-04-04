@@ -3,7 +3,7 @@ package org.messagewseb.temperature;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.messageweb.agents.Agent;
+import org.gwems.agents.Agent;
 
 public class ReceiveTemperatureDateLoggingAgent extends Agent {
 

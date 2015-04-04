@@ -1,9 +1,9 @@
 package org.messageweb.experiments;
 
 import org.apache.log4j.Logger;
-import org.messageweb.Global;
-import org.messageweb.agents.SimpleAgent;
-import org.messageweb.messages.AgentEcho;
+import org.gwems.agents.SimpleAgent;
+import org.gwems.servers.Global;
+import org.messageweb.testmessages.AgentEcho;
 
 /**
  * Start up a subscription, send a quick ping that will collect the existence of an agent somewhere in the network, and

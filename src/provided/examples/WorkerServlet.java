@@ -13,8 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.messageweb.ClusterState;
-import org.messageweb.Global;
+import org.gwems.servers.ClusterState;
+import org.gwems.servers.Global;
 import org.messageweb.dynamo.LastTimeItem;
 
 import com.amazonaws.auth.AWSCredentialsProviderChain;

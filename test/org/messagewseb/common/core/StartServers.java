@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Level;
+import org.gwems.servers.ClusterState;
+import org.gwems.servers.Global;
+import org.gwems.servers.WsClientImpl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.messageweb.ClusterState;
-import org.messageweb.Global;
-import org.messageweb.WsClientImpl;
 
 public class StartServers {
 	

@@ -6,9 +6,9 @@ import java.util.List;
 import javax.script.ScriptException;
 import javax.vecmath.Vector3d;
 
+import org.gwems.util.QuadSpaces;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.util.QuadSpaces;
 import org.messagewseb.common.core.JavaScriptTests;
 
 public class QuadSpacesJStests extends JavaScriptTests {

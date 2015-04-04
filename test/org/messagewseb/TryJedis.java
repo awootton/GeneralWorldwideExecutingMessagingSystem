@@ -1,11 +1,11 @@
 package org.messagewseb;
 
 import org.apache.log4j.Level;
+import org.gwems.servers.impl.JedisRedisPubSubImpl;
+import org.gwems.servers.impl.MyRedisPubSub;
+import org.gwems.util.PubSub;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.impl.JedisRedisPubSubImpl;
-import org.messageweb.impl.MyRedisPubSub;
-import org.messageweb.util.PubSub;
 
 public class TryJedis {
 
