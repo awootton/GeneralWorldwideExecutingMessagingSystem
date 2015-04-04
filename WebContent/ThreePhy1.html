@@ -78,7 +78,7 @@
 		scene.fog = new THREE.FogExp2(0x9999ff, 0.00025);
 
 		var floorTexture = new THREE.ImageUtils.loadTexture(
-				'images/ColoredKnifes.jpg');
+				'images/ColoredKnives.jpg');
 		floorTexture.minFilter = THREE.LinearFilter;
 		//floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
 		//floorTexture.repeat.set(1, 1);
@@ -139,7 +139,7 @@
 		myBox.position.set(8, 12.5, 0);
 		scene.add(myBox);
 	
-		// CONTROLS
+		// CONTROLS 
 		//controls = new THREE.AtwControls( box2, renderer.domElement );
 		
 		controls = new THREE.AtwControls(camera, renderer.domElement, myBox );
