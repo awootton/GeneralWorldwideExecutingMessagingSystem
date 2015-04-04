@@ -3,6 +3,11 @@ package org.messageweb.util;
 import org.messageweb.Global;
 import org.messageweb.agents.SessionAgent;
 
+/** This is only used one place: SessionAgent
+ * 
+ * @author awootton
+ *
+ */
 public class SessionRunnablesQueue  extends RunnablesQueue {
 
 	SessionAgent agent;

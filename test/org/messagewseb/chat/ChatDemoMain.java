@@ -14,7 +14,8 @@ import org.messagewseb.common.core.StartServers;
 
 public class ChatDemoMain extends StartServers {
 
-	/**
+	/** THis is CRAP - fix it or delete it.
+	 * 
 	 * Chat has a board name. A list of users who are online. A list of messages and times.
 	 * 
 	 * There are notices of leaving and entering. Notices of things posted.

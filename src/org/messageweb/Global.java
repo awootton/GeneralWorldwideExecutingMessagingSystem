@@ -189,6 +189,7 @@ public class Global implements Executor {
 		} else {
 			sessionAgent = (SessionAgent) this.timeoutCache.get(sessionStringAttribute.get());
 		}
+		assert ctx != null ;
 		sessionAgent.socketMessageQ.run(new CtxWrapper(ctx, message));
 	}
 

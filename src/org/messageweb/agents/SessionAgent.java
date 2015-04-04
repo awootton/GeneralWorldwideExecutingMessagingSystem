@@ -51,9 +51,11 @@ public class SessionAgent extends Agent {
 	// I even know that we would ever serialize this.
 	@DynamoDBIgnore
 	@JsonIgnore
-	public SessionRunnablesQueue socketMessageQ = null;
-	
+	public final SessionRunnablesQueue socketMessageQ;
+
 	public ChannelHandlerContext ctx;
+	
+	public final Global global;
 
 	/**
 	 * The subscribe channel (which is never used here because it doesn't make sense to publish from a session) is also
@@ -64,29 +66,18 @@ public class SessionAgent extends Agent {
 	 */
 	public SessionAgent(Global global, String sub) {
 		super(sub);
+		this.global = global;
 		messageQ = new AgentRunnablesQueue(global, this);
 		socketMessageQ = new SessionRunnablesQueue(global, this);
 	}
 
 	public void runSocketMessage(Runnable message) {
 		synchronized (this) {
-			ExecutionContext ec = Global.getContext();
-			Global global = ec.global;
-			// these should be the same:
-			assert global == socketMessageQ.getGlobal() : "must match";
-			assert global == messageQ.getGlobal() : "must match";
-			ec.agent = Optional.of(this);
-			// we have to remember this for when the replies come back from
-			// subscriptions. It's flakey and it worries me because I'm not 100%
-			// sure that the socket won't change or something.
-			this.ctx = ec.ctx.get();
-
 			long current = System.currentTimeMillis();
 			if (current > next10sec) {
 				next10sec = current + 10 * 1000;
 				global.timeoutCache.setTtl(this.sub, Util.twoMinutes);
 			}
-
 			if (validated) {
 				message.run();
 			} else {
@@ -106,11 +97,11 @@ public class SessionAgent extends Agent {
 
 			ExecutionContext ec = Global.getContext();
 			Global global = ec.global;
-			assert  global == socketMessageQ.getGlobal() : "should match";
-			assert  global == messageQ.getGlobal(): "should match";
+			assert global == socketMessageQ.getGlobal() : "should match";
+			assert global == messageQ.getGlobal() : "should match";
 			ec.agent = Optional.of(this);
 			// Note that there is no ctx here.
-			assert  !ec.ctx.isPresent() : "There is no socket context for message subscriptions";
+			assert !ec.ctx.isPresent() : "There is no socket context for message subscriptions";
 
 			// can't we always just forward them to the client?
 			// do we need to look at them?

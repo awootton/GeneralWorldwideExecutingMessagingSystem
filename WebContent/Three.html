@@ -20,7 +20,21 @@ canvas {
 	<script src="js/libs/controls/OrbitControls.js" type="text/javascript"></script>
 	<script src="js/libs/controls/AtwNoMouseFirstPersonControls.js" type="text/javascript"></script>
 	<script src="js/js/atw_stats.js" type="text/javascript"></script>
+
+	<script src="js/QuadSpaces.js" type="text/javascript"></script>
+
 	<script>
+
+		var v = new THREE.Vector3( 1, 2, 3 );
+
+		var strList = QuadSpaces.decompose(v,0);
+
+		console.log(QuadSpaces.listToString(strList));
+
+		var vect2 = QuadSpaces.getMinCorner(strList[0]);
+
+		var vect3 = QuadSpaces.reconstitute(strList);
+
 		var clock = new THREE.Clock();
 
 		var scene = new THREE.Scene();

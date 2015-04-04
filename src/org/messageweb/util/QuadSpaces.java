@@ -10,7 +10,7 @@ import javax.websocket.EncodeException;
 
 import org.junit.Assert;
 
-public class LodMath {
+public class QuadSpaces {
 
 	/**
 	 * Some math test's I'm going to have to write in js. I'm just making notes here. The GWEMS is not likely to have
@@ -64,6 +64,15 @@ public class LodMath {
 		return new Pair<Vector3d, Vector3d>(vmin, vmax);
 	}
 
+	/** Return the vector of the corner of the cube described by s
+	 * where is is of the form x_y_x_p and x, y, and z MUST be between -2 and 1
+	 * and p MUST be an even number. 
+	 * p is a power of 2
+	 * 
+	 * @param s
+	 * @return
+	 * @throws EncodeException
+	 */
 	public static Vector3d getMinCorner(String s) throws EncodeException {
 		String[] parts = s.split("_");
 		Vector3d vmin;
@@ -89,12 +98,14 @@ public class LodMath {
 		vmin.scale(power);
 		return vmin;
 	}
-	
-	/**
-	 * @throws EncodeException  
+
+	/** The complete opposite of decompose. 
+	 * A list of quadspaces can be added to recover a vector in 3 space. 
+	 * 
+	 * @throws EncodeException
 	 * 
 	 */
-	public static Vector3d reconstitute( List<String> quadspaces ) throws EncodeException{
+	public static Vector3d reconstitute(List<String> quadspaces) throws EncodeException {
 		Vector3d sum = new Vector3d();
 		for (String string : quadspaces) {
 			sum.add(getMinCorner(string));
@@ -106,18 +117,18 @@ public class LodMath {
 	 * Return a list of quads, low quads first, that contain this vector. large quads that start with 0_0_0 are
 	 * suppressed.
 	 * 
-	 * fractional quads, less than 1 meter, are left out unless bias is < 0 bias must be even! It's a power of 2.
+	 * fractional quads, less than 1 meter, are left out unless bias is < 0. Bias must be even! It's a power of 2. We
 	 * 
 	 * @param v
 	 * @return
 	 */
 	public static List<String> decompose(Vector3d v, int bias) {
-		List<String> list = new ArrayList<>();
-		double power = Math.scalb(1, bias);
-		v.scale(power);
-		long x = (long) v.x;
-		long y = (long) v.y;
-		long z = (long) v.z;
+		assert ((bias & 1) == 0) : "bias must be even";
+		List<String> result = new ArrayList<>();
+		double power = Math.scalb(1, -bias);
+		long x = (long) (v.x * power);
+		long y = (long) (v.y * power);
+		long z = (long) (v.z * power);
 		int p = bias;
 		int i1, i2, i3;
 		while (true) {
@@ -136,13 +147,14 @@ public class LodMath {
 			y >>= 2;
 			z >>= 2;
 			p += 2;
-			list.add(s);
-
+			// we could suppress zero fraction parts here
+			// if ( s.startsWith("0_0_0_"))
+			result.add(s);
 			if (x == 0 && y == 0 && z == 0) {
 				break;
 			}
 		}
-		return list;
+		return result;
 	}
 
 	public static void main(String[] args) throws EncodeException {
@@ -150,54 +162,53 @@ public class LodMath {
 		List<String> list;
 
 		list = decompose(new Vector3d(0, 0, 0), 0);
-		Assert.assertEquals("[0_0_0_0]","" + list );
+		Assert.assertEquals("[0_0_0_0]", "" + list);
 
 		list = decompose(new Vector3d(1, 1, 1), 0);
-		Assert.assertEquals("[1_1_1_0]","" + list ) ;
+		Assert.assertEquals("[1_1_1_0]", "" + list);
 
 		// note that it's forward 4 and back 2
 		list = decompose(new Vector3d(2, 2, 2), 0);
-		Assert.assertEquals("[-2_-2_-2_0, 1_1_1_2]","" + list );
+		Assert.assertEquals("[-2_-2_-2_0, 1_1_1_2]", "" + list);
 
 		// note that it's forward 4 and back 1
 		list = decompose(new Vector3d(3, 3, 3), 0);
-		Assert.assertEquals("[-1_-1_-1_0, 1_1_1_2]","" + list );
+		Assert.assertEquals("[-1_-1_-1_0, 1_1_1_2]", "" + list);
 
 		// forwrd 4 back 0
 		list = decompose(new Vector3d(4, 4, 4), 0);
-		Assert.assertEquals( "[0_0_0_0, 1_1_1_2]","" + list );
+		Assert.assertEquals("[0_0_0_0, 1_1_1_2]", "" + list);
 
 		list = decompose(new Vector3d(-1, -1, -1), 0);
-		Assert.assertEquals("[-1_-1_-1_0]","" + list );
-		
+		Assert.assertEquals("[-1_-1_-1_0]", "" + list);
+
 		list = decompose(new Vector3d(-4, -5, -6), 0);
-		Assert.assertEquals("[0_-1_-2_0, -1_-1_-1_2]", "" + list );
-		
+		Assert.assertEquals("[0_-1_-2_0, -1_-1_-1_2]", "" + list);
+
 		list = decompose(new Vector3d(-44, 123456, 11), 0);
-		Assert.assertEquals("[0_0_-1_0, 1_0_-1_2, 1_0_1_4, -1_1_0_6, 0_-2_0_8, 0_1_0_10, 0_-2_0_12, 0_0_0_14, 0_-2_0_16, 0_1_0_18]", "" + list );
+		Assert.assertEquals("[0_0_-1_0, 1_0_-1_2, 1_0_1_4, -1_1_0_6, 0_-2_0_8, 0_1_0_10, 0_-2_0_12, 0_0_0_14, 0_-2_0_16, 0_1_0_18]", "" + list);
 
 		// the reverse should add up
 		Vector3d input = new Vector3d(-44, 123456, 11);
 		list = decompose(input, 0);
 		Vector3d re = reconstitute(list);
-		
-		
-		
-		Vector3d sum = new Vector3d();
-		for (String string : list) {
-			sum.add(getMinCorner(string));
-		}
-		System.out.println(sum);
-		
-		System.out.println();
-		System.out.println();
-		for (String string : list) {
-			System.out.println(getMinCorner(string));
-		}
+		Assert.assertEquals(re, input);
+
+		// try fractions
+
+		// it rounds
+		list = decompose(new Vector3d(0, 0.25, 0), 0);
+		Assert.assertEquals("[0_0_0_0]", "" + list);
+
+		input = new Vector3d(-44 / 256.0, 123456 / 256.0, 11 / 256.0);
+		// unless we put the rounding level down 2^-12
+		list = decompose(input, -12);
+		re = reconstitute(list);
+		Assert.assertEquals(re, input);
 
 		System.out.println(getMinMax("0_0_0_0"));
 
-		System.out.println(getMinMax("0_0_0_0"));
+		System.out.println(getMinMax("1_1_0_0"));
 		System.out.println(getMinMax("0_0_0_2"));
 
 		System.out.println(getMinMax("-2_-2_-2_2"));
