@@ -16,6 +16,9 @@ canvas {
 
 </head>
 <body>
+
+	<div>Hello World Atw</div>
+	
 	<script src="js/three.js"></script>
 	<script src="js/libs/controls/OrbitControls.js" type="text/javascript"></script>
 	<script src="js/libs/controls/AtwNoMouseFirstPersonControls.js" type="text/javascript"></script>
@@ -111,11 +114,17 @@ canvas {
 			var str = "x=" + camera.position.x + "<br>";
 			str += "y=" + camera.position.y + "<br>";
 			str += "z=" + camera.position.z;
-			stats.update(str);
+
+			var strList = QuadSpaces.decompose(camera.position,0);
+			
+			var strList6 = QuadSpaces.decompose(camera.position,6);
+			
+			stats.update(strList + "<br>" + strList6);//str);
 		};
 
 		render();
 	</script>
+
 </body>
 </html>
 
