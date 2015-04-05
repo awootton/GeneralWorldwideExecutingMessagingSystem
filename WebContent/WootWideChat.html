@@ -4,38 +4,69 @@
 <meta charset="UTF-8">
 <title>WootWideChat GWEMS client demo.</title>
 
-<script src="http://code.jquery.com/jquery.min.js"></script>
-<script src="js/GWEMS.js" type="text/javascript"></script>
+<!--  Help! I have no style and no class.
+<style>
+.top_block {
+	width: 100%;
+	display: block;
+}
+
+.Top {
+	width: 100%;
+	height: 159px;
+	background-color: #9999ff;
+}
+
+.Bottom {
+	width: 100%;
+	height: 435px;
+	background-color: #9999ff;
+}
+
+.TextArea {
+	width: 100%;
+	height: 100%;
+	background-color: #FFFFFF;
+}
+</style>
+ -->
+<script src="js/jquery-1.11.2.min.js"></script>
+<script src="js/GWEMS.js"></script>
+<script src="js/WootWideChat.js"></script>
 
 <script>
+	var ourTopics = {// To start with
+		'TimeEveryMinute' : 'TimeEveryMinute'
+	};
+
 	// Open a websocket. 
-	var sock = new GWEMS.WebSocketClient("localhost", 8081, "/");
+	var sock = new GWEMS.WebSocketClient(location.hostname, 8081, "/");
 
 	var handleIncomingMessage = function(string) {
-		console.log(string);
-		$("#log").prepend("" + string + "<br>");
+		// show it.
+		var obj = JSON.parse(string);
+		var s = "<span>" + obj.from.substring(4) + " -- " + obj.msg + "<br>";
+		$("#log").prepend(s);
 	}
 
 	sock.handleMessage = handleIncomingMessage;
 
 	sock.handleOpen = function(event) {
 		$("#status").text("*");
-		// send a subscribe message as a test 
-		var msg = '{"@C":"org.gwems.Subscribe","channel":"#TimeEveryTenSeconds"}';
+		var msg = '{"@C":"org.gwems.Subscribe","channel":"#TimeEveryMinute"}';
 		sock.send(msg);
 		if (restartTimer) {
-			//clearInterval(restartTimer);
+			clearInterval(restartTimer);
 		}
 		restartTimer = undefined;
 	}
 	var restartTimer = undefined;
 	sock.handleClose = function(event) {
-		$("#status").text("Oh crap. The server went down.");
-// 		restartTimer = setInterval(function() {
-// 			sock.start();
-// 		}, 10 * 1000);
-	}
-
+		$("#status").text("Oh crap. The server went down. Reload!");
+		// If I restart and the server is down for a long time it locks up. Why? 
+		/* 		restartTimer = setInterval(function() {
+		 sock.start();
+		 }, 10 * 1000);  */}
 	sock.start();
 
 	// start a timer to keep the socket alive 60 sec
@@ -43,24 +74,121 @@
 		if (restartTimer == undefined) {
 			sock.send('{"@C":"Live"}');
 		}
-	}, 10 * 1000);
+	}, 60 * 1000);
+
+	var subscribe = function(aMap) {
+		for (key in aMap) {
+			var msg = '{"@C":"org.gwems.Subscribe","channel":"#' + key + '"}';
+			sock.send(msg);
+		}
+	};
+	var unsubscribe = function(aMap) {
+		for (key in aMap) {
+			var msg = '{"@C":"org.gwems.Unsubscribe","channel":"#' + key + '"}';
+			sock.send(msg);
+		}
+	};
+
+	var handleSubTags = function(str) {
+		var after = wwc.extractTags($('#subscriptionList').val());
+		var str = wwc.toTags(after);
+		var before = ourTopics;
+		$('#subHints').text('subscribed to ' + str);
+
+		var added = wwc.addedToMap(before, after);
+		var removed = wwc.removedFromMap(before, after);
+		if (Object.keys(added).length) {
+			$("#log").prepend('subscribed to ' + wwc.toTags(added) + '<br>');
+			subscribe(added);
+		}
+		if (Object.keys(removed).length) {
+			$("#log").prepend('unsubscribed from ' + wwc.toTags(removed) + '<br>');
+			unsubscribe(removed);
+		}
+		ourTopics = after;
+	}
+
+	var handleSendText = function(str) {
+		// add the 'always' list
+		if (str.length < 1)
+			return;
+		var theAlwaysTags = $('#setList').val();
+		var tagMap = wwc.extractTags(str + theAlwaysTags);
+		if (Object.keys(tagMap).length) {
+			var safe = str.replace('"', '\\"');
+			for (key in tagMap) {
+				var s = '{"@C":"org.gwems.Publish","channel":"#' + key
+						+ '","msg":{"@C":"org.gwems.Push2Client","msg":"' + safe + '"}}';
+				console.log("publishing " + s);
+				sock.send(s);
+			}
+		} else {
+			$('#sendHints').text('There were no #tags. Nothing happened');
+		}
+	}
+
+	$(document).ready(function() {
+
+		$('#subscribe').click(function() {
+			handleSubTags($('#subscriptionList').val());
+		});
+
+		$('#subscriptionList').keypress(function(event) {
+			console.log(event);
+			if (event.keyCode == 13) {
+				handleSubTags($('#subscriptionList').val());
+				return false;
+			}
+			return true;
+		});
+
+		$('#send').click(function() {
+			handleSendText($('#message').val());
+		});
+
+		$('#message').keypress(function(event) {
+			console.log(event);
+			if (event.keyCode == 13) {
+				handleSendText($('#message').val());
+				return false;
+			}
+			return true;
+		});
+
+		$("#status").css('position', 'absolute');
+		$("#status").css('bottom', '10px');
+		$("#status").css('right', '100px');
+		$("#status").css('zIndex', '100');
+
+	});
 </script>
 
 </head>
 <body>
 
-	<div></div>
-	<textarea placeholder="msg here" id="message"></textarea>
-	<input type="submit" id="send" value="send" />
-	<div id="status">Down</div>
-	<div id="log"></div>
+	<div class="content">
+		<div class="Top">
+			<div class="content">
+				<textarea id="setList" style="width: 320px; height: 16px;">Use these tags on every post: #mom</textarea>
+				<br> <input type="button" id="send" value="Send" /> <span
+					id="sendHints">Add #tags to send your message to different
+					topics.</span> <br>
+				<textarea style="width: 320px; height: 75px;"
+					placeholder="message here #mom #TimeEveryTenSeconds" id="message"></textarea>
+			</div>
+		</div>
+		<div class="Bottom">
+			<input type="button" id="subscribe" value="Watch" /> <span
+				id="subHints">Type #tags here to watch topics.</span>
+			<div>
+				<textarea style="width: 320px; height: 75px;" id="subscriptionList">#TimeEveryMinute</textarea>
+				<div>
+					<div class="content" id="log"></div>
+				</div>
+			</div>
 
-	<script>
-		$("#status").css('position', 'absolute');
-		$("#status").css('bottom', '10px');
-		$("#status").css('right', '100px');
-		$("#status").css('zIndex', '100');
-	</script>
-
+			<div id="status">Down</div>
+		</div>
+	</div>
 </body>
 </html>

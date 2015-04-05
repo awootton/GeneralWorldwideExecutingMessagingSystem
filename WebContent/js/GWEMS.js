@@ -32,7 +32,6 @@ GWEMS.WebSocketClient.prototype.start = function() {
 	};
 	this.socket.onmessage = function(event) {
      	var msg = event.data;
-     	console.log(msg);
      	this.GWEMS.handleMessage(msg);
 	}
 };

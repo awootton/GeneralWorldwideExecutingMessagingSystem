@@ -8,17 +8,17 @@ import org.gwems.servers.Global;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
- * Clients send this: {"@C":"org.gwems.Subscribe","channel":"none"} to start a subscription towards
- * their SessionAgent.
+ * Clients send this: {"@C":"org.gwems.Unsubscribe","channel":"none"} to start a subscription towards their
+ * SessionAgent.
  * 
  * There is no reply.
  * 
  * @author awootton
  *
  */
-public class Subscribe implements Runnable {
-	
-	public static Logger logger = Logger.getLogger(Subscribe.class);
+public class Unsubscribe implements Runnable {
+
+	public static Logger logger = Logger.getLogger(Unsubscribe.class);
 
 	public String channel = "none";
 
@@ -28,15 +28,15 @@ public class Subscribe implements Runnable {
 		if (ec.agent.isPresent() && ec.agent.get() instanceof SessionAgent) {
 			SessionAgent session = (SessionAgent) ec.agent.get();
 			if (channel.length() >= 4 && !"none".equals(channel)) {
-				ec.global.subscribe(session, "WWC" + channel.trim());
+				ec.global.unsubscribe(session, "WWC" + channel.trim());
 				if (logger.isDebugEnabled())
-					logger.debug("Session" + session.key + " subscribed to " + channel);
+					logger.debug("Session" + session.key + " unsubscribed to " + channel);
 			}
 		}
 	}
 
 	public static void main(String[] args) throws JsonProcessingException {
-		System.out.println(Global.serialize(new Subscribe()));
+		System.out.println(Global.serialize(new Unsubscribe()));
 	}
 
 }

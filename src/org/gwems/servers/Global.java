@@ -1,7 +1,6 @@
 package org.gwems.servers;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 
@@ -176,7 +175,7 @@ public class Global implements Executor {
 	static final int SessionAgentTTL = Util.twoMinutes;
 
 	/**
-	 * Incoming messages from the WS server, or incoming in general, come directly through here.
+	 * Incoming messages from the WS channel come directly through here.
 	 * 
 	 * @param ctx
 	 * @param child
@@ -246,7 +245,7 @@ public class Global implements Executor {
 
 		@Override
 		public void run() {
-			ExecutionContext ec = context.get();
+		//	ExecutionContext ec = context.get();
 	//		ec.ctx = Optional.of(ctx);
 			try {
 				if (logger.isTraceEnabled()) {
@@ -282,6 +281,9 @@ public class Global implements Executor {
 
 		@Override
 		public void handle(String channel, String str) {
+			if ( logger.isTraceEnabled()){
+				logger.trace("from redis" + str + " on channel " + channel);
+			}
 			// reject the bytes before the '{'
 			// TODO: there's a fancy, optimized, faster, way to do this job.
 			// FIXME: write it. Also, don't slow down this thread.
@@ -301,7 +303,9 @@ public class Global implements Executor {
 					Runnable runme = Global.deserialize(message);
 					// get all the local subscribers
 					Set<Agent> agents = session2channel.thing2items_get(channel);
-
+					if ( logger.isTraceEnabled()){
+						logger.trace("sending2 to " + agents + " on channel " + channel);
+					}
 					for (Agent agent : agents) {
 						// give them the message
 						agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
@@ -320,7 +324,7 @@ public class Global implements Executor {
 	/**
 	 * This was a lambda but it's used in several places here. Both in the receiver of redis (LocalSubscriberHandler
 	 * above) and also in the two publish methods.
-	 * 
+	 * x
 	 * @author awootton
 	 *
 	 */
@@ -343,12 +347,10 @@ public class Global implements Executor {
 
 			ExecutionContext ec = context.get();
 			ec.subscribedChannel = Optional.of(channel);
-			// System.out.println(" ######### SEtting context for " + channel);
 			ec.agent = Optional.of(agent);
 			runme.run();
 			ec.subscribedChannel = Optional.empty();
 			ec.agent = Optional.empty();
-
 		}
 	}
 
@@ -373,6 +375,10 @@ public class Global implements Executor {
 
 	public static String serializePretty(Object message) throws JsonProcessingException {
 		return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(message);
+	}
+	
+	public static ObjectNode getPlainNode(){
+		return plain_mapper.getNodeFactory().objectNode();
 	}
 
 	/**
@@ -405,6 +411,10 @@ public class Global implements Executor {
 //	}
 
 	public void publish(String channel, String message) {
+		
+		if ( logger.isTraceEnabled()){
+			logger.trace("publish sending " + message + " on channel " + channel);
+		}
 		if (channel == null)
 			return;
 		if (channel.length() == 0)
@@ -419,6 +429,9 @@ public class Global implements Executor {
 				Runnable runme = Global.deserialize(message);
 				// get all the local subscribers
 				Set<Agent> agents = session2channel.thing2items_get(channel);
+				if ( logger.isTraceEnabled()){
+					logger.trace("psending on to " + agents + " on channel " + channel);
+				}
 				for (Agent agent : agents) {
 					// give them the message
 					agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
@@ -459,6 +472,9 @@ public class Global implements Executor {
 			ec.subscribedChannel = Optional.of(channel);
 			// get all the local subscribers
 			Set<Agent> agents = session2channel.thing2items_get(channel);
+			if ( logger.isTraceEnabled()){
+				logger.trace("sending on to " + agents + " on channel " + channel);
+			}
 			for (Agent agent : agents) {
 				// give them the message
 				agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));

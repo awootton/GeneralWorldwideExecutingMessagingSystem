@@ -7,6 +7,7 @@ import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /** Push to client.
  * 
@@ -25,18 +26,24 @@ public class Push2Client implements Runnable {
 		super();
 		this.msg = message;
 	}
+	
+	public Push2Client() {// for jackson
+	}
 
 	@Override
 	public void run() {
 		// meant to run in a session agent.
 		ExecutionContext ec = Global.getContext();
-		// Global global = ec.global;
 		if (ec.agent.isPresent() && ec.agent.get() instanceof SessionAgent) {
 			SessionAgent session = (SessionAgent) ec.agent.get();
 			if ( logger.isTraceEnabled()){
 				logger.trace("Sending message " + msg + " to " + session.key);
 			}
-			session.writeAndFlush(msg);
+			String from = "" + ec.subscribedChannel.get();
+			ObjectNode node = Global.getPlainNode();
+			node.put("from", from);
+			node.put("msg" , msg);
+			session.writeAndFlush("" + node);
 		} else {
 			// what?
 			logger.debug("non session message? " + msg + " agent = " + ec.agent);
