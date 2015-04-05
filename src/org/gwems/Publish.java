@@ -23,8 +23,8 @@ public class Publish implements Runnable {
 
 	public static Logger logger = Logger.getLogger(Publish.class);
 
-	public String channel = "none";
-	public Runnable msg = new Push2Client("msg");
+	public String channel = "na";
+	public Runnable msg = new Push2Client("somemsg");
 
 	@Override
 	public void run() {
@@ -45,6 +45,7 @@ public class Publish implements Runnable {
 
 		Publish p = new Publish();
 		System.out.println(Global.serialize(p));
+		System.out.println(Global.serializePretty(p));
 
 	}
 

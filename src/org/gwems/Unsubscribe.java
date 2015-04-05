@@ -37,6 +37,7 @@ public class Unsubscribe implements Runnable {
 
 	public static void main(String[] args) throws JsonProcessingException {
 		System.out.println(Global.serialize(new Unsubscribe()));
+		System.out.println(Global.serializePretty(new Unsubscribe()));
 	}
 
 }

@@ -40,6 +40,7 @@ public class Push2Client implements Runnable {
 				logger.trace("Sending message " + msg + " to " + session.key);
 			}
 			String from = "" + ec.subscribedChannel.get();
+			// We should not do this. We should make client write the publish with 'from' in it if that's what they want.
 			ObjectNode node = Global.getPlainNode();
 			node.put("from", from);
 			node.put("msg" , msg);
@@ -52,6 +53,7 @@ public class Push2Client implements Runnable {
 	
 	public static void main(String[] args) throws JsonProcessingException {
 		System.out.println(Global.serialize(new Push2Client("none")));
+		System.out.println(Global.serializePretty(new Push2Client("none")));
 	}
 
 	

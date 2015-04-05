@@ -1,6 +1,6 @@
-/** An interface to the GeneralWorldwideExecutingMessageSystem on github.
-Mostly it's generic websockets.
- * Copyright 2015 Alan Wootton see included license.
+/**
+ * An interface to the GeneralWorldwideExecutingMessageSystem on github. Mostly it's generic websockets. Copyright 2015
+ * Alan Wootton see included license.
  */
 
 var GWEMS = {
@@ -17,8 +17,8 @@ GWEMS.WebSocketClient = function(host, port, uri) {
 };
 
 GWEMS.WebSocketClient.prototype.start = function() {
-
-	this.socket = new WebSocket("ws://" + this.host + ":" + this.port + this.uri);
+	// WebSocket
+	this.socket = new ReconnectingWebSocket("ws://" + this.host + ":" + this.port + this.uri);
 	this.socket.GWEMS = this;
 
 	this.socket.onopen = function(event) {
@@ -31,13 +31,13 @@ GWEMS.WebSocketClient.prototype.start = function() {
 		this.GWEMS.handleError(event);
 	};
 	this.socket.onmessage = function(event) {
-     	var msg = event.data;
-     	this.GWEMS.handleMessage(msg);
+		var msg = event.data;
+		this.GWEMS.handleMessage(msg);
 	}
 };
 
 GWEMS.WebSocketClient.prototype.send = function(string) {
-	if ( string && string.length>0) {
+	if (string && string.length > 0) {
 		this.socket.send(string);
 	}
 };
@@ -58,3 +58,64 @@ GWEMS.WebSocketClient.prototype.handleError = function(event) {
 GWEMS.WebSocketClient.prototype.handleMessage = function(string) {
 	console.log("Have message " + string);
 };
+
+/**
+ * Subtract the before Set from the after Set and return a new Set. Expects an object where keys and value are the same.
+ * eg. { key:key } Because this I show I do a Set.
+ * 
+ */
+GWEMS.addedToSet = function(before, after) {
+	var res = JSON.parse(JSON.stringify(after));
+	for (key in before) {
+		res[key] = null;
+	}
+	var res2 = {};
+	for (key in res) {
+		if (res[key]) {
+			res2[key] = key;
+		}
+	}
+	return res2;
+}
+
+GWEMS.removedFromSet = function(before, after) {
+	return GWEMS.addedToSet(after, before);
+}
+
+GWEMS.subscribeJsonObject = {
+	"@C" : "org.gwems.Subscribe",
+	"channel" : ""
+};
+
+GWEMS.getSubscribeString = function(channel) {
+	GWEMS.subscribeJsonObject.channel = channel;
+	var s = JSON.stringify(GWEMS.subscribeJsonObject);
+	return s;
+};
+
+GWEMS.unsubscribeJsonObject = {
+	"@C" : "org.gwems.Unubscribe",
+	"channel" : ""
+};
+
+GWEMS.getUnsubscribeString = function(channel) {
+	GWEMS.unsubscribeJsonObject.channel = channel;
+	var s = JSON.stringify(GWEMS.unsubscribeJsonObject);
+	return s;
+}
+
+GWEMS.publishObject = {
+	"@C" : "org.gwems.Publish",
+	"channel" : "",
+	"msg" : {
+		"@C" : "org.gwems.Push2Client",
+		"msg" : ""
+	}
+};
+
+GWEMS.getPublishString = function(channel, message) {
+	GWEMS.publishObject.channel = channel;
+	GWEMS.publishObject.msg.msg = message;
+	var s = JSON.stringify(GWEMS.publishObject);
+	return s;
+}

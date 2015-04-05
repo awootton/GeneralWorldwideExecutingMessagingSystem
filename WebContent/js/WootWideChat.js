@@ -1,10 +1,9 @@
 /**
  * Copyright Alan Wootton see GPLv3 in license file
  * 
- * Utility functions for dealing with text containing #tags and differencing maps
+ * Utility functions for dealing with text containing #tags.
  */
 
-// some utility functions
 var wwc = {};
 
 /**
@@ -44,22 +43,3 @@ wwc.toTags = function(map) {
 	return s;
 };
 
-/** Subtract the before Set from the after Set and return a new Set.
- */
-wwc.addedToMap = function(before, after) {
-	var res = JSON.parse(JSON.stringify(after));
-	for (key in before) {
-		res[key] = null;
-	}
-	var res2 = {};
-	for (key in res) {
-		if (res[key]) {
-			res2[key] = key;
-		}
-	}
-	return res2;
-}
-
-wwc.removedFromMap = function(before, after) {
-	return wwc.addedToMap(after, before);
-}

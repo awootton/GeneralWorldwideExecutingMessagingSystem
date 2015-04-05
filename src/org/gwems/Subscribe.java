@@ -37,6 +37,7 @@ public class Subscribe implements Runnable {
 
 	public static void main(String[] args) throws JsonProcessingException {
 		System.out.println(Global.serialize(new Subscribe()));
+		System.out.println(Global.serializePretty(new Subscribe()));
 	}
 
 }
