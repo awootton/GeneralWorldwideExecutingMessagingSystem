@@ -1,5 +1,8 @@
-# GeneralWorldwideExecutingMessagingSystem1
-The start of the worldwide distributed message system in AWS. It's an eclipse project. 
+Welcome to GWEMS 
+-------------------
+Aka GeneralWorldwideExecutingMessagingSystem.
+
+A worldwide distributed message system in AWS.
 Because every metaverse needs a strong backbone. 
 
 Connections are being served on a [webSocket](ws://go3here.com:8081/) There is a very rough example of message delivery in the form of [an http page with javascript that operates the websocket api]( http://go2here.com) There will be worldwide endpoints soon. 
