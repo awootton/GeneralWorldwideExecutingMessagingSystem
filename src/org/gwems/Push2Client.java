@@ -37,7 +37,7 @@ public class Push2Client implements Runnable {
 		if (ec.agent.isPresent() && ec.agent.get() instanceof SessionAgent) {
 			SessionAgent session = (SessionAgent) ec.agent.get();
 			if ( logger.isTraceEnabled()){
-				logger.trace("Sending message " + msg + " to " + session.key);
+				logger.trace("Sending message2client " + msg + " to " + session.key);
 			}
 			String from = "" + ec.subscribedChannel.get();
 			// We should not do this. We should make client write the publish with 'from' in it if that's what they want.

@@ -233,20 +233,16 @@ public class Global implements Executor {
 	}
 
 	private static class CtxWrapper implements Runnable {
-
-	//	ChannelHandlerContext ctx;
+		
 		String message;
 
 		public CtxWrapper(String message) {
 			super();
-	//		this.ctx = ctx;
 			this.message = message;
 		}
 
 		@Override
 		public void run() {
-		//	ExecutionContext ec = context.get();
-	//		ec.ctx = Optional.of(ctx);
 			try {
 				if (logger.isTraceEnabled()) {
 					logger.trace("CtxWrapper deserialize  " + message);
@@ -263,7 +259,6 @@ public class Global implements Executor {
 			} catch (IOException e) {
 				logger.error(message, e);
 			} finally {
-	//			ec.ctx = null;
 			}
 		}
 	}
@@ -282,7 +277,7 @@ public class Global implements Executor {
 		@Override
 		public void handle(String channel, String str) {
 			if ( logger.isTraceEnabled()){
-				logger.trace("from redis" + str + " on channel " + channel);
+				logger.trace("something from redis " + str + " on channel " + channel);
 			}
 			// reject the bytes before the '{'
 			// TODO: there's a fancy, optimized, faster, way to do this job.
@@ -409,6 +404,12 @@ public class Global implements Executor {
 //			logger.error("bad message " + message, e);
 //		}
 //	}
+	
+	/** do we really use this?
+	 * 
+	 * @param channel
+	 * @param message
+	 */
 
 	public void publish(String channel, String message) {
 		
@@ -453,6 +454,9 @@ public class Global implements Executor {
 	}
 
 	public void publish(String channel, Runnable runme) {
+		if ( logger.isTraceEnabled()){
+			logger.trace("publish sending runme " + runme + " on channel " + channel);
+		}
 		if (channel == null)
 			return;
 		if (channel.length() == 0)
