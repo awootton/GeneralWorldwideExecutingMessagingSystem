@@ -1,7 +1,5 @@
 package org.gwems.servers;
 
-import io.netty.channel.ChannelHandlerContext;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;

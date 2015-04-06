@@ -1,17 +1,24 @@
 /**
+ * Atw was here. Added some stuff. I'm moving an object (not the camera) and I'm using finding a lookAt vector from the
+ * camera.
+ * 
  * @author mrdoob / http://mrdoob.com/
  * @author alteredq / http://alteredqualia.com/
  * @author paulirish / http://paulirish.com/
  */
 
-THREE.AtwNoMouseFirstPersonControls = function(object, domElement) {
+THREE.AtwNoMouseFirstPersonControls = function(object, domElement, camera) {
 
 	this.object = object;
+	this.object.yvelocity = 0;
+	
 	this.target = new THREE.Vector3(0, 0, 0);
 
 	this.domElement = (domElement !== undefined) ? domElement : document;
 
 	this.enabled = true;
+
+	this.camera = camera;
 
 	this.movementSpeed = 1.0;
 	this.lookSpeed = 0.005;
@@ -55,10 +62,7 @@ THREE.AtwNoMouseFirstPersonControls = function(object, domElement) {
 	if (this.domElement !== document) {
 
 		this.domElement.setAttribute('tabindex', -1);
-
 	}
-
-	//
 
 	this.handleResize = function() {
 
@@ -229,9 +233,7 @@ THREE.AtwNoMouseFirstPersonControls = function(object, domElement) {
 			this.autoSpeedFactor = delta * (heightDelta * this.heightCoef);
 
 		} else {
-
 			this.autoSpeedFactor = 0.0;
-
 		}
 
 		var actualMoveSpeed = delta * this.movementSpeed;
@@ -240,35 +242,55 @@ THREE.AtwNoMouseFirstPersonControls = function(object, domElement) {
 			actualMoveSpeed *= 10;
 		}
 
-		if (this.moveForward || (this.autoForward && !this.moveBackward))
-			this.object.translateZ(-(actualMoveSpeed + this.autoSpeedFactor));
-		if (this.moveBackward)
-			this.object.translateZ(actualMoveSpeed);
+		var look = new THREE.Vector3().copy(this.object.position);
+		look.sub(this.camera.position);
+		look.y = 0;
+		look.normalize();
 
-		if (this.moveLeft)
-			this.object.translateX(-actualMoveSpeed);
-		if (this.moveRight)
-			this.object.translateX(actualMoveSpeed);
+		if (this.moveForward || (this.autoForward && !this.moveBackward)) {
+			look.multiplyScalar((actualMoveSpeed + this.autoSpeedFactor));
+			this.object.translateX(look.x);
+			this.object.translateZ(look.z);
+		}
+		if (this.moveBackward) {
+			look.multiplyScalar(-actualMoveSpeed);
+			this.object.translateX(look.x);
+			this.object.translateZ(look.z);
+		}
+		if (this.moveLeft) {
+			look.multiplyScalar(actualMoveSpeed);
+			this.object.translateX(look.z);
+			this.object.translateZ(-look.x);
+		}
+		if (this.moveRight) {
+			look.multiplyScalar(-actualMoveSpeed);
+			this.object.translateX(look.z);
+			this.object.translateZ(-look.x);
+		}
 
 		if (this.moveUp)
 			this.object.translateY(actualMoveSpeed);
 		if (this.moveDown)
 			this.object.translateY(-actualMoveSpeed);
 
+		if ( this.object.lowestY() <= 0 ){
+			this.object.yvelocity = 0;
+			this.object.position.y -= this.object.lowestY() * 0.01;
+		} else {
+			this.object.position.y += this.object.yvelocity;
+			this.object.yvelocity -= 0.0005;
+		}
+
 		var actualLookSpeed = delta * this.lookSpeed;
 
 		if (!this.activeLook) {
-
 			actualLookSpeed = 0;
-
 		}
 
 		var verticalLookRatio = 1;
 
 		if (this.constrainVertical) {
-
 			verticalLookRatio = Math.PI / (this.verticalMax - this.verticalMin);
-
 		}
 
 		this.lon += this.mouseX * actualLookSpeed;
@@ -281,9 +303,7 @@ THREE.AtwNoMouseFirstPersonControls = function(object, domElement) {
 		this.theta = THREE.Math.degToRad(this.lon);
 
 		if (this.constrainVertical) {
-
 			this.phi = THREE.Math.mapLinear(this.phi, 0, Math.PI, this.verticalMin, this.verticalMax);
-
 		}
 
 		var targetPosition = this.target, position = this.object.position;
@@ -292,7 +312,7 @@ THREE.AtwNoMouseFirstPersonControls = function(object, domElement) {
 		targetPosition.y = position.y + 100 * Math.cos(this.phi);
 		targetPosition.z = position.z + 100 * Math.sin(this.phi) * Math.sin(this.theta);
 
-		this.object.lookAt(targetPosition);
+		// somehow this messes up -> this.object.lookAt(targetPosition);// does a cube have a lookAt ? ha ha
 
 	};
 
@@ -311,7 +331,7 @@ THREE.AtwNoMouseFirstPersonControls = function(object, domElement) {
 
 		return function() {
 
-			if ( fn )
+			if (fn)
 				fn.apply(scope, arguments);
 
 		};

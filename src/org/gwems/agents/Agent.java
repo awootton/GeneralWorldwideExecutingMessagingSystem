@@ -6,7 +6,6 @@ import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 import org.gwems.util.AgentRunnablesQueue;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import com.fasterxml.jackson.annotation.JsonIgnore;

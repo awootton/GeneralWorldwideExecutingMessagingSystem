@@ -1,6 +1,5 @@
 import org.apache.log4j.Logger;
 import org.gwems.servers.Global;
-import org.gwems.util.StartOneGlobalServer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 

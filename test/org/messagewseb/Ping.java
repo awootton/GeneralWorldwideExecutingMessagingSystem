@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.gwems.servers.ClusterState;
 import org.gwems.servers.Global;
 import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.impl.MyRedisPubSub;
 import org.gwems.servers.impl.MyWebSocketClientHandler;
 import org.gwems.util.TimeoutCache;
 import org.junit.Assert;
@@ -68,6 +69,8 @@ public class Ping {
 		Ping.logger.setLevel(Level.TRACE);
 		PingEcho.logger.setLevel(Level.TRACE);
 		TimeoutCache.logger.setLevel(Level.TRACE);
+		
+		MyRedisPubSub.logger.setLevel(Level.TRACE);
 
 		Ping test = new Ping();
 		test.gobabygo();

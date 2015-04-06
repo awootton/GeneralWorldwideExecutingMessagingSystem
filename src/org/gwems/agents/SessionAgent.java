@@ -3,7 +3,6 @@ package org.gwems.agents;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.log4j.Logger;
@@ -81,7 +80,7 @@ public class SessionAgent extends Agent {
 	}
 
 	/**
-	 * Set ourselves so that we keep alive every 10 sec. In some cases there will be a stream as fast as 60 per sec and
+	 * Set ourselves so that we keep alive every 10 sec. In some cases there will be a stream as fast as 60 hz and
 	 * that would stress the timeoutCache.
 	 * 
 	 * Then, run the message.
@@ -112,14 +111,9 @@ public class SessionAgent extends Agent {
 	public void run(Runnable message) {
 
 		synchronized (this) {
-
 			// if they are supposed to go down then they will be wrapped with a Push2Client
 			// don't just blindly forward them because then there's no option to run them here.
-
-			ExecutionContext ec = Global.getContext();
-	//		ec.ctx = Optional.of(ctx);
 			message.run();
-	//		ec.ctx = Optional.empty();
 		}
 	}
 }

@@ -7,6 +7,8 @@ import org.gwems.agents.SessionAgent;
 import org.gwems.agents.SimpleAgent;
 import org.gwems.servers.Global;
 import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.impl.JedisRedisPubSubImpl;
+import org.gwems.servers.impl.MyRedisPubSub;
 import org.gwems.servers.impl.MyWebSocketClientHandler;
 import org.gwems.util.TimeoutCache;
 import org.junit.Test;
@@ -25,7 +27,7 @@ public class PingAgent extends TempDataLogger {
 		demoAgentPing(global1);// from server1 to server1 - easy
 		demoAgentPing(global2);// from server1 to server2 - a little harder
 		
-		//demoAgentPing(global4);// from server1 to server3 - different clusters - broken
+		//demoAgentPing(global4);// from server1 to server3 - different clusters - broken TODO: FIXME: 
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -45,6 +47,9 @@ public class PingAgent extends TempDataLogger {
 		AgentEcho.logger.setLevel(Level.TRACE);
 
 		AgentFinder.logger.setLevel(Level.TRACE);
+		
+		MyRedisPubSub.logger.setLevel(Level.TRACE);
+		JedisRedisPubSubImpl.logger.setLevel(Level.TRACE);
 
 		PingAgent test = new PingAgent();
 

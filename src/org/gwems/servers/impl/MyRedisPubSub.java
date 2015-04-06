@@ -1,7 +1,6 @@
 package org.gwems.servers.impl;
 
 import org.apache.log4j.Logger;
-import org.gwems.util.PubSub;
 import org.gwems.util.PubSub.Handler;
 
 import redis.clients.jedis.JedisPubSub;
@@ -9,7 +8,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class MyRedisPubSub extends JedisPubSub {
 
-	public static Logger logger = Logger.getLogger(PubSub.class);
+	public static Logger logger = Logger.getLogger(MyRedisPubSub.class);
 
 	Handler handler = null;
 
@@ -26,6 +25,9 @@ public class MyRedisPubSub extends JedisPubSub {
 		throw new NotImplementedException();
 	}
 
+	/** These are the REPLIES from when we call sub and unsub in 
+	 * 
+	 */
 	@Override
 	public void onSubscribe(String channel, int subscribedChannels) {
 		if (logger.isTraceEnabled())

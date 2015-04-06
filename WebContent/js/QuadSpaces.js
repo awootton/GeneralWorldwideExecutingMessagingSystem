@@ -140,3 +140,44 @@ QuadSpaces.getY = function(vector) {
 QuadSpaces.getZ = function(vector) {
 	return vector.z;
 }
+
+/**
+ * 20 times per second we want to broadcast a position of ourself in the 4-16 meter range (and less).<br>
+ * 5 times per second in the 16-64 meter range.<br>
+ * 1 times per second in the 64 to 256 <br>
+ * 0.25 for 256 to 1km
+ * 1/16 for 1km to 4 km
+ * after 4km we'll be invisible.
+ * 
+ * We start, at time zero, by broadcasting to all at once.
+ * 
+ */
+
+QuadSpaces.avatarStateProto = {
+		position: {}, // vector
+		orientation: {}, //quaternion
+		id: "none"// a guid, or key
+}
+
+Quadspaces.avatarInstantProto = {
+	data : {}, // size ?
+	
+}
+
+QuadSpaces.update = new function(position) {
+	var d = new Date();
+	var time = d.getMilliseconds();
+}
+
+/**
+ * var v = new THREE.Vector3(1, 2, 3);
+ * 
+ * var strList = QuadSpaces.decompose(v, 0);
+ * 
+ * console.log(QuadSpaces.listToString(strList));
+ * 
+ * var vect2 = QuadSpaces.getMinCorner(strList[0]);
+ * 
+ * var vect3 = QuadSpaces.reconstitute(strList);
+ * 
+ */

@@ -1,9 +1,13 @@
 package org.gwems.servers.impl;
 
+import java.util.Arrays;
+
 import org.apache.log4j.Logger;
 import org.gwems.util.PubSub;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 public class JedisRedisPubSubImpl extends PubSub {
 
@@ -17,6 +21,9 @@ public class JedisRedisPubSubImpl extends PubSub {
 
 	int port;
 
+	private MyJedisPool pool;
+
+	// When this channel is unsubscribed then the client quits and returns from the thread - need to change that.
 	private final String dummyChannel = "AHUAp4xu9FqRobj8zwn2vBI6Anag1t8Z5z6SWjn8_neverUseThisChannel";// random.org
 
 	public JedisRedisPubSubImpl(String hostName, int port, Handler handler, String globalName) {
@@ -25,7 +32,10 @@ public class JedisRedisPubSubImpl extends PubSub {
 		myPubSub = new MyRedisPubSub();
 		myPubSub.handler = handler;
 
+		// not from pool - permanent.
 		subscribingRedis = new Jedis(hostName, port);
+
+		pool = new MyJedisPool(new JedisPoolConfig(), hostName, port);
 
 		Thread thread = new Thread(new RunPS());
 		thread.setName("Redis_Sub_Runner" + globalName);
@@ -49,22 +59,31 @@ public class JedisRedisPubSubImpl extends PubSub {
 		}
 	}
 
-	public Jedis getJedis() {// FIXME: needs pool
-		return new Jedis(hostName, port);
-	}
-
 	@Override
 	public void publish(String channel, String message) {
-		getJedis().publish(channel, message);
+		Jedis jedis = pool.getResource();
+		try {
+			jedis.publish(channel, message);
+		} catch (Exception e) {
+			logger.error("what?", e);
+		} finally {
+			pool.returnJedis(jedis);
+		}
 	}
 
 	@Override
 	public void subcribe(String... channels) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("sending subscribe to redis:" + Arrays.toString(channels));
+		}
 		myPubSub.subscribe(channels);
 	}
 
 	@Override
 	public void unsubcribe(String... channels) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("sending unsubcribe to redis:" + Arrays.toString(channels));
+		}
 		myPubSub.unsubscribe(channels);
 	}
 

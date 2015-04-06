@@ -8,8 +8,7 @@ import org.gwems.servers.Global;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
- * Clients send this: {"@C":"org.gwems.Subscribe","channel":"none"} to start a subscription towards
- * their SessionAgent.
+ * Clients send this: {"@C":"org.gwems.Subscribe","channel":"none"} to start a subscription towards their SessionAgent.
  * 
  * There is no reply.
  * 
@@ -17,7 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  *
  */
 public class Subscribe implements Runnable {
-	
+
 	public static Logger logger = Logger.getLogger(Subscribe.class);
 
 	public String channel = "none";
