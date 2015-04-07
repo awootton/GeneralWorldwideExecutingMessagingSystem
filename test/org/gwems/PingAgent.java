@@ -1,4 +1,4 @@
-package org.messagewseb;
+package org.gwems;
 
 import java.io.IOException;
 
@@ -10,6 +10,7 @@ import org.gwems.servers.WsClientImpl;
 import org.gwems.servers.impl.JedisRedisPubSubImpl;
 import org.gwems.servers.impl.MyRedisPubSub;
 import org.gwems.servers.impl.MyWebSocketClientHandler;
+import org.gwems.temperature.TempDataLogger;
 import org.gwems.util.TimeoutCache;
 import org.junit.Test;
 import org.messageweb.experiments.AgentFinder;
@@ -18,7 +19,6 @@ import org.messageweb.socketimpl.MyWebSocketServerHandler;
 import org.messageweb.testmessages.AgentEcho;
 import org.messageweb.testmessages.LogonMessage;
 import org.messageweb.testmessages.PingEcho;
-import org.messagewseb.temperature.TempDataLogger;
 
 public class PingAgent extends TempDataLogger {
 

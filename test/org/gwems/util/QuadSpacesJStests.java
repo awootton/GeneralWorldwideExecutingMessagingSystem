@@ -1,4 +1,4 @@
-package org.messagewseb.util;
+package org.gwems.util;
 
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -6,10 +6,10 @@ import java.util.List;
 import javax.script.ScriptException;
 import javax.vecmath.Vector3d;
 
+import org.gwems.common.core.JavaScriptTests;
 import org.gwems.util.QuadSpaces;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messagewseb.common.core.JavaScriptTests;
 
 public class QuadSpacesJStests extends JavaScriptTests {
 
@@ -87,18 +87,9 @@ public class QuadSpacesJStests extends JavaScriptTests {
 
 		v = new Vector3d(-44 / 256.0, 123456 / 256.0, 11 / 256.0);
 		doBoth(v, -11);
-
-		// List<String> slist = LodMath.decompose(v, 0);
-		// String
-		// System.out.println(slist);
-		//
-		// Object ov = inv.invokeMethod(lod, "vector", v.x, v.y, v.z);
-		//
-		// Object lodlist = inv.invokeMethod(lod, "decompose", ov, 0);
-		//
-		// Object s = inv.invokeMethod(lod, "listToString", lodlist);
-		//
-		// System.out.println(s);
+		
+		v = new Vector3d(-4, 12, 88);
+		doBoth(v, 2);
 
 	}
 

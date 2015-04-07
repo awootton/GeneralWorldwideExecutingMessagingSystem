@@ -273,9 +273,9 @@ THREE.AtwNoMouseFirstPersonControls = function(object, domElement, camera) {
 		if (this.moveDown)
 			this.object.translateY(-actualMoveSpeed);
 
-		if ( this.object.lowestY() <= 0 ){
+		if ( this.object.position.y <= 0 ){
 			this.object.yvelocity = 0;
-			this.object.position.y -= this.object.lowestY() * 0.01;
+			this.object.position.y -= this.object.position.y * 0.01;
 		} else {
 			this.object.position.y += this.object.yvelocity;
 			this.object.yvelocity -= 0.0005;

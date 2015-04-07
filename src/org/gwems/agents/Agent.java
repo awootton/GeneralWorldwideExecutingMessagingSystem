@@ -1,48 +1,54 @@
 package org.gwems.agents;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 import org.gwems.util.AgentRunnablesQueue;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 /**
  * 
- * needs: time to live. 
- * helpers.
- * test with storage.
- * We'll want to save these in db soon. 
+ * needs: time to live. helpers. test with storage. We'll want to save these in db soon.
  * 
  * @author awootton
  *
  */
 
-@DynamoDBTable(tableName = "Agents")
+// @DynamoDBTable(tableName = "Agents")
 public abstract class Agent implements Comparable<Agent> {
 
 	/**
-	 * We'll need to install the messageQ manually. Fortunately there will only be a handful of places where these are deserialized.
+	 * We'll need to install the messageQ manually. Fortunately there will only be a handful of places where these are
+	 * deserialized.
 	 */
-	@DynamoDBIgnore
-	@JsonIgnore
-	public AgentRunnablesQueue messageQ = null;
+	// @DynamoDBIgnore
+	// @JsonIgnore
+	public AgentRunnablesQueue messageQ = null;// protected?
 
-	public String key = "";// aka the  ?, is unique
+	private final String key;// must be unique!
+	public final Map<Object, Object> userMap;
 
 	public Agent(String key) {
 		this.key = key;
-//		byte[] bytes = Global.getContext().sha256.digest((sub + "publish").getBytes());
-//		String publishchannel = Base64.getEncoder().encodeToString(bytes);
-//		pub = publishchannel;
+		this.userMap = new HashMap<>();
+	}
+	
+	@Override
+	public String toString() {
+		return this.getClass() + ":" + key;
+	}
+	
+	public final String getKey(){
+		return key;
 	}
 
+
 	/**
-	 * Sometimes the agent might want to filter the messages.
-	 * To do that override this. Otherwise, as you can see, the messages just run.
+	 * Sometimes the agent might want to filter the messages. To do that override this. Otherwise, as you can see, the
+	 * messages just run.
+	 * 
 	 * @param message
 	 */
 	public void run(Runnable message) {

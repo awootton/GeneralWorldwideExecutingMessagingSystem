@@ -1,4 +1,4 @@
-package org.messagewseb.js;
+package org.gwems.js;
 
 import java.io.FileNotFoundException;
 

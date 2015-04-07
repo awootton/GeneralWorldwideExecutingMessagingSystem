@@ -20,6 +20,7 @@ import org.gwems.agents.Agent;
 import org.gwems.agents.SessionAgent;
 import org.gwems.servers.impl.JedisRedisPubSubImpl;
 import org.gwems.servers.impl.MyRejectedExecutionHandler;
+import org.gwems.util.HalfHashTwoWayMapping;
 import org.gwems.util.PubSub;
 import org.gwems.util.TimeoutCache;
 import org.gwems.util.TwoWayMapping;
@@ -82,7 +83,7 @@ public class Global implements Executor {
 	 * all agents have a timeout that unsubscribes them
 	 * 
 	 */
-	private TwoWayMapping<Agent, String> session2channel = new TwoWayMapping<Agent, String>();
+	private TwoWayMapping<Agent, String> session2channel = new HalfHashTwoWayMapping<Agent, String>();
 
 	int port;
 
@@ -185,11 +186,11 @@ public class Global implements Executor {
 		Attribute<String> sessionStringAttribute = ctx.attr(key);
 		SessionAgent sessionAgent;
 		if (sessionStringAttribute.get() == null) {
-			sessionAgent = new SessionAgent(this, getRandom(),ctx);
+			sessionAgent = new SessionAgent(this, getRandom(), ctx);
 			sessionAgent.ipAddress = ctx.channel().remoteAddress().toString();
 			logger.info("SessionAgent on " + sessionAgent.ipAddress);
-			sessionStringAttribute.set(sessionAgent.key);
-			timeoutCache.put(sessionAgent.key, sessionAgent, SessionAgentTTL, () -> {
+			sessionStringAttribute.set(sessionAgent.getKey());
+			timeoutCache.put(sessionAgent.getKey(), sessionAgent, SessionAgentTTL, () -> {
 				ctx.close();
 				unsubscribeAgent(sessionAgent);
 			});
@@ -198,7 +199,7 @@ public class Global implements Executor {
 		}
 		assert ctx != null;
 		if (logger.isTraceEnabled()) {
-			logger.trace("Sending message to execute on "+sessionAgent.key+" with " + message);
+			logger.trace("Sending message to execute on " + sessionAgent + " with " + message);
 		}
 		sessionAgent.byteCount.addAndGet(message.length());
 		sessionAgent.socketMessageQ.run(new CtxWrapper(message));
@@ -211,13 +212,13 @@ public class Global implements Executor {
 	}
 
 	/**
-	 * For sending reply messages on WS sockets
-	 * which, btw, is never allowed.
+	 * For sending reply messages on WS sockets which, btw, is never allowed.
+	 * 
 	 * @return
 	 */
-//	public static Optional<ChannelHandlerContext> getCtx() {
-//		return context.get().ctx;
-//	}
+	// public static Optional<ChannelHandlerContext> getCtx() {
+	// return context.get().ctx;
+	// }
 
 	/**
 	 * For knowing which server we on a member of in multi-server and multi-pool simulations.
@@ -233,7 +234,7 @@ public class Global implements Executor {
 	}
 
 	private static class CtxWrapper implements Runnable {
-		
+
 		String message;
 
 		public CtxWrapper(String message) {
@@ -266,8 +267,8 @@ public class Global implements Executor {
 	// private static final ThreadLocal<String> latestChannel = new ThreadLocal<String>();
 
 	/**
-	 *  Channels subscribed to come in through here when they come from another server through redis.
-	 *  Local publish messages short circuit redis. 
+	 * Channels subscribed to come in through here when they come from another server through redis. Local publish
+	 * messages short circuit redis.
 	 * 
 	 * @author awootton
 	 *
@@ -276,7 +277,7 @@ public class Global implements Executor {
 
 		@Override
 		public void handle(String channel, String str) {
-			if ( logger.isTraceEnabled()){
+			if (logger.isTraceEnabled()) {
 				logger.trace("something from redis " + str + " on channel " + channel);
 			}
 			// reject the bytes before the '{'
@@ -298,7 +299,7 @@ public class Global implements Executor {
 					Runnable runme = Global.deserialize(message);
 					// get all the local subscribers
 					Set<Agent> agents = session2channel.thing2items_get(channel);
-					if ( logger.isTraceEnabled()){
+					if (logger.isTraceEnabled()) {
 						logger.trace("sending2 to " + agents + " on channel " + channel);
 					}
 					for (Agent agent : agents) {
@@ -318,12 +319,13 @@ public class Global implements Executor {
 
 	/**
 	 * This was a lambda but it's used in several places here. Both in the receiver of redis (LocalSubscriberHandler
-	 * above) and also in the two publish methods.
-	 * x
+	 * above) and also in the two publish methods. x
+	 * 
 	 * @author awootton
 	 *
 	 */
-	@JsonIgnoreType // never serialize this 
+	@JsonIgnoreType
+	// never serialize this
 	private static class ChannelSubscriberWrapper implements Runnable {
 
 		String channel;
@@ -371,8 +373,8 @@ public class Global implements Executor {
 	public static String serializePretty(Object message) throws JsonProcessingException {
 		return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(message);
 	}
-	
-	public static ObjectNode getPlainNode(){
+
+	public static ObjectNode getPlainNode() {
 		return plain_mapper.getNodeFactory().objectNode();
 	}
 
@@ -395,25 +397,26 @@ public class Global implements Executor {
 	 * 
 	 * @param message
 	 */
-//	static public void XXreply(Runnable message) {
-//		ChannelHandlerContext ctx = context.get().ctx.get();
-//		try {
-//			String sendme = Global.serialize(message);
-//			ctx.channel().writeAndFlush(new TextWebSocketFrame(sendme));
-//		} catch (JsonProcessingException e) {
-//			logger.error("bad message " + message, e);
-//		}
-//	}
-	
-	/** do we really use this?
+	// static public void XXreply(Runnable message) {
+	// ChannelHandlerContext ctx = context.get().ctx.get();
+	// try {
+	// String sendme = Global.serialize(message);
+	// ctx.channel().writeAndFlush(new TextWebSocketFrame(sendme));
+	// } catch (JsonProcessingException e) {
+	// logger.error("bad message " + message, e);
+	// }
+	// }
+
+	/**
+	 * do we really use this?
 	 * 
 	 * @param channel
 	 * @param message
 	 */
 
 	public void publish(String channel, String message) {
-		
-		if ( logger.isTraceEnabled()){
+
+		if (logger.isTraceEnabled()) {
 			logger.trace("publish sending " + message + " on channel " + channel);
 		}
 		if (channel == null)
@@ -430,7 +433,7 @@ public class Global implements Executor {
 				Runnable runme = Global.deserialize(message);
 				// get all the local subscribers
 				Set<Agent> agents = session2channel.thing2items_get(channel);
-				if ( logger.isTraceEnabled()){
+				if (logger.isTraceEnabled()) {
 					logger.trace("psending on to " + agents + " on channel " + channel);
 				}
 				for (Agent agent : agents) {
@@ -454,7 +457,7 @@ public class Global implements Executor {
 	}
 
 	public void publish(String channel, Runnable runme) {
-		if ( logger.isTraceEnabled()){
+		if (logger.isTraceEnabled()) {
 			logger.trace("publish sending runme " + runme + " on channel " + channel);
 		}
 		if (channel == null)
@@ -476,7 +479,7 @@ public class Global implements Executor {
 			ec.subscribedChannel = Optional.of(channel);
 			// get all the local subscribers
 			Set<Agent> agents = session2channel.thing2items_get(channel);
-			if ( logger.isTraceEnabled()){
+			if (logger.isTraceEnabled()) {
 				logger.trace("sending on to " + agents + " on channel " + channel);
 			}
 			for (Agent agent : agents) {

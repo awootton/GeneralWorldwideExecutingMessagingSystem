@@ -1,4 +1,4 @@
-package org.messagewseb.common.core;
+package org.gwems.common.core;
 
 import java.io.FileNotFoundException;
 

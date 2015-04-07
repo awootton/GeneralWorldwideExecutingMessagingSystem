@@ -1,4 +1,4 @@
-package org.gwems;
+package gwems;
 
 import org.apache.log4j.Logger;
 import org.gwems.agents.SessionAgent;
@@ -8,7 +8,7 @@ import org.gwems.servers.Global;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
- * Clients send this: {"@C":"org.gwems.Subscribe","channel":"none"} to start a subscription towards their SessionAgent.
+ * Clients send this: {"@C":"gwems.Subscribe","channel":"none"} to start a subscription towards their SessionAgent.
  * 
  * There is no reply.
  * 
@@ -29,7 +29,7 @@ public class Subscribe implements Runnable {
 			if (channel.length() >= 4 && !"none".equals(channel)) {
 				ec.global.subscribe(session, "WWC" + channel.trim());
 				if (logger.isDebugEnabled())
-					logger.debug("Session" + session.key + " subscribed to " + channel);
+					logger.debug("Session" + session + " subscribed to " + channel);
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-package org.messagewseb.temperature;
+package org.gwems.temperature;
 
 import java.util.ArrayList;
 import java.util.List;

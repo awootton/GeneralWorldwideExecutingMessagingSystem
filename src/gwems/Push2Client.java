@@ -1,4 +1,4 @@
-package org.gwems;
+package gwems;
 
 
 import org.apache.log4j.Logger;
@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /** Push to client.
  * 
- * {"@C":"org.gwems.Push2Client","msg":"none"}
+ * {"@C":"gwems.Push2Client","msg":"none"}
  * 
  * @author awootton
  *
@@ -37,7 +37,7 @@ public class Push2Client implements Runnable {
 		if (ec.agent.isPresent() && ec.agent.get() instanceof SessionAgent) {
 			SessionAgent session = (SessionAgent) ec.agent.get();
 			if ( logger.isTraceEnabled()){
-				logger.trace("Sending message2client " + msg + " to " + session.key);
+				logger.trace("Sending message2client " + msg + " to " + session);
 			}
 			String from = "" + ec.subscribedChannel.get();
 			// We should not do this. We should make client write the publish with 'from' in it if that's what they want.

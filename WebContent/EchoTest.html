@@ -22,7 +22,7 @@
         socket = new WebSocket("ws://" + host + ":" + port + uri);
         socket.onmessage = function(event) {
         	var msg = event.data;
-        	 endTime = new Date().getMilliseconds();
+        	 endTime = Date.now();
         	 msg += " in " + (endTime-startTime);
         	 console.log("Message received: " + msg );
           $("#log").prepend(msg+"<br>");
@@ -46,7 +46,7 @@
         event.preventDefault();
         var msg = $("#message").val();
         console.log("sending " + msg);
-        startTime = new Date().getMilliseconds();
+        startTime = Date.now();
         socket.send(msg);
       });
     });

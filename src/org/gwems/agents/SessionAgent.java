@@ -74,10 +74,6 @@ public class SessionAgent extends Agent {
 		ctx.channel().writeAndFlush(new TextWebSocketFrame(message));
 	}
 
-	@Override
-	public String toString() {
-		return "SessionAgent:" + key;
-	}
 
 	/**
 	 * Set ourselves so that we keep alive every 10 sec. In some cases there will be a stream as fast as 60 hz and
@@ -92,7 +88,7 @@ public class SessionAgent extends Agent {
 			long current = System.currentTimeMillis();
 			if (current > next10sec) {
 				next10sec = current + 10 * 1000;
-				global.timeoutCache.setTtl(this.key, Util.twoMinutes);
+				global.timeoutCache.setTtl(this.getKey(), Util.twoMinutes);
 			}
 			messageCount++;
 			if (validated) {

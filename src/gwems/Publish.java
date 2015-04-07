@@ -1,4 +1,4 @@
-package org.gwems;
+package gwems;
 
 import org.apache.log4j.Logger;
 import org.gwems.agents.SessionAgent;
@@ -14,7 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  * See example in main. Note that I'm tacking on a little namespace for the future even though that might be useless.
  * (WWC)
  * 
- * {"@C":"org.gwems.Publish","channel":"none","msg":{"@C":"org.gwems.Push2Client","msg":"msg"}}
+ * {"@C":"gwems.Publish","channel":"none","msg":{"@C":"gwems.Push2Client","msg":"msg"}}
  * 
  * @author awootton
  *
@@ -24,7 +24,7 @@ public class Publish implements Runnable {
 	public static Logger logger = Logger.getLogger(Publish.class);
 
 	public String channel = "na";
-	public Runnable msg = new Push2Client("somemsg");
+	public Runnable msg = new Push2Client("none");
 
 	@Override
 	public void run() {
@@ -34,9 +34,9 @@ public class Publish implements Runnable {
 			if (channel.length() >= 3 && !"none".equals(channel)) {
 				// we're NOT going to wrap the message in a Push2Client
 				// someone else had to already wrap it.
-				ec.global.publish("WWC" + channel.trim(), msg);
+				ec.global.publish(channel.trim(), msg);
 				if (logger.isDebugEnabled())
-					logger.debug("Session" + session.key + " published to " + channel);
+					logger.debug("Session" + session + " did publish to " + channel);
 			}
 		}
 	}

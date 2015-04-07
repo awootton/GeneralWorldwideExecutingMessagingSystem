@@ -1,4 +1,4 @@
-package org.messagewseb.util;
+package org.gwems.util;
 
 import java.util.List;
 

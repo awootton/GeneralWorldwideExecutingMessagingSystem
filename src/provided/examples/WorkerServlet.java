@@ -1,5 +1,7 @@
 package provided.examples;
 
+import gwems.Push2Client;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -13,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.gwems.Push2Client;
 import org.gwems.servers.ClusterState;
 import org.gwems.servers.Global;
 import org.messageweb.dynamo.LastTimeItem;

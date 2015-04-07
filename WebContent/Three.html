@@ -22,16 +22,16 @@ canvas {
 			style="width: 440px; height: 12px;" id="message"></textarea>
 		<input type="submit" id="send" value="send" />
 	</div>
+	<div id="text" hidden='true'>avatar here</div>
 
 	<script src="http://code.jquery.com/jquery.min.js"></script>
 	<script src="js/three.js"></script>
-	<script src="js/libs/controls/OrbitControls.js" type="text/javascript"></script>
-	<script src="js/libs/controls/AtwNoMouseFirstPersonControls.js"
-		type="text/javascript"></script>
-	<script src="js/js/atw_stats.js" type="text/javascript"></script>
+	<script src="js/libs/controls/OrbitControls.js"></script>
+	<script src="js/libs/controls/AtwNoMouseFirstPersonControls.js"></script>
+	<script src="js/js/atw_stats.js"></script>
 
-	<script src="js/QuadSpaces.js" type="text/javascript"></script>
-	<script src="js/GWEMS.js" type="text/javascript"></script>
+	<script src="js/QuadSpaces.js"></script>
+	<script src="js/GWEMS.js"></script>
 	<script src="js/reconnecting-websocket.js"></script>
 
 	<script>
@@ -40,8 +40,8 @@ canvas {
 			var msg = $("#message").val();
 			//sock.send(msg);
 		});
-		
-		var userName = (""+Math.random()).substring(3,9);
+
+		var userName = ("" + Math.random()).substring(3, 9);
 		console.log("our name will be " + userName)
 
 		var hostName = location.hostname;
@@ -76,16 +76,15 @@ canvas {
 		directionalLight.position.set(10, 10, 10);
 		scene.add(directionalLight);
 
-		var geometry = new THREE.BoxGeometry(1, 1, 1);// one meter
+		var geometry = new THREE.BoxGeometry(0.5, 1, 0.5);// one meter
 		var material = new THREE.MeshLambertMaterial({
 			color : 0x7777FF
 		})
 		var cube = new THREE.Mesh(geometry, material);
 		cube.position.set(0.5, 0.5, 0.5);
-		scene.add(cube);
-		cube.lowestY = function(){
-			return cube.position.y-0.5;
-		}
+		var avatarContainer = new THREE.Object3D();
+		avatarContainer.add(cube);
+		scene.add(avatarContainer);
 
 		geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);// one meter
 		material = new THREE.MeshLambertMaterial({
@@ -108,34 +107,92 @@ canvas {
 		floor.position.set(0, -0.5, 0);
 		scene.add(floor);
 
+		scene.add(new THREE.GridHelper(64, 4));
+
 		var controls = new THREE.OrbitControls(camera, renderer.domElement);
-		var drivecontrols = new THREE.AtwNoMouseFirstPersonControls(cube, renderer.domElement ,camera);
+		var drivecontrols = new THREE.AtwNoMouseFirstPersonControls(avatarContainer, renderer.domElement, camera);
+
+		var tracker = new QuadSpaces.Tracker(sock, scene);
+		sock.handleMessage = tracker.handleIncoming;
 
 		var render = function() {
 			requestAnimationFrame(render);
 			renderer.render(scene, camera);
-			var cubeBefore = new THREE.Vector3().copy(cube.position);
-			controls.update();// needs delta
+			var cubeBefore = new THREE.Vector3().copy(avatarContainer.position);
+			controls.update();// needs delta not
 			drivecontrols.update(clock.getDelta());// needs delta
 
 			// we need to pin cube.y-0.5 to terrain todo:	
 
-			controls.target = cube.position;
-			cubeBefore.sub(cube.position);
+			controls.target = avatarContainer.position;
+			cubeBefore.sub(avatarContainer.position);
 			camera.position.sub(cubeBefore);// follow it
 
-			var str = "x=" + camera.position.x + "<br>";
-			str += "y=" + camera.position.y + "<br>";
-			str += "z=" + camera.position.z;
+			// cubeBefore is actually becomes our velocity.
+			cubeBefore.multiplyScalar(1.0 / clock.getDelta());
+			// our position is avatarContainer.position
+			tracker.update(avatarContainer.position, cubeBefore);
 
-			var strList = QuadSpaces.decompose(camera.position, 0);
+			var str = "x=" + (camera.position.x / 4 | 0) * 4 + " ";
+			str += "y=" + (camera.position.y / 4 | 0) * 4 + " ";
+			str += "z=" + (camera.position.z / 4 | 0) * 4;
 
-			var strList6 = QuadSpaces.decompose(camera.position, 6);
-
-			stats.update(strList + "<br>" + strList6);//str);
+			//var strList = QuadSpaces.decompose(camera.position, 0);
+			//var strList6 = QuadSpaces.decompose(camera.position, 6);
+			//strList + "<br>" + strList6 + "<br>" + 
+			stats.update(str);
 		};
 
 		render();
+
+		// TODO: move this stuff to it's own file.
+		var avatardata = null;
+		var protodata = null;
+		var handleGetting = function() {
+			if (avatardata != null && protodata != null) {
+				console.log(" have both");
+				avatardata = avatardata.substring(avatardata.indexOf('{'));
+				var ava = eval("(" + avatardata + ")");
+				//console.log(ava);
+				protodata = protodata.substring(protodata.indexOf('{'));
+				var ppp = eval("(" + protodata + ")");
+
+				ava.__proto__ = ppp;
+				//console.log(ppp);
+				//for ( i in ppp ){
+				//	ava.__proto__[i] = ppp[i];
+				//}
+				var thing = ava.build();
+				//since it's me add it to the cube
+				//scene.add(thing);
+				avatarContainer.remove(cube);
+				avatarContainer.add(thing);
+			}
+		};
+
+		var param = {
+			dataType : "text",
+			url : "scripts/avatar_proto.js",
+			data : "",
+			success : function(data) {
+				protodata = data;
+				console.log("data  protodata");
+				handleGetting();
+			}
+		};
+		$.ajax(param);
+
+		param = {
+			dataType : "text",
+			url : "scripts/avatar.js",
+			data : "",
+			success : function(data) {
+				avatardata = data;
+				console.log("data  avatar");
+				handleGetting();
+			}
+		};
+		$.ajax(param);
 	</script>
 
 </body>

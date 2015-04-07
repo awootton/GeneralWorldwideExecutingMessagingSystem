@@ -46,7 +46,7 @@ public class PingEcho implements Runnable {
 
 		if (  Global.getContext().agent.isPresent() && Global.getContext().agent.get() instanceof SessionAgent ) {
 			SessionAgent agent = (SessionAgent)Global.getContext().agent.get();
-			logger.info("PingEcho running on server -- have sessionm = " + agent.key);
+			logger.info("PingEcho running on server -- have sessionm = " + agent);
 			this.info = "from server:" + Global.getGlobal().id;
 			try {
 				String sendme = Global.serialize(this);

@@ -17,8 +17,8 @@ GWEMS.WebSocketClient = function(host, port, uri) {
 };
 
 GWEMS.WebSocketClient.prototype.start = function() {
-	// WebSocket
-	this.socket = new ReconnectingWebSocket("ws://" + this.host + ":" + this.port + this.uri);
+	// ReconnectingWebSocket 
+	this.socket = new WebSocket("ws://" + this.host + ":" + this.port + this.uri);
 	this.socket.GWEMS = this;
 
 	this.socket.onopen = function(event) {
@@ -37,9 +37,13 @@ GWEMS.WebSocketClient.prototype.start = function() {
 };
 
 GWEMS.WebSocketClient.prototype.send = function(string) {
+	try {  
 	if (string && string.length > 0) {
 		this.socket.send(string);
 	}
+	} catch (e) {
+		// say something
+	};
 };
 
 GWEMS.WebSocketClient.prototype.handleOpen = function(event) {
@@ -83,7 +87,7 @@ GWEMS.removedFromSet = function(before, after) {
 }
 
 GWEMS.subscribeJsonObject = {
-	"@C" : "org.gwems.Subscribe",
+	"@C" : "gwems.Subscribe",
 	"channel" : ""
 };
 
@@ -94,7 +98,7 @@ GWEMS.getSubscribeString = function(channel) {
 };
 
 GWEMS.unsubscribeJsonObject = {
-	"@C" : "org.gwems.Unubscribe",
+	"@C" : "gwems.Unubscribe",
 	"channel" : ""
 };
 
@@ -105,10 +109,10 @@ GWEMS.getUnsubscribeString = function(channel) {
 }
 
 GWEMS.publishObject = {
-	"@C" : "org.gwems.Publish",
+	"@C" : "gwems.Publish",
 	"channel" : "",
 	"msg" : {
-		"@C" : "org.gwems.Push2Client",
+		"@C" : "gwems.Push2Client",
 		"msg" : ""
 	}
 };

@@ -5,7 +5,8 @@ import org.gwems.agents.Agent;
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 
-/** Used in a demo in the test folder
+/**
+ * Used in a demo in the test folder
  * 
  * @author awootton
  *
@@ -38,7 +39,7 @@ public class AgentEcho implements Runnable {
 		String incoming = ec.subscribedChannel.get();
 
 		if (logger.isTraceEnabled())
-			logger.trace("found agent. does " + incoming + " == " + agent.key + " ?  with agent=" + agent);
+			logger.trace("found agent. does " + incoming + " == " + agent);
 
 		reply.agentInfo = "" + agent;
 		reply.globalInfo = global.id;

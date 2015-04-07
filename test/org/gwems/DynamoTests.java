@@ -1,4 +1,4 @@
-package org.messagewseb;
+package org.gwems;
 
 import org.gwems.servers.Global;
 import org.junit.Assert;

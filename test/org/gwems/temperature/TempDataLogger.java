@@ -1,10 +1,12 @@
-package org.messagewseb.temperature;
+package org.gwems.temperature;
 
 import java.io.IOException;
 
 import org.apache.log4j.Level;
+import org.gwems.Ping;
 import org.gwems.agents.SessionAgent;
 import org.gwems.agents.SimpleAgent;
+import org.gwems.common.core.StartServers;
 import org.gwems.servers.Global;
 import org.gwems.servers.WsClientImpl;
 import org.gwems.servers.impl.MyWebSocketClientHandler;
@@ -18,8 +20,6 @@ import org.messageweb.socketimpl.MyWebSocketServerHandler;
 import org.messageweb.testmessages.AgentEcho;
 import org.messageweb.testmessages.LogonMessage;
 import org.messageweb.testmessages.PingEcho;
-import org.messagewseb.Ping;
-import org.messagewseb.common.core.StartServers;
 
 
 /** so like totally wip that it's actually crap that needs to be flushed.

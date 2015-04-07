@@ -20,7 +20,7 @@ public class Live implements Runnable {
 	@Override
 	public void run() {
 		if ( logger.isTraceEnabled()){
-			logger.trace("have alive from session " + Global.getContext().agent);
+			logger.trace("have Live at session " + Global.getContext().agent);
 		}
 	}
 
