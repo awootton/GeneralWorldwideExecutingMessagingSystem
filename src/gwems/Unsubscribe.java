@@ -30,7 +30,7 @@ public class Unsubscribe implements Runnable {
 		if (ec.agent.isPresent() && ec.agent.get() instanceof SessionAgent) {
 			SessionAgent session = (SessionAgent) ec.agent.get();
 			if (channel.length() >= 4 && !"none".equals(channel)) {
-				ec.global.unsubscribe(session, "WWC" + channel.trim());
+				ec.global.unsubscribe(session, channel.trim());
 				if (logger.isDebugEnabled())
 					logger.debug("Session" + session + " unsubscribed to " + channel);
 			}

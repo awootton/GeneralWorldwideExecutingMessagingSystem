@@ -27,7 +27,7 @@ public class Subscribe implements Runnable {
 		if (ec.agent.isPresent() && ec.agent.get() instanceof SessionAgent) {
 			SessionAgent session = (SessionAgent) ec.agent.get();
 			if (channel.length() >= 4 && !"none".equals(channel)) {
-				ec.global.subscribe(session, "WWC" + channel.trim());
+				ec.global.subscribe(session, channel.trim());
 				if (logger.isDebugEnabled())
 					logger.debug("Session" + session + " subscribed to " + channel);
 			}

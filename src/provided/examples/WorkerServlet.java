@@ -78,13 +78,13 @@ public class WorkerServlet extends HttpServlet {
 				long time = System.currentTimeMillis();
 				if (time > time_10) {
 					time_10 += 10 * 1000;
-					global.publish("WWC" + "#TimeEveryTenSeconds", new Push2Client("" + new Date()));
-					global.publish("WWC" + "#10secs", new Push2Client("" + new Date()));
+					global.publish("WWC#TimeEveryTenSeconds", new Push2Client("" + new Date()));
+					global.publish("WWC#10secs", new Push2Client("" + new Date()));
 					// logger.info("sent time to #TimeEveryTenSeconds");
 				}
 				if (time > time_60) {
 					time_60 += 60 * 1000;
-					global.publish("WWC" + "#TimeEveryMinute", new Push2Client("" + new Date()));
+					global.publish("WWC#TimeEveryMinute", new Push2Client("" + new Date()));
 					// logger.info("sent time to #TimeEveryMinute");
 				}
 				try {

@@ -16,15 +16,19 @@ var dummy =
 		// sigh
 	},
 
-	build :  function() { // the data will be visible
+	build :  function( userName ) { // the data will be visible
 
 		 subscene = new THREE.Object3D();
 
 		 subscene.userData = this;
 
 		var geometry = new THREE.BoxGeometry(1/2,0.75,1/2);// one meter
+		
+		// derive color so we can tell them apart
+		var userColor = (userName * 123)&0xFFFFFF;
+		userColor |= 0x0F0F0F;
 		var material = new THREE.MeshLambertMaterial({
-			color : 0x7777FF
+			color : userColor
 		})
 
 		var cube = new THREE.Mesh(geometry , material);

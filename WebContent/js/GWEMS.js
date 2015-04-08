@@ -12,19 +12,26 @@ GWEMS.WebSocketClient = function(host, port, uri) {
 	this.host = host;
 	this.port = port;
 	this.uri = uri;
+	this.isOpen = 0;
 
 	this.socket = {};
 };
 
+GWEMS.WebSocketClient.prototype.setOpen = function( val ){
+	this.isOpen = val;
+}
+
 GWEMS.WebSocketClient.prototype.start = function() {
-	// ReconnectingWebSocket 
+	// ReconnectingWebSocket
 	this.socket = new WebSocket("ws://" + this.host + ":" + this.port + this.uri);
 	this.socket.GWEMS = this;
 
 	this.socket.onopen = function(event) {
+		this.GWEMS.setOpen(1);
 		this.GWEMS.handleOpen(event);
 	};
 	this.socket.onclose = function(event) {
+		this.GWEMS.setOpen(0);
 		this.GWEMS.handleClose(event);
 	};
 	this.socket.onerror = function(event) {
@@ -37,13 +44,14 @@ GWEMS.WebSocketClient.prototype.start = function() {
 };
 
 GWEMS.WebSocketClient.prototype.send = function(string) {
-	try {  
-	if (string && string.length > 0) {
-		this.socket.send(string);
-	}
+	try {
+		if (string && string.length > 0) {
+			this.socket.send(string);
+		}
 	} catch (e) {
 		// say something
-	};
+	}
+	;
 };
 
 GWEMS.WebSocketClient.prototype.handleOpen = function(event) {
@@ -98,7 +106,7 @@ GWEMS.getSubscribeString = function(channel) {
 };
 
 GWEMS.unsubscribeJsonObject = {
-	"@C" : "gwems.Unubscribe",
+	"@C" : "gwems.Unsubscribe",
 	"channel" : ""
 };
 
@@ -117,9 +125,38 @@ GWEMS.publishObject = {
 	}
 };
 
+// fixme: use bulk subscribe
+GWEMS.subscribe = function(aMap, gwemsSocket) {
+	for (key in aMap) {
+		var msg = GWEMS.getSubscribeString(key);
+		gwemsSocket.send(msg);
+	}
+};
+
+// fixme: use bulk unsub
+GWEMS.unsubscribe = function(aMap, gwemsSocket) {
+	for (key in aMap) {
+		var msg = GWEMS.getUnsubscribeString(key);
+		gwemsSocket.send(msg);
+	}
+};
+
 GWEMS.getPublishString = function(channel, message) {
 	GWEMS.publishObject.channel = channel;
 	GWEMS.publishObject.msg.msg = message;
 	var s = JSON.stringify(GWEMS.publishObject);
 	return s;
-}
+};
+
+GWEMS.subscribeChanges = function(before, after, gwemsSocket) {
+
+	var added = GWEMS.addedToSet(before, after);
+	var removed = GWEMS.removedFromSet(before, after);
+	if (Object.keys(added).length) {
+		GWEMS.subscribe(added,gwemsSocket);
+	}
+	if (Object.keys(removed).length) {
+		GWEMS.unsubscribe(removed,gwemsSocket);
+	}
+	return after;
+};

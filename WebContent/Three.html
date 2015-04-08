@@ -112,8 +112,7 @@ canvas {
 		var controls = new THREE.OrbitControls(camera, renderer.domElement);
 		var drivecontrols = new THREE.AtwNoMouseFirstPersonControls(avatarContainer, renderer.domElement, camera);
 
-		var tracker = new QuadSpaces.Tracker(sock, scene);
-		sock.handleMessage = tracker.handleIncoming;
+		var tracker = new QuadSpaces.Tracker(sock, scene, userName);
 
 		var render = function() {
 			requestAnimationFrame(render);
@@ -144,6 +143,8 @@ canvas {
 		};
 
 		render();
+		
+		var avatarBuilder = null;
 
 		// TODO: move this stuff to it's own file.
 		var avatardata = null;
@@ -162,7 +163,8 @@ canvas {
 				//for ( i in ppp ){
 				//	ava.__proto__[i] = ppp[i];
 				//}
-				var thing = ava.build();
+				avatarBuilder = ava;
+				var thing = ava.build(userName);
 				//since it's me add it to the cube
 				//scene.add(thing);
 				avatarContainer.remove(cube);

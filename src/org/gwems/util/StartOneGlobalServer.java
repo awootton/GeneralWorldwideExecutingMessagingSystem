@@ -20,11 +20,11 @@ public class StartOneGlobalServer {
 
 	public static void main(String[] args) {
 		
-		Push2Client.logger.setLevel(Level.TRACE);
+		Push2Client.logger.setLevel(Level.DEBUG);
 		Subscribe.logger.setLevel(Level.TRACE);
 		Unsubscribe.logger.setLevel(Level.TRACE);
-		Publish.logger.setLevel(Level.TRACE);
-		Global.logger.setLevel(Level.TRACE);
+		Publish.logger.setLevel(Level.DEBUG);
+		Global.logger.setLevel(Level.DEBUG);
 		
 		System.setProperty("catalina.base", "..");
 
@@ -45,7 +45,7 @@ public class StartOneGlobalServer {
 			}
 			if (time > time_60) {
 				time_60 += 60 * 1000;
-				global.publish("WWC" + "#TimeEveryMinute", new Push2Client("" + new Date()));
+				global.publish("WWC#TimeEveryMinute", new Push2Client("" + new Date()));
 				logger.info("sent time to #TimeEveryMinute");
 			}
 			try {

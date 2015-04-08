@@ -35,8 +35,8 @@ public class Publish implements Runnable {
 				// we're NOT going to wrap the message in a Push2Client
 				// someone else had to already wrap it.
 				ec.global.publish(channel.trim(), msg);
-				if (logger.isDebugEnabled())
-					logger.debug("Session" + session + " did publish to " + channel);
+				if (logger.isTraceEnabled())
+					logger.trace("Session" + session + " did publish to " + channel);
 			}
 		}
 	}

@@ -91,6 +91,7 @@ QuadSpaces.getMinCorner = function(str) {
 	var scaleFactor = parseInt(parts[3]);
 	var vmin = new THREE.Vector3(i0, i1, i2);
 	// how absurd do we have to get with the powers?
+	// this version will go further than a double.
 	var power = Math.pow(2, scaleFactor);
 	vmin.x *= power;
 	vmin.y *= power;
@@ -115,9 +116,13 @@ QuadSpaces.reconstitute = function(quadspaces) {
 }
 
 QuadSpaces.listToString = function(list) {
+	return listToString(0);
+}
+
+QuadSpaces.listToString = function(list, offset1) {
 	var res = '[';
 	var i = 0;
-	for (s in list) {
+	for (s = offset1; s < list.length; s++) {
 		if (i != 0)
 			res += ", ";
 		res += list[s];
@@ -146,7 +151,7 @@ QuadSpaces.getZ = function(vector) {
  * 2 times per second in the 16-64 meter range.<br>
  * 1/8 times per second in the 64 to 256 <br>
  * 256 is 1/32 or half a minute<br>
- * 1km  every 4 minutes<br>
+ * 1km every 4 minutes<br>
  * 4 km every 16 minutes (useless) and after 4km we'll be invisible.<br>
  * so, it's 6 levels<br>
  * 
@@ -172,17 +177,25 @@ QuadSpaces.getZ = function(vector) {
 
 QuadSpaces.Tracker = function(socket, scene, userHash) {
 
-	this.allSubscribed = {};// a set.
 	this.socket = socket;
 	this.scene = scene;
-	this.userHash = userHash;// an id of the user/camera/avatar
+	this.userHash = "" + userHash;// an id of the user/camera/avatar
+	this.id = "" + userHash;
+	this.selfCount = 0;// should increment
+
+	this.allSubscribedChannels = {};// a set.
+	this.nextSubscribedChannels = {};// a set.
+
+	// powers of 2 and must be even. We count by 2's.
+	this.minLevel = 2;// means there is no finer detail inside of 4 meters
+	this.maxLevel = 14;// 2^12 = 4km is the max we can see.
 
 	this.intervals = [];// 
 	// populate them from 1 to 7 = 4m to 4km
 	var time = Date.now();
-	var interval = 30;// ms
-	for ( i = 0 ; i < 6 ; i ++ ){
-		var newi = new QuadSpaces.Level  ( i + 1); 
+	var interval = 30;//100;// 30;// ms
+	for (i = this.minLevel; i < this.maxLevel; i += 2) {
+		var newi = new QuadSpaces.Level(i);
 		newi.nextSend = time;
 		newi.interval = interval;
 		this.intervals.push(newi);
@@ -190,16 +203,99 @@ QuadSpaces.Tracker = function(socket, scene, userHash) {
 		// TODO: override makeMessage on larger layers
 		// to leave off v and etc.
 	}
+	//this.intervals[0].interval = 300;// slow down for debugging
+	//this.intervals[1].interval = 300;// slow down for debugging
+	
+	this.avatars = {};// id to 
+
+	this.socket.tracker = this;
+	this.socket.handleMessage = function(data){
+		this.tracker.handleIncoming(data);
+	}
+}
+
+QuadSpaces.Tracker.prototype.getId = function() {
+	return this.id;
 }
 
 QuadSpaces.Tracker.prototype.handleIncoming = function(string) {
-	console.log("Tracker has message:  " + string);
+	var obj = JSON.parse(string);
+	var payload = JSON.parse(obj.msg);
+	if ( payload.id == this.id ){
+		this.selfCount ++;
+	} else {
+	  //console.log("Tracker has message: -------------->> " + payload);
+	  var theObject = this.avatars[payload.id];
+	  if (  theObject == null ){
+		var theObject = avatarBuilder.build(payload.id);
+		this.avatars[payload.id] = theObject;
+		this.scene.add(theObject);
+	  }
+	  theObject.position.x = payload.p[0];
+	  theObject.position.y = payload.p[1];
+	  theObject.position.z = payload.p[2];
+	}
 }
 
-QuadSpaces.Tracker.prototype.update = function(position, velocity, id ) {
+QuadSpaces.Tracker.prototype.processSubscriptions = function(position, velocity, lodlist) {
+	
+	var test = "[0_0_0_2]";
+	this.nextSubscribedChannels[test] = test;
+	
+	this.allSubscribedChannels = GWEMS.subscribeChanges(this.allSubscribedChannels, this.nextSubscribedChannels, this.socket);
+	
+// 	var msg = GWEMS.getSubscribeString();
+// 	this.socket.send(msg);
+// 	console.log("sub " + msg)
+
+	// var publishChannels = {};
+	// for (var i = 0; i < this.intervals.length; i ++ ) {
+	// var level = this.intervals[i];
+	// var str;
+	// if ( i < lodlist.length ) {
+	// str = QuadSpaces.listToString(lodlist, i);
+	// }else {
+	// str = "[0_0_0_" + level.logscale +"]";
+	// }
+	// publishChannels[str] = str;
+	// level.string = str;
+	// }
+	// // calc differences:
+	// this.allSubscribed = GWEMS.subscribeChanges(this.allSubscribed, publishChannels, this.socket);
+
+}
+
+QuadSpaces.Tracker.prototype.update = function(position, velocity) {
+	// don't start if the socket is not done yet
+	if (this.socket.isOpen == 0)
+		return;
 	var time = Date.now();
 	// recalc all the interval/level strings
-	// unsub and sub as necessary
+	this.nextSubscribedChannels = {};// a set.
+
+	var lodlist = QuadSpaces.decompose(position, this.minLevel);
+	// re-do the channels before we publish 
+	for (var i = 0; i < this.intervals.length; i++) {
+		// smallest to largest
+		var level = this.intervals[i];
+		var str;
+		if (i < lodlist.length) {
+			str = QuadSpaces.listToString(lodlist, i);
+		} else {
+			str = "[0_0_0_" + level.logscale + "]";
+		}
+		if ( level.string  != str ){
+			// it different, we've moved
+			level.string = str;
+			//this.nextSubscribedChannels[str] = str;
+			level.dirty = true;
+		} else
+			break;
+	}
+
+	// we'll need to subscribe before we write to the channels
+	this.processSubscriptions(position, velocity, lodlist);
+
 	// reset times when resub.
 	var p = [];// position of myself
 	p.push(position.x);
@@ -209,31 +305,35 @@ QuadSpaces.Tracker.prototype.update = function(position, velocity, id ) {
 	v.push(velocity.x);
 	v.push(velocity.y);
 	v.push(velocity.z);
-	
-	// what messages do we send
+
+	// what messages do we send?
 	for (i in this.intervals) {
 		var level = this.intervals[i];
 		if (level.nextSend < time) {
 			// send message
-			var msg = level.makeMessage(p,v,id);
-			var pubstr = GWEMS.getPublishString(level.string,msg);
+			var msg = level.makeMessage(p, v, this.id);
+			msg = JSON.stringify(msg);
+			var pubstr = GWEMS.getPublishString(level.string, msg);
 			this.socket.send(pubstr);
 			level.nextSend += level.interval;
+			//console.log( level.interval );
 		}
 	}
 }
 
 QuadSpaces.protoMessage1 = {
-	 p:[],
-	 v:[],
-	 id:""
+	p : [],
+	v : [],
+	id : ""
 };
 
-QuadSpaces.Level =  function( logscale ) {
+QuadSpaces.Level = function(logscale) {
 	this.nextSend = 0;
 	this.interval = 1;
-	this.scale = Math.pow(2, logscale);;// 1 or 4 or 16 or 64, etc. powers of 4
+	this.scale = Math.pow(2, logscale);
+	// 1 or 4 or 16 or 64, etc. powers of 4
 	this.logscale = logscale;// 0 or 2 or 4 or 6, etc. always even
+	this.dirty = true;
 
 	// the publish channel
 	this.string = "";// might be "[0_0_0_0]", or whatever
@@ -247,26 +347,13 @@ QuadSpaces.Level =  function( logscale ) {
 		var s = QuadSpaces.listToString(list);
 		return s;
 	}
-	
-	this.makeMessage = function( p, v, id , etc){
+
+	this.makeMessage = function(p, v, id, etc) {
 		var msg = QuadSpaces.protoMessage1;
 		msg.p = p;
 		msg.v = v;
 		msg.id = id;
-		return msg;//JSON.stringify(msg);
-	 }
- 
-}
+		return msg;// JSON.stringify(msg);
+	}
 
-/**
- * var v = new THREE.Vector3(1, 2, 3);
- * 
- * var strList = QuadSpaces.decompose(v, 0);
- * 
- * console.log(QuadSpaces.listToString(strList));
- * 
- * var vect2 = QuadSpaces.getMinCorner(strList[0]);
- * 
- * var vect3 = QuadSpaces.reconstitute(strList);
- * 
- */
+}
