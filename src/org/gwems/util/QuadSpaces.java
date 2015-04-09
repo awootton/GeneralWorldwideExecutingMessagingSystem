@@ -1,7 +1,10 @@
 package org.gwems.util;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javafx.util.Pair;
 
@@ -24,8 +27,10 @@ public class QuadSpaces {
 	 * what are they called ? Quadspaces
 	 *
 	 * 0_0_0_0 is the minimum corner of the zero meter cube. 0_0_0_1 is an error. 0_0_0_2 is a 4 by 4 by 4 meter cube at
-	 * the origin. .
+	 * the origin.
 	 * 
+	 * We should probably do this over with a base64 encoding and save a lot of space at the expense of readability
+	 * (which is low anyway).
 	 */
 
 	/**
@@ -64,10 +69,9 @@ public class QuadSpaces {
 		return new Pair<Vector3d, Vector3d>(vmin, vmax);
 	}
 
-	/** Return the vector of the corner of the cube described by s
-	 * where is is of the form x_y_x_p and x, y, and z MUST be between -2 and 1
-	 * and p MUST be an even number. 
-	 * p is a power of 2
+	/**
+	 * Return the vector of the corner of the cube described by s where is is of the form x_y_x_p and x, y, and z MUST
+	 * be between -2 and 1 and p MUST be an even number. p is a power of 2
 	 * 
 	 * @param s
 	 * @return
@@ -99,8 +103,8 @@ public class QuadSpaces {
 		return vmin;
 	}
 
-	/** The complete opposite of decompose. 
-	 * A list of quadspaces can be added to recover a vector in 3 space. 
+	/**
+	 * The complete opposite of decompose. A list of quadspaces can be added to recover a vector in 3 space.
 	 * 
 	 * @throws EncodeException
 	 * 
@@ -157,9 +161,45 @@ public class QuadSpaces {
 		return result;
 	}
 
+	// for a series of levels we need the quad names of the surrounding quads.
+	// It's practically an interview question. It's weird.
+	// I'm not sure that we need to do it that often or that it's a performance
+	// problem and I'm in a hurry to write it.
+
+	public static Set<String> surroundingSpaceNames(Vector3d position, int start, int end) {
+		Set<String> set = new HashSet<>();
+		Vector3d tmp = new Vector3d();
+		for (int bias = start; bias < end; bias++) {
+			double length = Math.scalb(1, bias);
+			length = length * 3.0/4.0; // we don't really need all 27. In some cases 1 will do.
+			double lenEnd = length;
+			// iterate -len, 0, + len
+			for (double x = -length; x <= lenEnd; x += length) {
+				for (double y = -length; y <= lenEnd; y += length) {
+					for (double z = -length; z <= lenEnd; z += length) {
+						tmp.x = position.x + x;
+						tmp.y = position.y + y;
+						tmp.z = position.z + z;
+						List<String> quad = decompose(tmp, bias);
+						set.add("" + quad);
+					}
+				}
+			}
+		}
+		return set;
+	}
+
 	public static void main(String[] args) throws EncodeException {
 
 		List<String> list;
+
+		System.out.println(new TreeSet<String>(surroundingSpaceNames(new Vector3d(1.1, 1.1, 1.1), 0, 1)));// 
+		// just past the edge should be 8
+		// [[0_0_0_0], [0_0_1_0], [0_1_0_0], [0_1_1_0], [1_0_0_0], [1_0_1_0], [1_1_0_0], [1_1_1_0]]
+ 
+		System.out.println(new TreeSet<String>(surroundingSpaceNames(new Vector3d(0.01, 0.01, 0.01), 0, 4)));
+		// just 1 per level because we're in the middle of a square
+		// [[0_0_0_0], [0_0_0_1], [0_0_0_2], [0_0_0_3]]
 
 		list = decompose(new Vector3d(0, 0, 0), 0);
 		Assert.assertEquals("[0_0_0_0]", "" + list);

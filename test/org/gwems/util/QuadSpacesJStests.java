@@ -2,12 +2,13 @@ package org.gwems.util;
 
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.script.ScriptException;
 import javax.vecmath.Vector3d;
 
 import org.gwems.common.core.JavaScriptTests;
-import org.gwems.util.QuadSpaces;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -64,15 +65,21 @@ public class QuadSpacesJStests extends JavaScriptTests {
 
 		List<String> slist = QuadSpaces.decompose(v, bias);
 		Object str = lsDecompose(v, bias);
-
+		
 		Assert.assertEquals("" + slist, str);
-
+		
 		System.out.println(" mn " + lsgetMinCorner(slist.get(0)));
 
 		Object strList = lsDecompose2list(v, bias);
 		Vector3d redone = reconstitute(strList);
 
 		Assert.assertEquals(v, redone);
+		
+		//surroundingSpaceNames(Vector3d position, int start, int end) {
+		
+		Set<String>  surrounds = QuadSpaces.surroundingSpaceNames(v, 0, 3);
+		String surrstr = "" + new TreeSet<String>(surrounds);
+		System.out.println(surrstr);
 
 		return "" + slist;
 	}
