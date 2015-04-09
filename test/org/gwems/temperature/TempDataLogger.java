@@ -3,7 +3,7 @@ package org.gwems.temperature;
 import java.io.IOException;
 
 import org.apache.log4j.Level;
-import org.gwems.Ping;
+import org.gwems.PingTest;
 import org.gwems.agents.SessionAgent;
 import org.gwems.agents.SimpleAgent;
 import org.gwems.common.core.StartServers;
@@ -123,7 +123,7 @@ public class TempDataLogger extends StartServers {
 		MyWebSocketServer.logger.setLevel(Level.TRACE);
 		WsClientImpl.logger.setLevel(Level.TRACE);
 		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
-		Ping.logger.setLevel(Level.TRACE);
+		PingTest.logger.setLevel(Level.TRACE);
 		PingEcho.logger.setLevel(Level.TRACE);
 		TimeoutCache.logger.setLevel(Level.TRACE);
 		MyWebSocketServerHandler.logger.setLevel(Level.TRACE);

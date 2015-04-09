@@ -146,7 +146,7 @@ public final class MyWebSocketServer {
 			
 			startedChannel = true;
 
-			ch.closeFuture().sync();
+			ch.closeFuture().sync();// and, the thread starts to wait.
 		} finally {
 			bossGroup.shutdownGracefully();
 			workerGroup.shutdownGracefully();

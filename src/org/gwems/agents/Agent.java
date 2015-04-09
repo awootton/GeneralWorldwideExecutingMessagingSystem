@@ -34,16 +34,15 @@ public abstract class Agent implements Comparable<Agent> {
 		this.key = key;
 		this.userMap = new HashMap<>();
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.getClass() + ":" + key;
 	}
-	
-	public final String getKey(){
+
+	public final String getKey() {
 		return key;
 	}
-
 
 	/**
 	 * Sometimes the agent might want to filter the messages. To do that override this. Otherwise, as you can see, the

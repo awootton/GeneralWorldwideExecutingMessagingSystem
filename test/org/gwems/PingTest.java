@@ -20,9 +20,9 @@ import org.messageweb.testmessages.PingEcho;
  * @author awootton
  *
  */
-public class Ping {
+public class PingTest {
 
-	public static Logger logger = Logger.getLogger(Ping.class);
+	public static Logger logger = Logger.getLogger(PingTest.class);
 
 	@Test
 	public void gobabygo() {
@@ -66,13 +66,13 @@ public class Ping {
 
 		WsClientImpl.logger.setLevel(Level.TRACE);
 		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
-		Ping.logger.setLevel(Level.TRACE);
+		PingTest.logger.setLevel(Level.TRACE);
 		PingEcho.logger.setLevel(Level.TRACE);
 		TimeoutCache.logger.setLevel(Level.TRACE);
 		
 		MyRedisPubSub.logger.setLevel(Level.TRACE);
 
-		Ping test = new Ping();
+		PingTest test = new PingTest();
 		test.gobabygo();
 
 		System.out.println(" 888  888  888  888  888  888  888  888  888  main finished   main finished   main finished   main finished   main finished ");

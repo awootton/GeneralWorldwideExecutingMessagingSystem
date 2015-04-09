@@ -5,52 +5,44 @@
 <meta charset="ISO-8859-1">
 <title>General Worldwide Executing Messaging System</title>
 
-<script
-	src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"
-	type="text/javascript"></script>
+<!-- Help ! I have no style and no class . -->
+<style>
+div {
+	font-size: 20px
+}
+</style>
 
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+ 
 <script type="text/javascript">
 	$(document).ready(function() {
-		//setTime();
-		// setInterval(setTime, 1000);
-
-		//jQuery('#dollarTyped').on('input', setAmount);
-
-		$.ajax({
-			url : "getLast"
-		}).done(function(data) {
-			setLast(data)
-		});
 
 	});
-
-	function setTime() {
-		//$('#theTime').append("sss");   
-		$('#theTime').html("time = " + new Date());
-	}
-
-	function setLast(aTimeStr) {
-		//$('#theTime').append("sss");   
-		$('#theLast').html("time = " + aTimeStr);
-	}
-
-	function setAmount() {
-		//$('#theTime').append("sss");   
-		var typed = $('#dollarTyped').val();
-		//$('#theTime').html(typed);
-		$('#dollarAmount').val(typed);
-	}
 </script>
-
 
 </head>
 <body>
+	<div>
+		Welcome to the temporary home of the <a
+			href="https://github.com/awootton/GeneralWorldwideExecutingMessagingSystem/wiki">GeneralWorldwideExecutingMessagingSystem</a>
+		demos.<br> <br>
+	</div>
+	<div>
+		<h3><a href="WootWideChat.html">The multichannel chat demo.
+				Aka WootWideChat </a></h3>
+		There are some instructions in the demo.
+	</div>
+	<div>
+		<h3><a href="Three.html">The multiuser VR demo. Three.html </a></h3>
+		W and S will move forward and backwards. A and D move left and right. 
+		R and F move up and down (or, they try to - there's gravity).<br>
+		Hold down the shift key to move faster. <br> This demo is more
+		interesting (if you are the only person in the space) if you open up
+		two browser windows side by side.
+	</div>
+	<div></div>
 
-	<br>
-	<br> Hello world from index.html
 
-	<br> The last visit was:
-	<div id="theLast">??</div>
 	<br>
 	<br>
 

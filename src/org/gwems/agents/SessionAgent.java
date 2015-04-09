@@ -14,6 +14,7 @@ import org.gwems.util.SessionRunnablesQueue;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * There's some confusion about what this does. We're going to need for the clients to subscribe to things but when they
@@ -74,10 +75,19 @@ public class SessionAgent extends Agent {
 		ctx.channel().writeAndFlush(new TextWebSocketFrame(message));
 	}
 
+	public void writeAndFlush(Runnable message) {
+		String str;
+		try {
+			str = Global.serialize(message);
+			ctx.channel().writeAndFlush(new TextWebSocketFrame(str));
+		} catch (JsonProcessingException e) {
+			logger.error("bad message " + message, e);
+		}
+	}
 
 	/**
-	 * Set ourselves so that we keep alive every 10 sec. In some cases there will be a stream as fast as 60 hz and
-	 * that would stress the timeoutCache.
+	 * Set ourselves so that we keep alive every 10 sec. In some cases there will be a stream as fast as 60 hz and that
+	 * would stress the timeoutCache.
 	 * 
 	 * Then, run the message.
 	 * 

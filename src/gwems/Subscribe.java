@@ -1,7 +1,6 @@
 package gwems;
 
 import org.apache.log4j.Logger;
-import org.gwems.agents.SessionAgent;
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 
@@ -24,13 +23,10 @@ public class Subscribe implements Runnable {
 	@Override
 	public void run() {
 		ExecutionContext ec = Global.getContext();
-		if (ec.agent.isPresent() && ec.agent.get() instanceof SessionAgent) {
-			SessionAgent session = (SessionAgent) ec.agent.get();
-			if (channel.length() >= 4 && !"none".equals(channel)) {
-				ec.global.subscribe(session, channel.trim());
-				if (logger.isDebugEnabled())
-					logger.debug("Session" + session + " subscribed to " + channel);
-			}
+		if (ec.agent.isPresent() && (channel.length() >= 4 && !"none".equals(channel))) {
+			ec.global.subscribe(ec.agent.get(), channel.trim());
+			if (logger.isDebugEnabled())
+				logger.debug("Session" + ec.getAgentName() + " subscribed to " + channel);
 		}
 	}
 

@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <title>WootWideChat GWEMS client demo.</title>
 
-<!--  Help! I have no style and no class. -->
-<style>
+<style> <!--  Help! I have no style and no class. -->
 .content .Top .Bottom #log {
 	width: 640px;
 }
-
+div textarea {
+	font-size: 20px
+}
 textarea {
 	width: 640px;
 }
@@ -34,7 +35,9 @@ textarea {
 
 	var handleIncomingMessage = function(string) {// show it in 'log'
 		var obj = JSON.parse(string);
-		var s = "<span>" + obj.from.substring(4) + " -- " + obj.msg + "<br>";
+		var from = obj.from;
+		var message = obj.msg;
+		var s = "<span>" + from + " -- " + message + "<br>";
 		$("#log").prepend(s);
 	}
 
@@ -104,7 +107,7 @@ textarea {
 		if (str.length < 1)
 			return;
 		var theAlwaysTags = $('#setList').val();
-		var tagMap = wwc.extractTags(str + theAlwaysTags);
+		var tagMap = wwc.extractTags(str + " " + theAlwaysTags);
 		if (Object.keys(tagMap).length) {
 			var safe = str.replace('"', '\\"');
 			for (key in tagMap) {
@@ -159,7 +162,7 @@ textarea {
 	<div class="content">
 		<div class="Top">
 
-			<textarea id="setList" style="height: 16px;">Use these tags on every post: #mom</textarea>
+			<textarea id="setList" style="height: 20px;">Use these tags on every post: #mom</textarea>
 			<br> <input type="button" id="send" value="Send" /> <span
 				id="sendHints">Add #tags to send your message to different
 				topics.</span> <br>

@@ -191,8 +191,8 @@ public class Global implements Executor {
 			logger.info("SessionAgent on " + sessionAgent.ipAddress);
 			sessionStringAttribute.set(sessionAgent.getKey());
 			timeoutCache.put(sessionAgent.getKey(), sessionAgent, SessionAgentTTL, () -> {
+				unsubscribeAgent(sessionAgent);// this is super important
 				ctx.close();
-				unsubscribeAgent(sessionAgent);
 			});
 		} else {
 			sessionAgent = (SessionAgent) this.timeoutCache.get(sessionStringAttribute.get());

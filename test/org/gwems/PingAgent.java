@@ -36,7 +36,7 @@ public class PingAgent extends TempDataLogger {
 		MyWebSocketServer.logger.setLevel(Level.TRACE);
 		WsClientImpl.logger.setLevel(Level.TRACE);
 		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
-		Ping.logger.setLevel(Level.TRACE);
+		PingTest.logger.setLevel(Level.TRACE);
 		PingEcho.logger.setLevel(Level.TRACE);
 		TimeoutCache.logger.setLevel(Level.TRACE);
 		MyWebSocketServerHandler.logger.setLevel(Level.TRACE);

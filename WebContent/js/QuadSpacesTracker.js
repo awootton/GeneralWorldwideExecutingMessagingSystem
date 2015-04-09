@@ -23,8 +23,8 @@
 
 /**
  * All the variables and stuff that we need to publish and subscribe to a VR world. socket is a GWEMS.WebSocketClient
- * scene is the top level scene graph where we can add and subtract avatars.
- * 
+ * scene is the top level scene graph where we can add and subtract avatars. 
+ * userHash is some kind of (tbd) name or id of the operator person/thing/avatar/whatever.
  */
 
 QuadSpaces.Tracker = function(socket, scene, userHash) {
@@ -46,13 +46,15 @@ QuadSpaces.Tracker = function(socket, scene, userHash) {
 	// smallest to largest
 	// populate them from 1 to 7 = 4m to 4km
 	var time = Date.now();
-	var interval = 30;// 100;// 30;// ms
+	var interval = 10;// 100;// 30;// ms
 	for (i = this.minLevel; i < this.maxLevel; i += 2) {
+		if ( interval < 20 )
+			interval = 20;//hack max at 50hz
 		var newi = new QuadSpaces.Level(i);
 		newi.nextSend = time;
-		newi.interval = interval;
+		newi.interval = interval | 0;
 		this.intervals.push(newi);
-		interval *= 4;
+		interval *= 2;// hack for faster rates was 4;
 		// TODO: override makeMessage on larger layers
 		// to leave off v and etc.
 	}

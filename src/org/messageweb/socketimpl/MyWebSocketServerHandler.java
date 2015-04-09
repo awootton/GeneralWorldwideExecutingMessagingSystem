@@ -33,6 +33,11 @@ import io.netty.util.CharsetUtil;
 import org.apache.log4j.Logger;
 import org.gwems.servers.Global;
 
+/** This was copied from a netty example. Hope it's ok - atw.
+ * 
+ * @author awootton
+ *
+ */
 public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
 
 	public static Logger logger = Logger.getLogger(MyWebSocketServerHandler.class);

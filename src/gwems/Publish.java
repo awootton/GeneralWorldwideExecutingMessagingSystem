@@ -1,7 +1,6 @@
 package gwems;
 
 import org.apache.log4j.Logger;
-import org.gwems.agents.SessionAgent;
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 
@@ -29,15 +28,14 @@ public class Publish implements Runnable {
 	@Override
 	public void run() {
 		ExecutionContext ec = Global.getContext();
-		if (ec.agent.isPresent() && ec.agent.get() instanceof SessionAgent) {
-			SessionAgent session = (SessionAgent) ec.agent.get();
-			if (channel.length() >= 3 && !"none".equals(channel)) {
-				// we're NOT going to wrap the message in a Push2Client
-				// someone else had to already wrap it.
-				ec.global.publish(channel.trim(), msg);
-				if (logger.isTraceEnabled())
-					logger.trace("Session" + session + " did publish to " + channel);
-			}
+		if (channel.length() >= 3 && !"na".equals(channel)) {
+			// we're NOT going to wrap the message in a Push2Client
+			// someone else had to already wrap it.
+			ec.global.publish(channel.trim(), msg);
+			if (logger.isTraceEnabled())
+				logger.trace("Session" + Global.getContext().getAgentName() + " did publish to " + channel);
+		} else {
+			logger.error("channel name was too short, or none:" + channel);
 		}
 	}
 
