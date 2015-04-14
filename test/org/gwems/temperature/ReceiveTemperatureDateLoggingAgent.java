@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.gwems.agents.Agent;
+import org.gwems.servers.Global;
 
 public class ReceiveTemperatureDateLoggingAgent extends Agent {
 
- 
-	public ReceiveTemperatureDateLoggingAgent(String key) {
-		super(key);
+	public ReceiveTemperatureDateLoggingAgent(Global global, String key) {
+		super(global, key);
 	}
 
 	// String id = "ReceivingAgent123";

@@ -11,6 +11,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.gwems.servers.ClusterState;
 import org.gwems.servers.Global;
+import org.gwems.servers.impl.MyWebSocketServerHandler;
+import org.gwems.servers.impl.WsLoggingHandler;
 
 public class StartOneGlobalServer {
 
@@ -26,11 +28,17 @@ public class StartOneGlobalServer {
 		Publish.logger.setLevel(Level.DEBUG);
 		Global.logger.setLevel(Level.DEBUG);
 		
+		WsLoggingHandler.logger.setLevel(Level.DEBUG);
+		
+		MyWebSocketServerHandler.logger.setLevel(Level.DEBUG);
+		
 		System.setProperty("catalina.base", "..");
 
 		// No Guice here yet. Assembling manually.
 
 		Global global = new Global(8081, new ClusterState());// starts a ws server
+		
+		global.sessionTtl = 30000;// 30 sec. 
 
 		// publish the time every 10 sec.
 		long time_10 = System.currentTimeMillis() + 10 * 1000;

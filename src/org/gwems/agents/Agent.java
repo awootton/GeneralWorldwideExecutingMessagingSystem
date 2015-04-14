@@ -16,7 +16,6 @@ import org.gwems.util.AgentRunnablesQueue;
  *
  */
 
-// @DynamoDBTable(tableName = "Agents")
 public abstract class Agent implements Comparable<Agent> {
 
 	/**
@@ -29,10 +28,15 @@ public abstract class Agent implements Comparable<Agent> {
 
 	private final String key;// must be unique!
 	public final Map<Object, Object> userMap;
+	public final Global global;
 
-	public Agent(String key) {
+	public Agent(Global global, String key) {
+		this.global = global;
 		this.key = key;
 		this.userMap = new HashMap<>();
+		// agents always subscribe to their own key so that they can make a SASE
+		global.subscribe(this, key);
+		// note that the agent timeout unsubs the agent
 	}
 
 	@Override

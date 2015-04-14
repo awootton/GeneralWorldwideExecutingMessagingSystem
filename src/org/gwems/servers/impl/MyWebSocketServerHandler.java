@@ -1,4 +1,4 @@
-package org.messageweb.socketimpl;
+package org.gwems.servers.impl;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
@@ -111,13 +111,16 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 
 		// Check for closing frame
 		if (frame instanceof CloseWebSocketFrame) {
+			if ( logger.isDebugEnabled()){
+				logger.debug("closing socket with CloseWebSocketFrame ");
+			}
 			// can we just do this here, or do we need to call global?
 			AttributeKey<String> key =  AttributeKey.<String> valueOf("session");
 			Attribute<String> sessionStringAttribute = ctx.attr(key);
 			if (sessionStringAttribute.get() == null) {
 				 // wtf? 
-				//logger.error("Why are we closing a socket with no sessionAgent?");
-				//A: sometimes no message was sentg on the socket!
+				logger.error("Why are we closing a socket with no sessionAgent?");
+				//A: sometimes no message was sentg on the socket! AA: but we fixed that. 
 			} else {
 				// and run all the closing routines asap.
 				global.timeoutCache.setTtl(sessionStringAttribute.get(), 0);
@@ -126,10 +129,16 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 			return;
 		}
 		if (frame instanceof PingWebSocketFrame) {
+			if ( logger.isDebugEnabled()){
+				logger.debug("Socket has PingWebSocketFrame");
+			}
 			ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
 			return;
 		}
 		if (!(frame instanceof TextWebSocketFrame)) {
+			if ( logger.isDebugEnabled()){
+				logger.debug("Socket unknown frame type " + frame.getClass().getName());
+			}
 			throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
 		}
 
@@ -167,7 +176,7 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		cause.printStackTrace();
-		ctx.close();
+		ctx.close();// closes the server?? atw
 	}
 
 	private static String getWebSocketLocation(FullHttpRequest req) {

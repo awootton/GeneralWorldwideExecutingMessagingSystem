@@ -38,7 +38,6 @@ import org.apache.log4j.Logger;
 import org.gwems.servers.impl.MyRejectedExecutionHandler;
 import org.gwems.servers.impl.MyWebSocketClientHandler;
 import org.gwems.util.TimeoutCache;
-import org.messageweb.testmessages.PingEcho;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -234,7 +233,7 @@ public final class WsClientImpl {
 		return myClient.get();
 	}
 
-	static public void Xreply(Runnable message) {
+	static public void XXXXXXXXXreply(Runnable message) {
 		ChannelHandlerContext ctx = myClientContext.get();
 		// logger.info(" have ctx name = " + ctx.name());
 		try {
@@ -264,6 +263,8 @@ public final class WsClientImpl {
 			myClient.set(WsClientImpl.this);
 			Runnable child;
 			try {
+				if ( logger.isTraceEnabled())
+					logger.trace("Have message " + message);
 				child = Global.deserialize(message);
 				child.run();
 			} catch (JsonParseException e) {
@@ -369,9 +370,9 @@ public final class WsClientImpl {
 
 		WsClientImpl test = new WsClientImpl(8081);
 
-		test.enqueueRunnable(new PingEcho());
+		//test.enqueueRunnable(new PingEcho());
 
-		test.enqueueRunnable(new PingEcho());
+		//test.enqueueRunnable(new PingEcho());
 
 		BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
@@ -384,6 +385,7 @@ public final class WsClientImpl {
 			}
 			if ("bye".equals(msg)) {
 				test.stop();
+				break;
 			}
 			test.enqueueString(msg);
 		}

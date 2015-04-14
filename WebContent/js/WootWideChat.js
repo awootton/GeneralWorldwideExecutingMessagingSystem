@@ -9,12 +9,15 @@ var wwc = {};
 /**
  * Returns a Set of strings without # No white spaces.
  * No quotes allowed. 
+ * If delim is present then it splits by something other than #
  */
 
-wwc.extractTags = function(text) {
+wwc.extractTags = function(text, delim ) {
 
+	if ( !delim )
+		delim = "#";
 	var result = {};
-	var parts = text.split("#");
+	var parts = text.split(delim);
 	var count = 0;
 	for ( var i in parts) {
 		// the first one doesn't count

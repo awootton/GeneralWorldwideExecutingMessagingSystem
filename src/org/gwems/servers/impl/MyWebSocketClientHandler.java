@@ -90,6 +90,6 @@ public class MyWebSocketClientHandler extends SimpleChannelInboundHandler<Object
 		if (!handshakeFuture.isDone()) {
 			handshakeFuture.setFailure(cause);
 		}
-		ctx.close();
+		ctx.close();// atw does this kill the server?
 	}
 }

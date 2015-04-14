@@ -5,7 +5,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 
 import org.gwems.agents.Agent;
-import org.gwems.agents.SessionAgent;
 
 /**
  * This will be available as ThreadLocal storage.

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 public  class Util {
 	
 	public static final int twoMinutes = 120 * 1000;
+	public static final int fifteenMinutes = 15 * 60 * 1000;
 
 	public static String serialize( Object that)  {
 		try {

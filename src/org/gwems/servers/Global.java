@@ -1,5 +1,6 @@
 package org.gwems.servers;
 
+import gwems.Ack;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
@@ -7,6 +8,7 @@ import io.netty.util.AttributeKey;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -15,17 +17,20 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.script.ScriptEngine;
+
 import org.apache.log4j.Logger;
 import org.gwems.agents.Agent;
 import org.gwems.agents.SessionAgent;
 import org.gwems.servers.impl.JedisRedisPubSubImpl;
+import org.gwems.servers.impl.JsEnginePool;
 import org.gwems.servers.impl.MyRejectedExecutionHandler;
+import org.gwems.servers.impl.MyWebSocketServer;
 import org.gwems.util.HalfHashTwoWayMapping;
 import org.gwems.util.PubSub;
 import org.gwems.util.TimeoutCache;
 import org.gwems.util.TwoWayMapping;
 import org.messageweb.dynamo.DynamoHelper;
-import org.messageweb.socketimpl.MyWebSocketServer;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
@@ -87,6 +92,10 @@ public class Global implements Executor {
 
 	int port;
 
+	JsEnginePool jsPool;
+
+	public int sessionTtl = SessionAgentTTL;// 15 min
+
 	public Global(int port, ClusterState cluster) {
 
 		this.cluster = cluster;
@@ -109,6 +118,8 @@ public class Global implements Executor {
 
 		// Start the redis pub/sub thread.
 		redisPubSub = new JedisRedisPubSubImpl(cluster.redis_server, cluster.redis_port, new LocalSubscriberHandler(), id);
+
+		jsPool = new JsEnginePool(this);
 
 		// how do we wait for server to start up?
 		while (server.startedChannel == false) {
@@ -175,6 +186,36 @@ public class Global implements Executor {
 
 	static final int SessionAgentTTL = Util.twoMinutes;
 
+	public SessionAgent almost_private_EnsureSessionAgent(ChannelHandlerContext ctx) {
+		SessionAgent sessionAgent;
+		AttributeKey<String> key = AttributeKey.<String> valueOf("session");
+		Attribute<String> sessionStringAttribute = ctx.attr(key);
+		if (sessionStringAttribute.get() == null) {
+			sessionAgent = new SessionAgent(this, getRandom(), ctx);
+			sessionStringAttribute.set(sessionAgent.getKey());
+			timeoutCache.put(sessionAgent.getKey(), sessionAgent, sessionTtl, () -> {
+				unsubscribeAgent(sessionAgent);// this is super important. We don't want the subscriptions to leak.
+					// do we close the socket?? ctx.close() here kills the server
+					logger.info("closed SessionAgent ip=" + sessionAgent.ipAddress + " start=" + sessionAgent.getStartTime() + " end=" + new Date().getTime());
+					sessionStringAttribute.set(null);
+				});
+			// send an ack now.
+			Ack ack = new Ack();
+			ack.server = this.id;
+			ack.session = sessionAgent.getKey();
+			ack.version = "0.1";// ?? TODO: ??
+			sessionAgent.writeAndFlush(ack);
+
+		} else {
+			sessionAgent = (SessionAgent) this.timeoutCache.get(sessionStringAttribute.get());
+			if (sessionAgent.ipAddress == null && ctx.channel() != null && ctx.channel().remoteAddress() != null) {
+				sessionAgent.ipAddress = ctx.channel().remoteAddress().toString();
+				logger.info("new SessionAgent ip=" + sessionAgent.ipAddress + " start=" + sessionAgent.getStartTime());
+			}
+		}
+		return sessionAgent;
+	}
+
 	/**
 	 * Incoming messages from the WS channel come directly through here.
 	 * 
@@ -182,21 +223,8 @@ public class Global implements Executor {
 	 * @param child
 	 */
 	public void executeChannelMessage(ChannelHandlerContext ctx, String message) {
-		AttributeKey<String> key = AttributeKey.<String> valueOf("session");
-		Attribute<String> sessionStringAttribute = ctx.attr(key);
 		SessionAgent sessionAgent;
-		if (sessionStringAttribute.get() == null) {
-			sessionAgent = new SessionAgent(this, getRandom(), ctx);
-			sessionAgent.ipAddress = ctx.channel().remoteAddress().toString();
-			logger.info("SessionAgent on " + sessionAgent.ipAddress);
-			sessionStringAttribute.set(sessionAgent.getKey());
-			timeoutCache.put(sessionAgent.getKey(), sessionAgent, SessionAgentTTL, () -> {
-				unsubscribeAgent(sessionAgent);// this is super important
-				ctx.close();
-			});
-		} else {
-			sessionAgent = (SessionAgent) this.timeoutCache.get(sessionStringAttribute.get());
-		}
+		sessionAgent = almost_private_EnsureSessionAgent(ctx);
 		assert ctx != null;
 		if (logger.isTraceEnabled()) {
 			logger.trace("Sending message to execute on " + sessionAgent + " with " + message);
@@ -414,7 +442,7 @@ public class Global implements Executor {
 	 * @param message
 	 */
 
-	public void publish(String channel, String message) {
+	public void XXXpublish(String channel, String message, boolean log) {
 
 		if (logger.isTraceEnabled()) {
 			logger.trace("publish sending " + message + " on channel " + channel);
@@ -457,7 +485,15 @@ public class Global implements Executor {
 	}
 
 	public void publish(String channel, Runnable runme) {
-		if (logger.isTraceEnabled()) {
+		publish(channel, runme, true);
+	}
+
+	public void publishLog(String channel, Runnable runme) {
+		publish(channel, runme, false);
+	}
+
+	private void publish(String channel, Runnable runme, boolean log) {
+		if (logger.isTraceEnabled() && log) {
 			logger.trace("publish sending runme " + runme + " on channel " + channel);
 		}
 		if (channel == null)
@@ -479,7 +515,7 @@ public class Global implements Executor {
 			ec.subscribedChannel = Optional.of(channel);
 			// get all the local subscribers
 			Set<Agent> agents = session2channel.thing2items_get(channel);
-			if (logger.isTraceEnabled()) {
+			if (logger.isTraceEnabled() && log) {
 				logger.trace("sending on to " + agents + " on channel " + channel);
 			}
 			for (Agent agent : agents) {
@@ -489,6 +525,7 @@ public class Global implements Executor {
 			ec.subscribedChannel = Optional.empty();
 		});
 		// Tack our name on the front so we don't re-broadcast when it arrives.
+		// FIXME: don't need this
 		redisPubSub.publish(channel, id + str);
 	}
 
@@ -534,7 +571,17 @@ public class Global implements Executor {
 		byte[] bytes = md.digest();
 		ec.lastRandom = bytes;
 		String str = Base64.getEncoder().encodeToString(bytes);
+		str = str.replaceAll("=", "");// just the random part please
 		return str;
+	}
+
+	public ScriptEngine getEngine() {
+		return jsPool.get();
+	}
+
+	public void returnEngine(ScriptEngine engine) {
+		if (engine != null)
+			jsPool.giveBack(engine);
 	}
 
 }

@@ -6,7 +6,6 @@ import org.apache.log4j.Logger;
 import org.gwems.util.PubSub;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class JedisRedisPubSubImpl extends PubSub {

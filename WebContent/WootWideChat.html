@@ -27,6 +27,7 @@ textarea {
 		'TimeEveryMinute' : 'TimeEveryMinute',
 		'mom' : 'mom',
 	};
+	var sessionId = "na";
 
 	var hostName = location.hostname;
 	console.log("Using " + hostName);
@@ -34,7 +35,12 @@ textarea {
 	var sock = new GWEMS.WebSocketClient(hostName, 8081, "/");
 
 	var handleIncomingMessage = function(string) {// show it in 'log'
+	
 		var obj = JSON.parse(string);
+		if ( obj['@C'] == "gwems.Ack"){
+			sessionId = obj.session;
+			console.log("Have session " + sessionId);
+		}
 		var from = obj.from;
 		var message = obj.msg;
 		var s = "<span>" + from + " -- " + message + "<br>";
@@ -84,7 +90,7 @@ textarea {
 	};
 
 	var handleSubTags = function(str) {
-		var after = wwc.extractTags($('#subscriptionList').val());
+		var after = wwc.extractTags($('#subscriptionList',' ').val());
 		var str = wwc.toTags(after);
 		var before = ourTopics;
 		$('#subHints').text('subscribed to ' + str);

@@ -3,10 +3,10 @@ package org.gwems.agents;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.log4j.Logger;
-import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 import org.gwems.servers.Util;
 import org.gwems.util.AgentRunnablesQueue;
@@ -41,10 +41,11 @@ public class SessionAgent extends Agent {
 	String userName = "none";// TODO: implement
 	String credentials = "none";// TODO: implement
 	// MyUser user = ?? TODO: what is user allowed to do ?
-	public String ipAddress = "none";// set by Global
+	public String ipAddress = null;// set by Global
 
 	long next10sec = System.currentTimeMillis() + 10 * 1000;
-	long startTime = System.currentTimeMillis();
+	long startTime =  new Date().getTime();//System.currentTimeMillis();
+	
 	int messageCount = 0;
 	public AtomicLong byteCount = new AtomicLong();
 
@@ -54,9 +55,7 @@ public class SessionAgent extends Agent {
 	public final SessionRunnablesQueue socketMessageQ;
 
 	private ChannelHandlerContext ctx;
-
-	public final Global global;
-
+	
 	/**
 	 * The session id and also the key for the timeoutQ. Constructed by Global
 	 * 
@@ -64,11 +63,12 @@ public class SessionAgent extends Agent {
 	 * @param sessionKey
 	 */
 	public SessionAgent(Global global, String sessionKey, ChannelHandlerContext ctx) {
-		super(sessionKey);
+		super(global,sessionKey);
 		this.ctx = ctx;
-		this.global = global;
+		//this.global = global;
 		messageQ = new AgentRunnablesQueue(global, this);
 		socketMessageQ = new SessionRunnablesQueue(global, this);
+		logger.info("started " + getKey());
 	}
 
 	public void writeAndFlush(String message) {
@@ -98,7 +98,12 @@ public class SessionAgent extends Agent {
 			long current = System.currentTimeMillis();
 			if (current > next10sec) {
 				next10sec = current + 10 * 1000;
-				global.timeoutCache.setTtl(this.getKey(), Util.twoMinutes);
+				if (ctx.channel() != null && ctx.channel().isOpen()) {
+					global.timeoutCache.setTtl(this.getKey(), Util.fifteenMinutes);
+				} else {
+					// is closed? This should have been handled somewhere else.
+					logger.error("Attempted ttl on closed socket " + this.toString());
+				}
 			}
 			messageCount++;
 			if (validated) {
@@ -122,4 +127,9 @@ public class SessionAgent extends Agent {
 			message.run();
 		}
 	}
+	
+	public long getStartTime() {
+		return startTime;
+	}
+
 }

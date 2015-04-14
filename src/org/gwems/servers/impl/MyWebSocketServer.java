@@ -1,4 +1,4 @@
-package org.messageweb.socketimpl;
+package org.gwems.servers.impl;
 
 /** Copyright Alan Wootton 2015
  * 
@@ -137,7 +137,7 @@ public final class MyWebSocketServer {
 
 		try {
 			ServerBootstrap b = new ServerBootstrap();
-			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).handler(new WsLoggingHandler())
+			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).handler(new WsLoggingHandler(global))
 					.childHandler(new MyWebSocketServerInitializer(sslCtx, global));
 
 			Channel ch = b.bind(port).sync().channel();

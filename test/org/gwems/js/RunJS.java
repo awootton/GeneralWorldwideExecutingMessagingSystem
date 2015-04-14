@@ -34,7 +34,7 @@ public class RunJS {
         Invocable inv = (Invocable) engine;
 
         // get script object on which we want to call the method
-        Object THREE = engine.get("THREE");
+       // Object THREE = engine.get("THREE");
         
         //System.out.println(THREE);
         
