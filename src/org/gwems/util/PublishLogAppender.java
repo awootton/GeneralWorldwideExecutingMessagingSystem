@@ -25,7 +25,7 @@ public class PublishLogAppender extends AppenderSkeleton {
 		if (ec.agent.isPresent()) {
 			String message = event.getRenderedMessage();
 			String channel = ec.agent.get().getKey() + "#log";
-			ec.global.publish(channel, new Push2Client(message));
+			ec.global.publishLog(channel, new Push2Client(message));
 		}
 	}
 

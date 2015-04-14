@@ -24,23 +24,29 @@ GWEMS.WebSocketClient.prototype.setOpen = function( val ){
 GWEMS.WebSocketClient.prototype.start = function() {
 	// ReconnectingWebSocket
 	this.socket = new WebSocket("ws://" + this.host + ":" + this.port + this.uri);
-	this.socket.GWEMS = this;
+	
+	var gewms = this;
 
 	this.socket.onopen = function(event) {
-		this.GWEMS.setOpen(1);
-		this.GWEMS.handleOpen(event);
+		gewms.setOpen(1);
+		gewms.handleOpen(event);
 	};
 	this.socket.onclose = function(event) {
-		this.GWEMS.setOpen(0);
-		this.GWEMS.handleClose(event);
+		gewms.setOpen(0);
+		gewms.handleClose(event);
 	};
 	this.socket.onerror = function(event) {
-		this.GWEMS.handleError(event);
+		gewms.handleError(event);
 	};
 	this.socket.onmessage = function(event) {
 		var msg = event.data;
-		this.GWEMS.handleMessage(msg);
-	}
+		gewms.handleMessage(msg);
+	};
+	
+	// set up keep alive.
+	window.setInterval(function() {
+		gewms.send('{"@C":"Live"}');
+	},  12 * 60 * 1000);// every 12 minutes. 
 };
 
 GWEMS.WebSocketClient.prototype.send = function(string) {

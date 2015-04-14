@@ -11,6 +11,7 @@ import javax.vecmath.Vector3d;
 import org.gwems.common.core.JavaScriptTests;
 import org.junit.Assert;
 import org.junit.Test;
+import org.messageweb.experiments.QuadSpaces;
 
 public class QuadSpacesJStests extends JavaScriptTests {
 

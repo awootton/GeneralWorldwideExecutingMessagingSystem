@@ -99,7 +99,7 @@ public class SessionAgent extends Agent {
 			if (current > next10sec) {
 				next10sec = current + 10 * 1000;
 				if (ctx.channel() != null && ctx.channel().isOpen()) {
-					global.timeoutCache.setTtl(this.getKey(), Util.fifteenMinutes);
+					global.timeoutCache.setTtl(this.getKey(), global.sessionTtl);
 				} else {
 					// is closed? This should have been handled somewhere else.
 					logger.error("Attempted ttl on closed socket " + this.toString());

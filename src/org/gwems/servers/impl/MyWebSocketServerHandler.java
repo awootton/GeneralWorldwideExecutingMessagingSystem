@@ -118,9 +118,6 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 			AttributeKey<String> key =  AttributeKey.<String> valueOf("session");
 			Attribute<String> sessionStringAttribute = ctx.attr(key);
 			if (sessionStringAttribute.get() == null) {
-				 // wtf? 
-				logger.error("Why are we closing a socket with no sessionAgent?");
-				//A: sometimes no message was sentg on the socket! AA: but we fixed that. 
 			} else {
 				// and run all the closing routines asap.
 				global.timeoutCache.setTtl(sessionStringAttribute.get(), 0);

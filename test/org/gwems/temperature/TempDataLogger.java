@@ -42,47 +42,10 @@ public class TempDataLogger extends StartServers {
 
 	@Test
 	public void demoOne() throws IOException {
-		demoAgentPing(global1);
-		demoAgentPing(global2);
+//		demoAgentPing(global1);
+	//	demoAgentPing(global2);
 	}
 
-	public void demoAgentPing(Global targetServer) throws IOException {
-
-		// ping for agent. Should fail.
-
-		String channel = "AbcDefHijQQQQQ";
-		// Don't reuse the id on short notice.
-		// Is this a flaw?
-		channel = Global.getRandom();
-
-		AgentFinder finder = new AgentFinder(global1, channel);
-		AgentFinder.Response response = finder.goAndWait();
-
-		System.out.println("found agent Info " + response.agentInfo + " from server " + response.globalInfo);
-
-		Assert.assertTrue(response.failed);
-		Assert.assertFalse(response.success);
-
-		// now, install an agent on server
-
-		SimpleAgent simpleAgent = new SimpleAgent(channel, targetServer);
-		// install into globalX
-		// FIXME: formalize agentInstall
-		targetServer.timeoutCache.put("simpleAgentAAAA", simpleAgent, 2500, () -> {
-			System.out.println(" SimpleAgent #2 timed out ! called from " + Thread.currentThread());
-		});
-		targetServer.subscribe(simpleAgent, channel);
-
-		// try the finder again
-		// should succeed
-		finder = new AgentFinder(global1, channel);
-		response = finder.goAndWait();
-
-		System.out.println("found agent Info " + response.agentInfo + " from server " + response.globalInfo);
-
-		Assert.assertTrue(response.success);
-		Assert.assertFalse(response.failed);
-	}
 
 	@Test
 	public void demoTwo() throws IOException {

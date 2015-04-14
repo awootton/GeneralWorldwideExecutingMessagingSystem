@@ -1,4 +1,4 @@
-package org.gwems.util;
+package org.messageweb.experiments;
 
 import java.util.ArrayList;
 import java.util.HashSet;

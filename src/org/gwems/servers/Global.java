@@ -1,7 +1,9 @@
 package org.gwems.servers;
 
 import gwems.Ack;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 
@@ -193,11 +195,19 @@ public class Global implements Executor {
 		if (sessionStringAttribute.get() == null) {
 			sessionAgent = new SessionAgent(this, getRandom(), ctx);
 			sessionStringAttribute.set(sessionAgent.getKey());
-			timeoutCache.put(sessionAgent.getKey(), sessionAgent, sessionTtl, () -> {
-				unsubscribeAgent(sessionAgent);// this is super important. We don't want the subscriptions to leak.
+			timeoutCache.put(sessionAgent.getKey(),
+					sessionAgent,
+					sessionTtl,
+					() -> {
+						unsubscribeAgent(sessionAgent);// this is super important. We don't want the subscriptions to
+														// leak.
 					// do we close the socket?? ctx.close() here kills the server
-					logger.info("closed SessionAgent ip=" + sessionAgent.ipAddress + " start=" + sessionAgent.getStartTime() + " end=" + new Date().getTime());
+					logger.info("closed SessionAgent ip=" + sessionAgent.ipAddress + " start=" + sessionAgent.getStartTime() + " end=" + new Date().getTime()
+							+ " key=" + sessionAgent.getKey());
 					sessionStringAttribute.set(null);
+					Channel ch = ctx.channel();
+					if (ch != null)
+						ch.writeAndFlush(new CloseWebSocketFrame());
 				});
 			// send an ack now.
 			Ack ack = new Ack();
