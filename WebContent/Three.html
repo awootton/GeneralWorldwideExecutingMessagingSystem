@@ -126,7 +126,8 @@ canvas {
 			renderer.render(scene, camera);
 			var cubeBefore = new THREE.Vector3().copy(avatarContainer.position);
 			controls.update();// needs delta not
-			drivecontrols.update(clock.getDelta());// needs delta
+			var delta = clock.getDelta();
+			drivecontrols.update(delta);// needs delta
 
 			// we need to pin cube.y-0.5 to terrain todo:	
 
@@ -135,7 +136,7 @@ canvas {
 			camera.position.sub(cubeBefore);// follow it
 
 			// cubeBefore is actually becomes our velocity.
-			cubeBefore.multiplyScalar(1.0 / clock.getDelta());
+			cubeBefore.multiplyScalar(1.0 / delta);
 			// our position is avatarContainer.position
 			tracker.update(avatarContainer.position, cubeBefore);
 

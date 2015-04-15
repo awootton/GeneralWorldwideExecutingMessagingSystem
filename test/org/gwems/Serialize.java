@@ -8,8 +8,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.messageweb.testmessages.PingEcho;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 public class Serialize {
 
 	private static Logger logger = Logger.getLogger(Serialize.class);
@@ -21,8 +19,8 @@ public class Serialize {
 		System.out.println(Global.getRandom());
 		System.out.println(Global.getRandom());
 		
-		ObjectNode tmp = Global.serialize2node(new PingEcho());
-		System.out.println("node = " + tmp);
+//		ObjectNode tmp = Global.serialize2node(new PingEcho());
+//		System.out.println("node = " + tmp);
 
 		
 		PingEcho p = new PingEcho();

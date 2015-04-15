@@ -250,7 +250,7 @@ public final class WsClientImpl {
 	 * Incoming messages to this client, or incoming in general, come directly through here.
 	 * 
 	 * try typing this into command prompt:
-	 * {"@C":"org.messageweb.messages.PingEcho","key":"someRandomKeyToDoTricksWith"}
+	 * {"@":"org.messageweb.messages.PingEcho","key":"someRandomKeyToDoTricksWith"}
 	 * 
 	 * @param ctx
 	 * @param child

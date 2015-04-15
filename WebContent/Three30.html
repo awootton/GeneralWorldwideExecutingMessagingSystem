@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Most simple metaverse.</title>
+<style>
+body {
+	margin: 0;
+}
+
+canvas {
+	width: 100%;
+	height: 100%
+}
+</style>
+
+<script src="http://code.jquery.com/jquery.min.js"></script>
+<script src="js/three.js"></script>
+<script src="js/libs/controls/OrbitControls.js"></script>
+<script src="js/libs/controls/AtwNoMouseFirstPersonControls.js"></script>
+<script src="js/GWEMS.js"></script>
+<script src="js/Axes.js"></script>
+<script src="js/RunningInCircleBot1.js"></script>
+
+</head>
+
+<body>
+	<script>
+		var clock = new THREE.Clock();
+
+		var userName = ("" + Math.random()).substring(3, 9);
+		console.log("our name will be " + userName)
+		var hostName = location.hostname;
+		console.log("Using host " + hostName);
+		var gwems = new GWEMS.WebSocketClient(hostName, 8081, "/");
+		gwems.start();
+
+		var scene = new THREE.Scene();
+		var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+		var ambient = new THREE.AmbientLight(0x444444);
+		scene.add(ambient);
+
+		var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.75);
+		directionalLight.position.set(-10, 10, 10);
+		scene.add(directionalLight);
+
+		var sceneCenter = new THREE.Vector3(0, 0, 1 << 20);
+
+		camera.position.x = 1;
+		camera.position.y = 1;
+		camera.position.z = sceneCenter.z + 5;
+		camera.lookAt(sceneCenter.x, sceneCenter.y, sceneCenter.z);
+
+		var renderer = new THREE.WebGLRenderer();
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		document.body.appendChild(renderer.domElement);
+
+		var grid = new THREE.GridHelper(64, 4);// 4 meter grid
+		grid.position.z = sceneCenter.z;
+		scene.add(grid);
+
+		var axes = buildAxes(100);
+		axes.position.x = sceneCenter.x;
+		axes.position.y = sceneCenter.y;
+		axes.position.z = sceneCenter.z;
+		scene.add(axes);
+
+		var controls = new THREE.OrbitControls(camera, renderer.domElement);
+		controls.target = sceneCenter;
+
+		var moving = new VelocityObjects();
+		scene.add(moving.getContainer());
+
+		var bot = new RunInCircle(gwems, userName, sceneCenter);
+
+		var render = function() {
+			requestAnimationFrame(render);
+			renderer.render(scene, camera);
+			controls.update();
+			moving.update(clock.getDelta());
+		};
+		render();
+
+		var session;
+
+		gwems.handleMessage = function(message) {
+
+			message = JSON.parse(message);
+			if (message.position) {
+				var anAvatar = moving.getOrConstructDefault(message);
+				anAvatar.position.set(message.position.x, message.position.y, message.position.z);
+				if (anAvatar.velocity)
+					anAvatar.velocity.set(message.velocity.x, message.velocity.y, message.velocity.z);
+			} else {
+				console.log(message);
+				var clazz = message["@"];
+				if (clazz == "gwems.Ack") {
+					// our socket is open!
+					session = message.session;
+					// subscribe to space
+					gwems.send(GWEMS.getSubscribeString("0_0_400_10"));
+				}
+			}
+		}
+	</script>
+
+</body>
+</html>

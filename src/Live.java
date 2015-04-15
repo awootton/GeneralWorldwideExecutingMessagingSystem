@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 /**
  * The smallest possible message. Used to keep sockets, and their agents, alive.
  * 
- * Send this string: {"@C":"Live"}
+ * Send this string: {"@":"Live"}
  * 
  * @author awootton
  * 

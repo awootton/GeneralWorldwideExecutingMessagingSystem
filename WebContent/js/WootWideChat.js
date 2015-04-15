@@ -18,10 +18,8 @@ wwc.extractTags = function(text, delim ) {
 		delim = "#";
 	var result = {};
 	var parts = text.split(delim);
-	var count = 0;
 	for ( var i in parts) {
 		// the first one doesn't count
-		if ( count ++ > 0 ){
 		var str = parts[i];
 		str = str.trim();
 		var a = str.split(' ');
@@ -29,18 +27,19 @@ wwc.extractTags = function(text, delim ) {
 		str = str.replace('"','\\"');
 		if (str.length >= 3)
 			result[str] = str;
-		}
 	}
 	return result;
 };
 
-wwc.toTags = function(map) {
+wwc.toTags = function(map, delim) {
+	if ( delim != "" )
+		delim = '#';
 	var s = "";
 	var start = 0;
 	for (i in map) {
 		if (start != 0)
 			s += ' ';
-		s += '#' + i;
+		s += delim + i;
 		start++;
 	}
 	return s;

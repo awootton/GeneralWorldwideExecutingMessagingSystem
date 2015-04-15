@@ -9,10 +9,14 @@ import io.netty.util.AttributeKey;
 
 import java.io.IOException;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -20,6 +24,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.script.ScriptEngine;
+
+import m.L;
 
 import org.apache.log4j.Logger;
 import org.gwems.agents.Agent;
@@ -36,13 +42,19 @@ import org.messageweb.dynamo.DynamoHelper;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper.DefaultTypeResolverBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 
 /**
  * This represents one 'server' and by that I mean a web socket (ws) port that is accepting incoming connections.
@@ -195,20 +207,21 @@ public class Global implements Executor {
 		if (sessionStringAttribute.get() == null) {
 			sessionAgent = new SessionAgent(this, getRandom(), ctx);
 			sessionStringAttribute.set(sessionAgent.getKey());
-			timeoutCache.put(sessionAgent.getKey(),
+			timeoutCache.put(
+					sessionAgent.getKey(),
 					sessionAgent,
 					sessionTtl,
 					() -> {
 						unsubscribeAgent(sessionAgent);// this is super important. We don't want the subscriptions to
 														// leak.
-					// do we close the socket?? ctx.close() here kills the server
-					logger.info("closed SessionAgent ip=" + sessionAgent.ipAddress + " start=" + sessionAgent.getStartTime() + " end=" + new Date().getTime()
-							+ " key=" + sessionAgent.getKey());
-					sessionStringAttribute.set(null);
-					Channel ch = ctx.channel();
-					if (ch != null)
-						ch.writeAndFlush(new CloseWebSocketFrame());
-				});
+						// do we close the socket?? ctx.close() here kills the server
+						logger.info("closed SessionAgent ip=" + sessionAgent.ipAddress + " start=" + sessionAgent.getStartTime() + " end="
+								+ new Date().getTime() + " key=" + sessionAgent.getKey());
+						sessionStringAttribute.set(null);
+						Channel ch = ctx.channel();
+						if (ch != null)
+							ch.writeAndFlush(new CloseWebSocketFrame());
+					});
 			// send an ack now.
 			Ack ack = new Ack();
 			ack.server = this.id;
@@ -391,13 +404,61 @@ public class Global implements Executor {
 
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	static {
-
-		// MAPPER.setVisibility(PropertyAccessor.ALL, Visibility.NONE);
 		MAPPER.setVisibility(PropertyAccessor.GETTER, Visibility.NONE);
 		MAPPER.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
-		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@C");
+		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@");
 	}
-	private static final ObjectMapper plain_mapper = new ObjectMapper();
+	
+	public static class XXXCustomTypeResolverBuilder extends DefaultTypeResolverBuilder
+	{
+	    public XXXCustomTypeResolverBuilder()
+	    {
+	        super(DefaultTyping.NON_FINAL);
+	    }
+
+	    @Override
+	    public boolean useForType(JavaType t)
+	    {
+	    	System.out.println(t);
+	        if (  t.getRawClass() == ArrayList.class )
+	        	return false;
+	        if (  t.getRawClass() == L.class )
+	        	return false;
+	    	
+	    	return false;
+//	    	if (t.getRawClass().getName().startsWith("test.jackson")) {
+//	            return true;
+//	        }
+//
+//	        return false;
+	    }
+	}
+
+	// DELETE ME
+	static class XXTreeMapCustomSerializer extends JsonSerializer<TreeMap<String, ?>> {
+
+		@Override
+		public void serialize(TreeMap<String, ?> tree, JsonGenerator jgen, SerializerProvider arg2) throws IOException, JsonProcessingException {
+			jgen.writeStartObject();
+			Iterator<?> it = tree.entrySet().iterator();
+			while (it.hasNext()) {
+				@SuppressWarnings("unchecked")
+				Entry<String, ?> entry = (Entry<String, ?>) it.next();
+				jgen.writeString(entry.getKey());
+				jgen.writeObject(entry.getValue());
+			}
+			jgen.writeEndObject();
+		}
+		
+		@Override
+		public void serializeWithType(TreeMap<String, ?> tree, JsonGenerator gen, 
+		        SerializerProvider provider, TypeSerializer typeSer) 
+		        throws IOException, JsonProcessingException {
+		  //typeSer.writeTypePrefixForObject(value, gen);
+		  serialize(tree, gen, provider); // call your customized serialize method
+		  //typeSer.writeTypeSuffixForObject(value, gen);
+		}
+	}
 
 	public static Runnable deserialize(String s) throws JsonParseException, JsonMappingException, IOException {
 		Runnable obj = MAPPER.readValue(s, Runnable.class);
@@ -412,9 +473,10 @@ public class Global implements Executor {
 		return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(message);
 	}
 
-	public static ObjectNode getPlainNode() {
-		return plain_mapper.getNodeFactory().objectNode();
-	}
+	// Let's not use this.
+//	public static ObjectNode getPlainNode() {
+//		return plain_mapper.getNodeFactory().objectNode();
+//	}
 
 	/**
 	 * Note that the @C key will NOT be missing !
@@ -423,12 +485,12 @@ public class Global implements Executor {
 	 * @return
 	 * @throws IOException
 	 */
-	public static ObjectNode serialize2node(Object message) throws IOException {
-		Object obj = plain_mapper.valueToTree(message);
-		ObjectNode node = (ObjectNode) obj;
-		node.put("@C", message.getClass().getName());
-		return (ObjectNode) obj;
-	}
+//	public static ObjectNode serialize2node(Object message) throws IOException {
+//		Object obj = plain_mapper.valueToTree(message);
+//		ObjectNode node = (ObjectNode) obj;
+//		node.put("@C", message.getClass().getName());
+//		return (ObjectNode) obj;
+//	}
 
 	/**
 	 * Only never called by SessionAgent ?

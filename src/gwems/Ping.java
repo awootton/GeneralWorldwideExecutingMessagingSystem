@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 /**
  * A client sends one of these to a server. The server creates an Ack message and sends it back.
  * 
- * {"@C":"gwems.Ping"}
+ * {"@":"gwems.Ping"}
  * 
  * @author awootton
  *

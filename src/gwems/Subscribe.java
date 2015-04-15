@@ -7,7 +7,7 @@ import org.gwems.servers.Global;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
- * Clients send this: {"@C":"gwems.Subscribe","channel":"none"} to start a subscription towards their SessionAgent.
+ * Clients send this: {"@":"gwems.Subscribe","channel":"none"} to start a subscription towards their SessionAgent.
  * 
  * There is no reply.
  * 

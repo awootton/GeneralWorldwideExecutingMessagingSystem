@@ -1,10 +1,12 @@
 /**
- * An interface to the GeneralWorldwideExecutingMessageSystem on github. Mostly it's generic websockets. Copyright 2015
+ * An interface to the GeneralWorldwideExecutingMessageSystem on github. Mostly it's generic websockets. <br>
+ * The definitions of the messages (eg, "@" : "gwems.Publish") are in java at github GeneralWorldwideExecutingMessageSystem<br>
+ * Copyright 2015
  * Alan Wootton see included license.
  */
 
 var GWEMS = {
-	REVISION : '1'
+	REVISION : '0.1'
 };
 
 GWEMS.WebSocketClient = function(host, port, uri) {
@@ -22,7 +24,7 @@ GWEMS.WebSocketClient.prototype.setOpen = function( val ){
 }
 
 GWEMS.WebSocketClient.prototype.start = function() {
-	// ReconnectingWebSocket
+ 
 	this.socket = new WebSocket("ws://" + this.host + ":" + this.port + this.uri);
 	
 	var gewms = this;
@@ -45,7 +47,7 @@ GWEMS.WebSocketClient.prototype.start = function() {
 	
 	// set up keep alive.
 	window.setInterval(function() {
-		gewms.send('{"@C":"Live"}');
+		gewms.send('{"@":"Live"}');
 	},  12 * 60 * 1000);// every 12 minutes. 
 };
 
@@ -55,9 +57,7 @@ GWEMS.WebSocketClient.prototype.send = function(string) {
 			this.socket.send(string);
 		}
 	} catch (e) {
-		// say something
 	}
-	;
 };
 
 GWEMS.WebSocketClient.prototype.handleOpen = function(event) {
@@ -78,8 +78,8 @@ GWEMS.WebSocketClient.prototype.handleMessage = function(string) {
 };
 
 /**
- * Subtract the before Set from the after Set and return a new Set. Expects an object where keys and value are the same.
- * eg. { key:key } Because this I show I do a Set.
+ * Subtract the before Set from the after Set and return a new Set. Expects an object where key = value.
+ * eg. { key:key }.
  * 
  */
 GWEMS.addedToSet = function(before, after) {
@@ -101,7 +101,7 @@ GWEMS.removedFromSet = function(before, after) {
 }
 
 GWEMS.subscribeJsonObject = {
-	"@C" : "gwems.Subscribe",
+	"@" : "gwems.Subscribe",
 	"channel" : ""
 };
 
@@ -112,7 +112,7 @@ GWEMS.getSubscribeString = function(channel) {
 };
 
 GWEMS.unsubscribeJsonObject = {
-	"@C" : "gwems.Unsubscribe",
+	"@" : "gwems.Unsubscribe",
 	"channel" : ""
 };
 
@@ -123,10 +123,10 @@ GWEMS.getUnsubscribeString = function(channel) {
 }
 
 GWEMS.publishObject = {
-	"@C" : "gwems.Publish",
+	"@" : "gwems.Publish",
 	"channel" : "",
 	"msg" : {
-		"@C" : "gwems.Push2Client",
+		"@" : "gwems.Push2Client",
 		"msg" : ""
 	}
 };
@@ -150,7 +150,7 @@ GWEMS.unsubscribe = function(aMap, gwemsSocket) {
 GWEMS.getPublishString = function(channel, message) {
 	GWEMS.publishObject.channel = channel;
 	GWEMS.publishObject.msg.msg = message;
-	var s = JSON.stringify(GWEMS.publishObject);
+	var s = JSON.stringify(GWEMS.publishObject);	
 	return s;
 };
 

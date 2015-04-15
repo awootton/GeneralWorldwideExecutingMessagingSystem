@@ -41,7 +41,7 @@ public class HexOctTrees {
 		if (s.startsWith("-"))
 			pos++;
 		long val = Long.parseLong(s, 16);
-		if ( pos != 0 )
+		if (pos != 0)
 			val = -val;
 		return val;
 	}
@@ -89,7 +89,16 @@ public class HexOctTrees {
 		System.out.println(decompose(new Vector3d(0, -(1L << 29) - 1, 0), 10));
 		System.out.println(decompose(new Vector3d(0, -(1L << 28) - 1, 0), 10));
 		System.out.println(decompose(new Vector3d(0, -(1L << 27) - 1, 0), 10));
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		for (int x = -1; x < 2; x+=2)
+			for (int y = -1; y < 2; y+=2)
+				for (int z = -1; z < 2; z+=2) {
+					System.out.println(decompose(new Vector3d(x, y, z + (1 << 20)), 10 ));// 2^10 ~= kilometer cube 2^20 away
+				}
+
+	//	System.out.println(decompose(new Vector3d(1, 1, 0 + 1 << 20), 20));
 
 	}
-
 }

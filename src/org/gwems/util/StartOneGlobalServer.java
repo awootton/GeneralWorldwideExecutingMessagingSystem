@@ -38,7 +38,7 @@ public class StartOneGlobalServer {
 
 		Global global = new Global(8081, new ClusterState());// starts a ws server
 		
-		global.sessionTtl = 30000;// 30 sec. 
+		//global.sessionTtl = 30000;// 30 sec. 
 
 		// publish the time every 10 sec.
 		long time_10 = System.currentTimeMillis() + 10 * 1000;

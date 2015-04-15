@@ -7,7 +7,7 @@ import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 
 /**
- * Clients send this: {"@C":"gwems.Unsubscribe","channel":"none"} to start a subscription towards their SessionAgent.
+ * Clients send this: {"@":"gwems.Unsubscribe","channel":"none"} to start a subscription towards their SessionAgent.
  * 
  * There is no reply.
  * 
@@ -35,8 +35,8 @@ public class Unsubscribe implements Runnable {
 	public static void main(String[] args) throws IOException {
 		System.out.println(Global.serialize(new Unsubscribe()));
 		System.out.println(Global.serializePretty(new Unsubscribe()));
-		Global.deserialize("{\"@C\":\"gwems.Unsubscribe\",\"channel\":\"none\"}");
-		// I wish: Global.deserialize("{@C:\"gwems.Unsubscribe\",channel:\"none\"}");
+		Global.deserialize("{\"@\":\"gwems.Unsubscribe\",\"channel\":\"none\"}");
+		// I wish: Global.deserialize("{@:\"gwems.Unsubscribe\",channel:\"none\"}");
 	}
 
 }

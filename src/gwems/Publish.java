@@ -13,7 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  * See example in main. Note that I'm tacking on a little namespace for the future even though that might be useless.
  * (WWC)
  * 
- * {"@C":"gwems.Publish","channel":"none","msg":{"@C":"gwems.Push2Client","msg":"msg"}}
+ * {"@":"gwems.Publish","channel":"none","msg":{"@":"gwems.Push2Client","msg":"msg"}}
  * 
  * @author awootton
  *
