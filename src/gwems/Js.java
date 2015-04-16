@@ -2,8 +2,10 @@ package gwems;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 
 import org.apache.log4j.Logger;
+import org.gwems.agents.Agent;
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 
@@ -20,8 +22,8 @@ public class Js implements Runnable {
 	public static Logger logger = Logger.getLogger(Js.class);
 
 	public String js = "console.log('Hello World');";
-	
-	ScriptContext context = null;// what? 
+
+	ScriptContext context = null;// what?
 
 	@Override
 	public void run() {
@@ -29,8 +31,24 @@ public class Js implements Runnable {
 		ScriptEngine engine = null;
 		try {
 
-			engine = ec.global.getEngine();
-			engine.eval(js);// , context
+			if (ec.agent.isPresent()) {
+				engine = ec.global.getEngine();
+				Agent agent = ec.agent.get();
+				// we need to restore the context from the agent.
+				// ScriptContext context = engine.getContext();
+				// actually, just the engine bindings
+				if (agent.bindings == null) {
+					agent.bindings = engine.createBindings();
+				}
+				try {
+					engine.eval(js, agent.bindings);// , context
+				} catch (ScriptException e) {
+					 logger.error("script error ",e);
+				}
+
+			} else {
+				logger.error("js error: there needs to be an Agent present. ");
+			}
 
 		} catch (Exception e) {
 			logger.error("js error ", e);

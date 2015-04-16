@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.script.Bindings;
+
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 import org.gwems.util.AgentRunnablesQueue;
@@ -29,6 +31,8 @@ public abstract class Agent implements Comparable<Agent> {
 	private final String key;// must be unique!
 	public final Map<Object, Object> userMap;
 	public final Global global;
+	
+	public Bindings bindings = null; // needs accessors
 
 	public Agent(Global global, String key) {
 		this.global = global;

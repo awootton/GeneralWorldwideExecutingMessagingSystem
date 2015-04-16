@@ -106,7 +106,7 @@ public class Global implements Executor {
 
 	int port;
 
-	JsEnginePool jsPool;
+	private JsEnginePool jsPool;
 
 	public int sessionTtl = SessionAgentTTL;// 15 min
 
@@ -654,6 +654,10 @@ public class Global implements Executor {
 	public void returnEngine(ScriptEngine engine) {
 		if (engine != null)
 			jsPool.giveBack(engine);
+	}
+	
+	public JsEnginePool getJsEnginePool(){
+		return jsPool;
 	}
 
 }
