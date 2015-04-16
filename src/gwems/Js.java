@@ -32,6 +32,7 @@ public class Js implements Runnable {
 		try {
 
 			if (ec.agent.isPresent()) {
+				//Global global = ec.global;
 				engine = ec.global.getEngine();
 				Agent agent = ec.agent.get();
 				// we need to restore the context from the agent.
@@ -41,11 +42,13 @@ public class Js implements Runnable {
 					agent.bindings = engine.createBindings();
 				}
 				try {
+					ec.isJs = true; 
 					engine.eval(js, agent.bindings);// , context
-				} catch (ScriptException e) {
-					 logger.error("script error ",e);
+					ec.isJs = false; 
+			} catch (ScriptException e) {
+					logger.error("script error ", e);
+				} finally {
 				}
-
 			} else {
 				logger.error("js error: there needs to be an Agent present. ");
 			}

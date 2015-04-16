@@ -111,6 +111,11 @@ public class Global implements Executor {
 	public int sessionTtl = SessionAgentTTL;// 15 min
 
 	public Global(int port, ClusterState cluster) {
+		
+		SecurityManager def = java.lang.System.getSecurityManager();
+		// def is null - no checks at all
+		// dammit. TODO: I can't make this work. 
+		//java.lang.System.setSecurityManager(new MySecurityManager());
 
 		this.cluster = cluster;
 		this.port = port;

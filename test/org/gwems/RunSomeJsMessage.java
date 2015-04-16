@@ -25,6 +25,27 @@ import org.messageweb.testmessages.LogonMessage;
 import org.messageweb.testmessages.PingEcho;
 
 public class RunSomeJsMessage extends StartServers {
+	
+	@Test
+	public void test2(){
+		
+		Agent agent = new SimpleAgent(Global.getRandom(), global1);
+		Js scriptMessage = new Js();
+
+		scriptMessage.js += "var aVar = new Date(); \n";// works
+		scriptMessage.js += "console.log('aVar is ' + aVar)\n";	
+		
+		scriptMessage.js += "var aVar = new java.util.ArrayList(); \n";
+		scriptMessage.js += "console.log('aVar is ' + aVar)\n";// works
+		
+		scriptMessage.js += "var aVar = new java.lang.Thread(); \n";
+		scriptMessage.js += "console.log('aVar is ' + aVar)\n";// this is NOT good
+		
+		scriptMessage.js += "var aVar = new java.lang.Thread(); \n";
+		scriptMessage.js += "console.log('aVar is ' + aVar)\n";// this is NOT good
+		
+		runScript(agent, scriptMessage);
+	}
 
 	@Test
 	public void someJs() throws IOException, InterruptedException {
@@ -118,12 +139,13 @@ public class RunSomeJsMessage extends StartServers {
 
 		MyRedisPubSub.logger.setLevel(Level.TRACE);
 		JedisRedisPubSubImpl.logger.setLevel(Level.TRACE);
+		Js.logger.setLevel(Level.TRACE);
 
 		RunSomeJsMessage test = new RunSomeJsMessage();
 
 		setup();
 
-		test.someJs();
+		test.test2();
 
 		try {
 			Thread.sleep(5 * 1000);

@@ -52,5 +52,7 @@ public class ExecutionContext {
 	}
 
 	byte[] lastRandom = new byte[1];
+	
+	public boolean isJs = false;
 
 }
