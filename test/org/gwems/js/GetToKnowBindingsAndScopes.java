@@ -16,8 +16,8 @@ import javax.script.SimpleBindings;
 
 public class GetToKnowBindingsAndScopes {
 
-	public static void dumpBindings(Bindings bindings) {
-		System.out.println(" ------------  Dumping Bindings for " + bindings + " -------------------------");
+	public static void dumpBindings(String comment , Bindings bindings) {
+		System.out.println(" ------------ Dumping "+comment+" Bindings for " + bindings + " -------------------------");
 		if (bindings == null)
 			System.out.println("  No bindings");
 		else
@@ -48,14 +48,14 @@ public class GetToKnowBindingsAndScopes {
 			manager.put("global", "global bindings");
 			manager.put("globalIntVar", 123456);
 
-			dumpBindings(manager.getBindings());
+			dumpBindings("mgr",manager.getBindings());
 			ScriptEngine engine = manager.getEngineByExtension("js");
 			engine.put("engine", "engine bindings");
 			engine.put("engineIntVar", 56789);
 
-			dumpBindings(engine.getBindings(ScriptContext.GLOBAL_SCOPE));
+			dumpBindings("global",engine.getBindings(ScriptContext.GLOBAL_SCOPE));
 
-			dumpBindings(engine.getBindings(ScriptContext.ENGINE_SCOPE));
+			dumpBindings("engine",engine.getBindings(ScriptContext.ENGINE_SCOPE));
 
 			try {
 				Bindings bindings = engine.createBindings();
@@ -63,7 +63,7 @@ public class GetToKnowBindingsAndScopes {
 				bindings.put("app", new GetToKnowBindingsAndScopes());
 				bindings.put("bindings", bindings);
 				
-				dumpBindings(bindings);
+				dumpBindings("created",bindings);
 				
 				engine.eval("app.dumpBindings (bindings);", bindings);
 			} catch (ScriptException se) {
@@ -73,9 +73,9 @@ public class GetToKnowBindingsAndScopes {
 			ScriptEngine engine2 = manager.getEngineByExtension("js");
 			engine2.put("engine2", "engine2 bindings");
 
-			dumpBindings(engine2.getBindings(ScriptContext.GLOBAL_SCOPE));
-			dumpBindings(engine2.getBindings(ScriptContext.ENGINE_SCOPE));
-			dumpBindings(engine.getBindings(ScriptContext.ENGINE_SCOPE));
+			dumpBindings("global2",engine2.getBindings(ScriptContext.GLOBAL_SCOPE));
+			dumpBindings("engine2",engine2.getBindings(ScriptContext.ENGINE_SCOPE));
+			dumpBindings("engine",engine.getBindings(ScriptContext.ENGINE_SCOPE));
 		}
 		
 		{

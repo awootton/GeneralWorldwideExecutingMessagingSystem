@@ -80,7 +80,7 @@ public class TempDataLogger extends StartServers {
 
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args)  {
 
 		Global.logger.setLevel(Level.TRACE);
 		MyWebSocketServer.logger.setLevel(Level.TRACE);
@@ -102,7 +102,11 @@ public class TempDataLogger extends StartServers {
 
 		setup();
 
-		test.demoOne();
+		try {
+			test.demoOne();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 
 		try {
 			Thread.sleep(5 * 1000);

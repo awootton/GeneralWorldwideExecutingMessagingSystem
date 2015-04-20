@@ -9,7 +9,6 @@ import io.netty.util.AttributeKey;
 
 import java.io.IOException;
 import java.security.MessageDigest;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Iterator;
@@ -25,11 +24,10 @@ import java.util.concurrent.TimeUnit;
 
 import javax.script.ScriptEngine;
 
-import m.L;
-
 import org.apache.log4j.Logger;
 import org.gwems.agents.Agent;
 import org.gwems.agents.SessionAgent;
+import org.gwems.agents.SimpleAgent;
 import org.gwems.servers.impl.JedisRedisPubSubImpl;
 import org.gwems.servers.impl.JsEnginePool;
 import org.gwems.servers.impl.MyRejectedExecutionHandler;
@@ -42,16 +40,13 @@ import org.messageweb.dynamo.DynamoHelper;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectMapper.DefaultTypeResolverBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
@@ -91,7 +86,7 @@ public class Global implements Executor {
 	// The thread that watches the NIO acceptor.
 	private Thread serverThread;
 
-	private PubSub redisPubSub;
+	private PubSub thePubSub;
 
 	ClusterState cluster;
 
@@ -110,42 +105,70 @@ public class Global implements Executor {
 
 	public int sessionTtl = SessionAgentTTL;// 15 min
 
+	public boolean isPubSub = false;
+
+	public static Global dummyGlobal() {
+		Global global = new Global(0, null);
+
+		return global;
+	}
+
 	public Global(int port, ClusterState cluster) {
-		
-		SecurityManager def = java.lang.System.getSecurityManager();
+
+		// SecurityManager def = java.lang.System.getSecurityManager();
 		// def is null - no checks at all
-		// dammit. TODO: I can't make this work. 
-		//java.lang.System.setSecurityManager(new MySecurityManager());
+		// dammit. TODO: I can't make this work.
+		// java.lang.System.setSecurityManager(new MySecurityManager());
 
 		this.cluster = cluster;
 		this.port = port;
 
-		dynamoHelper = new DynamoHelper();
+		/**
+		 * A dummy has no WebSocket server and no pub sub server. It's just the thread pool and a timeoutQ
+		 * 
+		 */
+		boolean isDummyServer = port == 0 && cluster == null;
+
+		if (!isDummyServer)
+			dynamoHelper = new DynamoHelper();
 
 		executor = new ThreadPoolExecutor(2, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new MyThreadFactory());
 
 		// open the port
-		server = new MyWebSocketServer(this);
-		Runnable starter = server.new Starter(port, this);
-		serverThread = new Thread(starter);
-		serverThread.setName(id + ":" + port);
-		serverThread.setDaemon(true);
-		serverThread.start();
+		if (!isDummyServer) {
+			server = new MyWebSocketServer(this);
+			Runnable starter = server.new Starter(port, this);
+			serverThread = new Thread(starter);
+			serverThread.setName(id + ":" + port);
+			serverThread.setDaemon(true);
+			serverThread.start();
+		}
 
 		// start the timeout cache.
 		timeoutCache = new TimeoutCache(executor, id);
 
 		// Start the redis pub/sub thread.
-		redisPubSub = new JedisRedisPubSubImpl(cluster.redis_server, cluster.redis_port, new LocalSubscriberHandler(), id);
+		// might be null if this server is server the root of the pub/sub.
+		if (!isDummyServer)
+			thePubSub = cluster.pubSubFactory(new LocalSubscriberHandler(), id);
 
 		jsPool = new JsEnginePool(this);
 
 		// how do we wait for server to start up?
-		while (server.startedChannel == false) {
-			try {
-				Thread.sleep(1);
-			} catch (InterruptedException e) {
+		if (!isDummyServer)
+			while (server.startedChannel == false) {
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+				}
 			}
+		if (thePubSub != null) {
+			// start a timer to keep the 'dis pubsub alive
+			Agent shitAgent = new SimpleAgent(JedisRedisPubSubImpl.dummyChannel, this);
+			timeoutCache.put("eTADIUdpXuaVjdijWhlE", shitAgent, 12 * 60 * 1000, () -> {
+				timeoutCache.setTtl("eTADIUdpXuaVjdijWhlE", 12 * 60 * 1000);
+				thePubSub.publish(JedisRedisPubSubImpl.dummyChannel, "{\"@\":\"Live\"}");
+			});
 		}
 	}
 
@@ -169,25 +192,7 @@ public class Global implements Executor {
 
 	}
 
-	// private class GlobalStateSetter implements Runnable {
-	// Runnable child;
-	//
-	// public GlobalStateSetter(Runnable child) {
-	// super();
-	// this.child = child;
-	// }
-	//
-	// @Override
-	// public void run() {
-	// ExecutionContext ec = context.get();
-	// ec.global = ServerGlobalState.this;
-	// child.run();
-	// ec.global = null;
-	// }
-	// }
-
 	public void execute(Runnable r) {
-		// executor.execute(new GlobalStateSetter(r));
 		executor.execute(() -> {
 			ExecutionContext ec = context.get();
 			ec.global = Global.this;
@@ -212,27 +217,28 @@ public class Global implements Executor {
 		if (sessionStringAttribute.get() == null) {
 			sessionAgent = new SessionAgent(this, getRandom(), ctx);
 			sessionStringAttribute.set(sessionAgent.getKey());
-			timeoutCache.put(
-					sessionAgent.getKey(),
+			timeoutCache.put(sessionAgent.getKey(),
 					sessionAgent,
 					sessionTtl,
 					() -> {
-						unsubscribeAgent(sessionAgent);// this is super important. We don't want the subscriptions to
-														// leak.
-						// do we close the socket?? ctx.close() here kills the server
-						logger.info("closed SessionAgent ip=" + sessionAgent.ipAddress + " start=" + sessionAgent.getStartTime() + " end="
-								+ new Date().getTime() + " key=" + sessionAgent.getKey());
-						sessionStringAttribute.set(null);
-						Channel ch = ctx.channel();
-						if (ch != null)
-							ch.writeAndFlush(new CloseWebSocketFrame());
-					});
+						unsubscribeAgent(sessionAgent);// Super important. We don't want the subscriptions to leak.
+					// do we close the socket?? ctx.close() here kills this server
+					logger.info("closed SessionAgent ip=" + sessionAgent.ipAddress + " start=" + sessionAgent.getStartTime() + " end=" + new Date().getTime()
+							+ " key=" + sessionAgent.getKey());
+					sessionStringAttribute.set(null);
+					Channel ch = ctx.channel();
+					if (ch != null)
+						ch.writeAndFlush(new CloseWebSocketFrame());
+				});
 			// send an ack now.
 			Ack ack = new Ack();
 			ack.server = this.id;
 			ack.session = sessionAgent.getKey();
 			ack.version = "0.1";// ?? TODO: ??
 			sessionAgent.writeAndFlush(ack);
+			if (logger.isTraceEnabled()) {
+				logger.trace("sent Ack to " + ack.session);
+			}
 
 		} else {
 			sessionAgent = (SessionAgent) this.timeoutCache.get(sessionStringAttribute.get());
@@ -262,8 +268,16 @@ public class Global implements Executor {
 	}
 
 	public void stop() {
-		server.stop();
+
+		if (thePubSub != null)
+			thePubSub.stop();
+		if (server != null)
+			server.stop();
 		executor.setRejectedExecutionHandler(new MyRejectedExecutionHandler());
+		try {
+			executor.awaitTermination(5, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+		}
 		executor.shutdown();
 	}
 
@@ -413,31 +427,31 @@ public class Global implements Executor {
 		MAPPER.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
 		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@");
 	}
-	
-	public static class XXXCustomTypeResolverBuilder extends DefaultTypeResolverBuilder
-	{
-	    public XXXCustomTypeResolverBuilder()
-	    {
-	        super(DefaultTyping.NON_FINAL);
-	    }
 
-	    @Override
-	    public boolean useForType(JavaType t)
-	    {
-	    	System.out.println(t);
-	        if (  t.getRawClass() == ArrayList.class )
-	        	return false;
-	        if (  t.getRawClass() == L.class )
-	        	return false;
-	    	
-	    	return false;
-//	    	if (t.getRawClass().getName().startsWith("test.jackson")) {
-//	            return true;
-//	        }
-//
-//	        return false;
-	    }
-	}
+	// public static class XXXCustomTypeResolverBuilder extends DefaultTypeResolverBuilder
+	// {
+	// public XXXCustomTypeResolverBuilder()
+	// {
+	// super(DefaultTyping.NON_FINAL);
+	// }
+	//
+	// @Override
+	// public boolean useForType(JavaType t)
+	// {
+	// System.out.println(t);
+	// if ( t.getRawClass() == ArrayList.class )
+	// return false;
+	// if ( t.getRawClass() == L.class )
+	// return false;
+	//
+	// return false;
+	// // if (t.getRawClass().getName().startsWith("test.jackson")) {
+	// // return true;
+	// // }
+	// //
+	// // return false;
+	// }
+	// }
 
 	// DELETE ME
 	static class XXTreeMapCustomSerializer extends JsonSerializer<TreeMap<String, ?>> {
@@ -454,14 +468,13 @@ public class Global implements Executor {
 			}
 			jgen.writeEndObject();
 		}
-		
+
 		@Override
-		public void serializeWithType(TreeMap<String, ?> tree, JsonGenerator gen, 
-		        SerializerProvider provider, TypeSerializer typeSer) 
-		        throws IOException, JsonProcessingException {
-		  //typeSer.writeTypePrefixForObject(value, gen);
-		  serialize(tree, gen, provider); // call your customized serialize method
-		  //typeSer.writeTypeSuffixForObject(value, gen);
+		public void serializeWithType(TreeMap<String, ?> tree, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException,
+				JsonProcessingException {
+			// typeSer.writeTypePrefixForObject(value, gen);
+			serialize(tree, gen, provider); // call your customized serialize method
+			// typeSer.writeTypeSuffixForObject(value, gen);
 		}
 	}
 
@@ -478,98 +491,15 @@ public class Global implements Executor {
 		return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(message);
 	}
 
-	// Let's not use this.
-//	public static ObjectNode getPlainNode() {
-//		return plain_mapper.getNodeFactory().objectNode();
-//	}
-
-	/**
-	 * Note that the @C key will NOT be missing !
-	 * 
-	 * @param message
-	 * @return
-	 * @throws IOException
-	 */
-//	public static ObjectNode serialize2node(Object message) throws IOException {
-//		Object obj = plain_mapper.valueToTree(message);
-//		ObjectNode node = (ObjectNode) obj;
-//		node.put("@C", message.getClass().getName());
-//		return (ObjectNode) obj;
-//	}
-
-	/**
-	 * Only never called by SessionAgent ?
-	 * 
-	 * @param message
-	 */
-	// static public void XXreply(Runnable message) {
-	// ChannelHandlerContext ctx = context.get().ctx.get();
-	// try {
-	// String sendme = Global.serialize(message);
-	// ctx.channel().writeAndFlush(new TextWebSocketFrame(sendme));
-	// } catch (JsonProcessingException e) {
-	// logger.error("bad message " + message, e);
-	// }
-	// }
-
-	/**
-	 * do we really use this?
-	 * 
-	 * @param channel
-	 * @param message
-	 */
-
-	public void XXXpublish(String channel, String message, boolean log) {
-
-		if (logger.isTraceEnabled()) {
-			logger.trace("publish sending " + message + " on channel " + channel);
-		}
-		if (channel == null)
-			return;
-		if (channel.length() == 0)
-			return;
-
-		// Tell the local subscribers
-		// but not in this thread.
-		executor.execute(() -> {
-			ExecutionContext ec = context.get();
-			ec.subscribedChannel = Optional.of(channel);
-			try {
-				Runnable runme = Global.deserialize(message);
-				// get all the local subscribers
-				Set<Agent> agents = session2channel.thing2items_get(channel);
-				if (logger.isTraceEnabled()) {
-					logger.trace("psending on to " + agents + " on channel " + channel);
-				}
-				for (Agent agent : agents) {
-					// give them the message
-					agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
-				}
-
-			} catch (JsonProcessingException e) {
-				logger.error("bad message " + message, e);
-			} catch (IOException e) {
-				logger.error("bad message io " + message, e);
-			} finally {
-				ec.subscribedChannel = Optional.empty();
-			}
-		});
-
-		// add the server id to the front of the message so that it doesn't
-		// get broadcast locally, again, when it comes back.
-		redisPubSub.publish(channel, id + message);
-
-	}
-
 	public void publish(String channel, Runnable runme) {
-		publish(channel, runme, true);
+		publish(channel, runme, true, null);
 	}
 
 	public void publishLog(String channel, Runnable runme) {
-		publish(channel, runme, false);
+		publish(channel, runme, false, null);
 	}
 
-	private void publish(String channel, Runnable runme, boolean log) {
+	public void publish(String channel, Runnable runme, boolean log, Agent except) {
 		if (logger.isTraceEnabled() && log) {
 			logger.trace("publish sending runme " + runme + " on channel " + channel);
 		}
@@ -597,13 +527,15 @@ public class Global implements Executor {
 			}
 			for (Agent agent : agents) {
 				// give them the message
-				agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
+				if (agent != except)
+					agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
 			}
 			ec.subscribedChannel = Optional.empty();
 		});
 		// Tack our name on the front so we don't re-broadcast when it arrives.
-		// FIXME: don't need this
-		redisPubSub.publish(channel, id + str);
+		// FIXME: don't need this when redis is gone
+		if (thePubSub != null)
+			thePubSub.publish(channel, id + str);
 	}
 
 	public void subscribe(Agent agent, String channel) {
@@ -613,8 +545,8 @@ public class Global implements Executor {
 			return;
 
 		Set<Agent> agents = session2channel.thing2items_get(channel);
-		if (agents.isEmpty()) {
-			redisPubSub.subcribe(channel);
+		if (agents.isEmpty() && thePubSub != null) {
+			thePubSub.subcribe(channel);
 		}
 		session2channel.add(agent, channel);
 	}
@@ -622,8 +554,8 @@ public class Global implements Executor {
 	public void unsubscribe(Agent agent, String channel) {
 		session2channel.remove(agent, channel);
 		Set<Agent> agents = session2channel.thing2items_get(channel);
-		if (agents.isEmpty()) {
-			redisPubSub.unsubcribe(channel);
+		if (agents.isEmpty() && thePubSub != null) {
+			thePubSub.unsubcribe(channel);
 		}
 	}
 
@@ -632,8 +564,8 @@ public class Global implements Executor {
 		session2channel.removeItem(agent);
 		for (String channel : channels) {
 			Set<Agent> agents = session2channel.thing2items_get(channel);
-			if (agents.isEmpty()) {
-				redisPubSub.unsubcribe(channel);
+			if (agents.isEmpty() && thePubSub != null) {
+				thePubSub.unsubcribe(channel);
 			}
 		}
 	}
@@ -660,8 +592,8 @@ public class Global implements Executor {
 		if (engine != null)
 			jsPool.giveBack(engine);
 	}
-	
-	public JsEnginePool getJsEnginePool(){
+
+	public JsEnginePool getJsEnginePool() {
 		return jsPool;
 	}
 

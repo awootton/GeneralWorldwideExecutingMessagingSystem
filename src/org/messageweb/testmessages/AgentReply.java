@@ -6,7 +6,7 @@ import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 import org.messageweb.experiments.AgentFinder;
 
-/** Used in test. Not for production.
+/** Used in test. Not for production. antique - delete me
  * 
  * @author awootton
  *

@@ -22,5 +22,9 @@ public abstract class PubSub {
 	public abstract void setHandler(Handler handler);
 
 	public abstract void stop();
+	
+	// When this channel is unsubscribed then the client quits and returns from the thread - need to change that.
+	// We leak this channel permanently, use it for keep alives. 
+	public static final String dummyChannel = "AHUAp4xu9FqRobj8zwn2vBI6Anag1t8Z5z6SWjn8_neverUseThisChannel";// random.org
 
 }

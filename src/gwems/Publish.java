@@ -24,6 +24,16 @@ public class Publish implements Runnable {
 
 	public String channel = "na";
 	public Runnable msg = new Push2Client("none");
+	
+	public Publish(){
+		
+	}
+
+	public Publish(String channel, Runnable msg) {
+		super();
+		this.channel = channel;
+		this.msg = msg;
+	}
 
 	@Override
 	public void run() {

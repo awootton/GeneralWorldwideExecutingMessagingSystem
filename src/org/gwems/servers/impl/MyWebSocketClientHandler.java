@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -55,32 +56,43 @@ public class MyWebSocketClientHandler extends SimpleChannelInboundHandler<Object
 		if (!handshaker.isHandshakeComplete()) {
 			handshaker.finishHandshake(ch, (FullHttpResponse) msg);
 			logger.debug("WebSocket Client connected!");
-			handshakeFuture.setSuccess();
+			handshakeFuture.setSuccess();			
 			return;
-		}
-
-		if (msg instanceof FullHttpResponse) {
-			FullHttpResponse response = (FullHttpResponse) msg;
-			throw new IllegalStateException("Unexpected FullHttpResponse (getStatus=" + response.getStatus() + ", content="
-					+ response.content().toString(CharsetUtil.UTF_8) + ')');
 		}
 
 		WebSocketFrame frame = (WebSocketFrame) msg;
 		if (frame instanceof TextWebSocketFrame) {
 			TextWebSocketFrame textFrame = (TextWebSocketFrame) frame;
-			logger.trace("WebSocket Client atw received textFrame message: " + textFrame.text());
+			if ( logger.isTraceEnabled() )
+				logger.trace("WebSocket Client atw received textFrame message: " + textFrame.text());
 			try {
 				client.executeChannelMessage(ctx, textFrame.text());
 			} catch (Exception e) {
 				logger.error(e);
 			}
-
+		} else if (frame instanceof BinaryWebSocketFrame) {
+			// TODO: deprecate
+			BinaryWebSocketFrame bytesFrame = (BinaryWebSocketFrame) frame;
+			if ( logger.isTraceEnabled() )
+				logger.trace("WebSocket Client received binary: " + bytesFrame.content().readableBytes());
+			try {
+				client.executeChannelMessage(ctx, bytesFrame);
+			} catch (Exception e) {
+				logger.error(e);
+			}
 		} else if (frame instanceof PongWebSocketFrame) {
 			logger.info("WebSocket Client received pong - not handled");
 		} else if (frame instanceof CloseWebSocketFrame) {
 			logger.info("WebSocket Client received closing");
 			ch.close();
 		}
+	
+		if (msg instanceof FullHttpResponse) {
+			FullHttpResponse response = (FullHttpResponse) msg;
+			throw new IllegalStateException("Unexpected FullHttpResponse (getStatus=" + response.getStatus() + ", content="
+					+ response.content().toString(CharsetUtil.UTF_8) + ')');
+		}
+
 	}
 
 	@Override

@@ -25,25 +25,21 @@ import org.messageweb.testmessages.LogonMessage;
 import org.messageweb.testmessages.PingEcho;
 
 public class RunSomeJsMessage extends StartServers {
-	
+
 	@Test
-	public void test2(){
-		
+	public void test2() {
+
 		Agent agent = new SimpleAgent(Global.getRandom(), global1);
 		Js scriptMessage = new Js();
 
 		scriptMessage.js += "var aVar = new Date(); \n";// works
-		scriptMessage.js += "console.log('aVar is ' + aVar)\n";	
-		
-		scriptMessage.js += "var aVar = new java.util.ArrayList(); \n";
-		scriptMessage.js += "console.log('aVar is ' + aVar)\n";// works
-		
-		scriptMessage.js += "var aVar = new java.lang.Thread(); \n";
-		scriptMessage.js += "console.log('aVar is ' + aVar)\n";// this is NOT good
-		
-		scriptMessage.js += "var aVar = new java.lang.Thread(); \n";
-		scriptMessage.js += "console.log('aVar is ' + aVar)\n";// this is NOT good
-		
+		scriptMessage.js += "console.log('aVar is ' + aVar)\n";
+
+		// fails
+		// scriptMessage.js += "var aVar = new java.util.ArrayList(); \n";
+		// fails
+		// scriptMessage.js += "var aVar = new java.lang.Thread(); \n";
+
 		runScript(agent, scriptMessage);
 	}
 
@@ -78,21 +74,21 @@ public class RunSomeJsMessage extends StartServers {
 
 		System.out.println(scriptMessage.js);
 		runScript(agent, scriptMessage);
-		
+
 		obj = agent.bindings.get("myAgentId");
 		System.out.println("obj = " + obj);
-		while (agent.bindings.get("myAgentId") == null) 
+		while (agent.bindings.get("myAgentId") == null)
 			Thread.sleep(1);
 		obj = agent.bindings.get("myAgentId");
 		Assert.assertEquals(agent.getKey(), "" + obj);
-		
+
 		// now, the other agent
 		scriptMessage.js = "var myAgentId = '" + agent2.getKey() + "';\n";
 		runScript(agent2, scriptMessage);
 		obj = agent2.bindings.get("myAgentId");
 		System.out.println("obj = " + obj);
-	
-		while (agent2.bindings.get("myAgentId") == null) 
+
+		while (agent2.bindings.get("myAgentId") == null)
 			Thread.sleep(1);
 		obj = agent2.bindings.get("myAgentId");
 		Assert.assertEquals(agent2.getKey(), "" + obj);
@@ -119,7 +115,7 @@ public class RunSomeJsMessage extends StartServers {
 		}
 	}
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args)  {
 
 		Global.logger.setLevel(Level.TRACE);
 		MyWebSocketServer.logger.setLevel(Level.TRACE);

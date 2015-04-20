@@ -7,6 +7,7 @@ import org.gwems.servers.Global;
 /** We're going to have to delete this if it doesn't get filled out.
  * Is it ok to block in here? Just for a little bit?  
  * No - this is crap - deleteme
+ * antique - delete me
  * @author awootton
  *
  */

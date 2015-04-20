@@ -7,6 +7,7 @@ import org.gwems.servers.Global;
 
 /**
  * Used in a demo in the test folder
+ * antique - delete me
  * 
  * @author awootton
  *

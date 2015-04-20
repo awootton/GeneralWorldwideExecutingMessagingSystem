@@ -19,6 +19,14 @@ public class Subscribe implements Runnable {
 	public static Logger logger = Logger.getLogger(Subscribe.class);
 
 	public String channel = "none";
+	
+	public Subscribe(){
+	}
+
+	public Subscribe(String channel) {
+		super();
+		this.channel = channel;
+	}
 
 	@Override
 	public void run() {

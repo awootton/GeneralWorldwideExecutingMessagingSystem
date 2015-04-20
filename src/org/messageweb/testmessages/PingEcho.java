@@ -12,8 +12,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
- * When sent from a client, and executed on a server, it simply writs back to the client. When the client runs it an
+ * When sent from a client, and executed on a server, it simply writes back to the client. When the client runs it an
  * integer in the timeoutQ is incremented.
+ * 
+ * antique - delete me - for a test only
  * 
  * @author awootton
  *
@@ -55,17 +57,17 @@ public class PingEcho implements Runnable {
 			} catch (JsonProcessingException e) {
 				e.printStackTrace();
 			}
-		} else {
+		} else {// there is still a global and an agent but the agent is a WsClientImpl 
 			WsClientImpl client = WsClientImpl.getClient();
 			logger.info("PingEcho null context , back on client " + client);
 
 			// this would mean that we are inside of the client
-			Object got = client.cache.get(key);
+			Object got = client.global.timeoutCache.get(key);
 			if (got == null) {
 				got = new AtomicInteger(0);
 			}
 			((AtomicInteger) got).addAndGet(1);
-			client.cache.put(key, got, 100);
+			client.global.timeoutCache.put(key, got, 100);
 			return;
 		}
 

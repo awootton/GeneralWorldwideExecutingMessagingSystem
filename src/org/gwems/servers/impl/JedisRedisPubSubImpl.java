@@ -22,9 +22,6 @@ public class JedisRedisPubSubImpl extends PubSub {
 
 	private MyJedisPool pool;
 
-	// When this channel is unsubscribed then the client quits and returns from the thread - need to change that.
-	private final String dummyChannel = "AHUAp4xu9FqRobj8zwn2vBI6Anag1t8Z5z6SWjn8_neverUseThisChannel";// random.org
-
 	public JedisRedisPubSubImpl(String hostName, int port, Handler handler, String globalName) {
 		this.hostName = hostName;
 		this.port = port;

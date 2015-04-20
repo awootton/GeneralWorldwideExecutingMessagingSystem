@@ -116,7 +116,7 @@ public final class MyWebSocketServer {
 
 	private void start(int port, Global global) throws Exception {
 
-		synchronized (portsStarted) {
+		synchronized (portsStarted) {// does this even work?? 
 			if (portsStarted.contains(port))
 				return;
 			portsStarted.add(port);

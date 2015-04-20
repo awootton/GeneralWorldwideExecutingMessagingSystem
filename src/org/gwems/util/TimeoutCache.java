@@ -100,45 +100,16 @@ public class TimeoutCache {
 							r.run();
 						}
 						synchronized (getSyncObject()) {
-							cache.invalidate(head);
+							// only invalidate it if it's still timed out.
+							// the runners might have renewed it. 
+							if ( head.expires <= time )
+								cache.invalidate(head);
 						}
 					});
 				}
 			}
 		}
 	}
-
-	// private class RunTimerList implements Runnable {
-	// TimedKey key;
-	//
-	// public RunTimerList(TimedKey key) {
-	// this.key = key;
-	// }
-	//
-	// @Override
-	// public void run() {
-	// if (logger.isTraceEnabled()) {
-	// logger.trace("timing out key = " + key.key + " calling " + key.runners.size() + " watchers");
-	// }
-	//
-	// for (Runnable r : key.runners) {
-	// r.run();
-	// }
-	// synchronized (getSyncObject()) {
-	// cache.invalidate(key);
-	// }
-	// }
-	// }
-
-	// private static class TimedCompare implements Comparator<TimedKey> {
-	// @Override
-	// public int compare(TimedKey o1, TimedKey o2) {
-	// long val = o1.expires - o2.expires;
-	// if (val != 0)
-	// return (int) (val >> 32);
-	// return o1.key.compareTo(o2.key);
-	// }
-	// }
 
 	private static class ObjectHolder {
 		TimedKey key;

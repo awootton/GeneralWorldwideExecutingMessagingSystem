@@ -1,6 +1,5 @@
 package gwems;
 
-import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
@@ -14,6 +13,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 /**
  * This runs some javascript.
  * 
+ * {"@":"gwems.Js","js":"console.log('Hello World');"} 
+ * 
+ * 
  * @author awootton
  *
  */
@@ -23,8 +25,6 @@ public class Js implements Runnable {
 
 	public String js = "console.log('Hello World');";
 
-	ScriptContext context = null;// what?
-
 	@Override
 	public void run() {
 		ExecutionContext ec = Global.getContext();
@@ -32,7 +32,7 @@ public class Js implements Runnable {
 		try {
 
 			if (ec.agent.isPresent()) {
-				//Global global = ec.global;
+				// Global global = ec.global;
 				engine = ec.global.getEngine();
 				Agent agent = ec.agent.get();
 				// we need to restore the context from the agent.
@@ -40,12 +40,21 @@ public class Js implements Runnable {
 				// actually, just the engine bindings
 				if (agent.bindings == null) {
 					agent.bindings = engine.createBindings();
+					// this won't really work in the long run.
+					engine.eval("var java = {};", agent.bindings);
 				}
 				try {
-					ec.isJs = true; 
-					engine.eval(js, agent.bindings);// , context
-					ec.isJs = false; 
-			} catch (ScriptException e) {
+					ec.isJs = true;
+					engine.eval(js, agent.bindings);
+					ec.isJs = false;
+
+					// Bindings globalBinding = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
+					// Bindings engineBinding = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+					// GetToKnowBindingsAndScopes.dumpBindings("global",globalBinding);
+					// GetToKnowBindingsAndScopes.dumpBindings("engine",engineBinding);
+					// GetToKnowBindingsAndScopes.dumpBindings("agent",agent.bindings);
+
+				} catch (ScriptException e) {
 					logger.error("script error ", e);
 				} finally {
 				}
@@ -62,7 +71,7 @@ public class Js implements Runnable {
 
 	public static void main(String[] args) throws JsonProcessingException {
 
-		Publish p = new Publish();
+		Js p = new Js();
 		System.out.println(Global.serialize(p));
 		System.out.println(Global.serializePretty(p));
 

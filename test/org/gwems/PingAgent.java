@@ -28,7 +28,7 @@ public class PingAgent extends StartServers {
 
 		// fixme: add these tests again sometime 
 		
-		// demoAgentPing(global1);// from server1 to server1 - easy
+		demoAgentPing(global1);// from server1 to server1 - easy
 	
 		//demoAgentPing(global2);// from server1 to server2 - a little harder
 		
@@ -74,7 +74,7 @@ public class PingAgent extends StartServers {
 	}
 
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args)   {
 
 		Global.logger.setLevel(Level.TRACE);
 		MyWebSocketServer.logger.setLevel(Level.TRACE);
@@ -99,7 +99,11 @@ public class PingAgent extends StartServers {
 
 		setup();
 
-		test.myDemoOne();
+		try {
+			test.myDemoOne();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 
 		try {
 			Thread.sleep(5 * 1000);

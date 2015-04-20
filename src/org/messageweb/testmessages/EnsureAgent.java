@@ -2,7 +2,7 @@ package org.messageweb.testmessages;
 
 import org.messageweb.dynamo.AtwTableBase;
 
-/** if this is crap them remove it,
+/** if this is crap them remove it,  √
  * 
  * @author awootton
  *

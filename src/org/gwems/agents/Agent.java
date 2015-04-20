@@ -12,7 +12,7 @@ import org.gwems.util.AgentRunnablesQueue;
 
 /**
  * 
- * needs: time to live. helpers. test with storage. We'll want to save these in db soon.
+ * needs: time to live. helpers. test with storage. We'll want to save these in db soon. maybe.
  * 
  * @author awootton
  *
@@ -22,10 +22,8 @@ public abstract class Agent implements Comparable<Agent> {
 
 	/**
 	 * We'll need to install the messageQ manually. Fortunately there will only be a handful of places where these are
-	 * deserialized.
+	 * deserialized. Or, none.
 	 */
-	// @DynamoDBIgnore
-	// @JsonIgnore
 	public AgentRunnablesQueue messageQ = null;// protected?
 
 	private final String key;// must be unique!

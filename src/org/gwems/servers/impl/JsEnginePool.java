@@ -1,14 +1,16 @@
 package org.gwems.servers.impl;
 
 import gwems.Js;
-import gwems.Publish;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import org.apache.log4j.Logger;
 import org.gwems.servers.Global;
@@ -31,6 +33,19 @@ public class JsEnginePool {
 		factory.put("console", new JsConsole());
 		factory.put("global", new GlobalInterface(global));
 		// anything else?
+
+		ScriptEngine engine = factory.getEngineByName("JavaScript");//
+		try {
+			engine.eval("var java = {};");
+			Bindings globalBinding = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
+			Bindings engineBinding = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+			Object obj = engineBinding.get("java");
+			// why does this not work?
+			globalBinding.put("java", obj);
+
+		} catch (ScriptException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public ScriptEngine get() {
@@ -44,19 +59,18 @@ public class JsEnginePool {
 	}
 
 	private int count = 0;
-	
+
 	public int getCreatedCount() {
 		return count;
 	}
 
 	private ScriptEngine create() {
-
 		// create JavaScript engine
 		ScriptEngine engine = factory.getEngineByName("JavaScript");//
 		// ScriptEngine engine = factory.getEngineByName("nashorn");// they are the same
-		// init some interfaces.
 		logger.info("created new JavaScript engine #" + count++);
-
+		// bindings made here don't stick because
+		// a new engine bindings is set by every agent
 		return engine;
 	}
 

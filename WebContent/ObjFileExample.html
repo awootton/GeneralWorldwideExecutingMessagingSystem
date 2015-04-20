@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>three.js webgl - loaders - OBJ loader w/atw</title>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<style>
+body {
+	font-family: Monospace;
+	background-color: #000;
+	color: #fff;
+	margin: 0px;
+	overflow: hidden;
+}
+
+#info {
+	color: #fff;
+	position: absolute;
+	top: 10px;
+	width: 100%;
+	text-align: center;
+	z-index: 100;
+	display: block;
+}
+
+#info a, .button {
+	color: #f00;
+	font-weight: bold;
+	text-decoration: underline;
+	cursor: pointer
+}
+</style>
+</head>
+
+<body>
+	<div id="info">
+		<a href="http://threejs.org" target="_blank">three.js</a> - OBJLoader
+		test
+	</div>
+
+	<script src="http://code.jquery.com/jquery.min.js"></script>
+	<script src="js/three.js"></script>
+	<script src="js/libs/controls/OrbitControls.js"></script>
+	<script src="js/Axes.js"></script>
+
+	<script src="js/loaders/OBJLoader.js"></script>
+	<script>
+		var container;
+
+		var camera, scene, renderer, controls;
+
+		//		var mouseX = 0, mouseY = 0;
+
+		var windowHalfX = window.innerWidth / 2;
+		var windowHalfY = window.innerHeight / 2;
+
+		init();
+		animate();
+
+		function init() {
+
+			container = document.createElement('div');
+			document.body.appendChild(container);
+
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
+			camera.position.z = 100;
+
+			// scene
+
+			scene = new THREE.Scene();
+
+			//var ambient = new THREE.AmbientLight(0x101030);
+			//scene.add(ambient);
+
+			var ambient = new THREE.AmbientLight(0x333333);
+			scene.add(ambient);
+
+			var directionalLight = new THREE.DirectionalLight(0xffeedd);
+			directionalLight.position.set(100, 200, 1000);
+			scene.add(directionalLight);
+
+			var geometry = new THREE.BoxGeometry(1, 1, 1);// one meter
+			var material = new THREE.MeshLambertMaterial({
+				color : 0x777777
+			})
+			var cube = new THREE.Mesh(geometry, material);
+			//cube.position.set(0.5, 0.5, 0.5);
+			//scene.add(cube);
+			var cubeObject = new THREE.Object3D();
+			cubeObject.add(cube);
+			scene.add(cubeObject);
+
+			var grid = new THREE.GridHelper(64, 4);// 4 meter grid
+			//grid.position.z = sceneCenter.z;
+			scene.add(grid);
+			// texture
+
+			var manager = new THREE.LoadingManager();
+			manager.onProgress = function(item, loaded, total) {
+				console.log(item, loaded, total);
+			};
+
+			var texture = new THREE.Texture();
+
+			var onProgress = function(xhr) {
+				if (xhr.lengthComputable) {
+					var percentComplete = xhr.loaded / xhr.total * 100;
+					console.log(Math.round(percentComplete, 2) + '% downloaded');
+				}
+			};
+
+			var onError = function(xhr) {
+				console.log(xhr);
+			};
+
+			var loader = new THREE.ImageLoader(manager);
+			loader.load('images/ColoredKnives.jpg', function(image) {
+
+				texture.image = image;
+				texture.needsUpdate = true;
+
+			});
+
+			// model
+
+			var directionalLight2 = new THREE.DirectionalLight(0x997777);
+			directionalLight2.position.set(100, 200, -1000);
+			scene.add(directionalLight2);
+
+			var phongMat = new THREE.MeshPhongMaterial ({
+				color : 0xAA7777,
+				specular: 0x009900, shininess: 0, shading: THREE.SmoothShading  
+			})
+
+			// even though the faces in an obj file are clearly indexs the OBJLoader
+			// still makes a sea of triangles. sux. 
+			var loader = new THREE.OBJLoader(manager);
+			//		loader.load('images/humanoid_quad.obj', function(object) {
+			var blockman = 'images/humanoid_quad.obj';
+			var teddy = 'images/teddy.obj';
+			var al = 'images/al.obj';
+			loader.load(teddy, function(object) {
+				object.traverse(function(child) {
+					if (child instanceof THREE.Mesh) {
+						//child.material.map = texture;
+						child.material = phongMat;
+						var geo = child.geometry;
+						var normals = geo.getAttribute( 'normal');
+
+						if ( ! normals ){
+					//	buffergeometry.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( geometry.normals ), 3 ) );
+							geo.computeVertexNormals ()
+						}
+					}
+				});
+
+				//object.position.y = -80;
+				//object.position.y = +20;
+				scene.add(object);
+
+			}, onProgress, onError);
+
+			//
+
+			renderer = new THREE.WebGLRenderer();
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			container.appendChild(renderer.domElement);
+
+			controls = new THREE.OrbitControls(camera, renderer.domElement);
+			//controls.target = sceneCenter;
+
+			//document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+			//
+
+			window.addEventListener('resize', onWindowResize, false);
+
+		}
+
+		function onWindowResize() {
+
+			windowHalfX = window.innerWidth / 2;
+			windowHalfY = window.innerHeight / 2;
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+		}
+
+		/* 		function onDocumentMouseMove(event) {
+
+		 mouseX = (event.clientX - windowHalfX) / 2;
+		 mouseY = (event.clientY - windowHalfY) / 2;
+
+		 }
+		 */
+		//
+		function animate() {
+
+			requestAnimationFrame(animate);
+
+			renderer.render(scene, camera);
+			controls.update();
+
+		}
+	</script>
+
+</body>
+</html>

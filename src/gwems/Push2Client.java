@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  * 
  * {"@":"gwems.Push2Client","msg":"none"}
  * 
+ * 
  * @author awootton
  *
  */
@@ -27,7 +28,11 @@ public class Push2Client implements Runnable {
 
 	Object msg = "none";
 
-	public Push2Client(String message) {
+	/** Object will need to be serializable by jackson.
+	 * 
+	 * @param message
+	 */
+	public Push2Client(Object message) {
 		super();
 		this.msg = message;
 	}
@@ -44,14 +49,8 @@ public class Push2Client implements Runnable {
 			if (logger.isTraceEnabled()) {
 				logger.trace("Sending message2client " + msg + " to " + session);
 			}
-			String from = ec.subscribedChannel.get();
-			// We should not do this. We should make client write the publish with 'from' in it if that's what they
-			// want.
-//			T node = new T();
-//			node.put("from", from);
-//			node.put("msg", "" + msg);
- 			try {
-				session.writeAndFlush(Global.serialize(msg));//Global.serialize(node));
+			try {
+				session.writeAndFlush(Global.serialize(msg));
 			} catch (JsonProcessingException e) {
 				logger.error(e);
 			}

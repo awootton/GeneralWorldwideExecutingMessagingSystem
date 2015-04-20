@@ -1,5 +1,6 @@
 package org.gwems.servers;
 
+import gwems.Ack;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -14,6 +15,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -27,17 +29,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.gwems.servers.impl.MyRejectedExecutionHandler;
+import org.gwems.agents.Agent;
 import org.gwems.servers.impl.MyWebSocketClientHandler;
-import org.gwems.util.TimeoutCache;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -57,20 +57,18 @@ import com.fasterxml.jackson.databind.JsonMappingException;
  * arguments if you want to connect to the example WebSocket server, as this is the default. Copyright 2015 Alan Wootton
  * see included license.
  */
-public final class WsClientImpl {
+public class WsClientImpl extends Agent {
 
 	public static Logger logger = Logger.getLogger(WsClientImpl.class);
 
-	static final String URL = System.getProperty("url", "ws://127.0.0.1:8081");// + // "/websocket"
-
 	MyWebSocketClientHandler handler;
 
-	public boolean running = true;// just this server
+	public boolean running = true;// just this client
 	// System.setProperty("catalina.base", ".."); // so logger won't npe
 
-	private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
+	// private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
-	public TimeoutCache cache;
+	// public TimeoutCache cache;
 
 	private int port;
 	private String host;
@@ -80,15 +78,27 @@ public final class WsClientImpl {
 
 	private static int clientInstanceCounter = 0;
 
-	public WsClientImpl(int port) {
-		super();
-		this.port = port;
+	// These are in Agent
+	// public m.T map;
+	// public Bindings bindings = null; // for javascript
 
-		cache = new TimeoutCache(executor, "AllClients");
+	public Global global = null;
+
+	/**
+	 * The global may be a dummy, just for this client.
+	 * 
+	 * @param host
+	 * @param port
+	 * @param global
+	 */
+	public WsClientImpl(String host, int port, Global global) {
+		super(global, Global.getRandom());
+		this.port = port;
+		this.global = global;
 
 		Thread thread = new Thread(() -> {
 			try {
-				startUp(port);
+				startUp(host, port);
 			} catch (Exception e) {
 				logger.error(e);
 			}
@@ -98,31 +108,19 @@ public final class WsClientImpl {
 		thread.start();
 		logger.info("Web CLient started port= " + port);
 	}
-
-	// class ClientStarter implements Runnable {
-	//
-	// int port;
-	//
-	// public ClientStarter(int port) {
-	//
-	// this.port = port;
-	// }
-	//
-	// public void run() {
-	// WsClientImpl server = WsClientImpl.this;
-	// try {
-	// server.startUp(port);
-	// } catch (Exception e) {
-	// logger.error(e);
-	// }
-	// }
-	// }
+	
+	public WsClientImpl(String host, int port) {
+		this(host,port,Global.dummyGlobal());
+		// FIXME: for some reason I don't know the ack won't arrive 
+		// unless we say something first. 
+		enqueueString("{\"@\":\"Live\"}");
+	}
 
 	// hangs the thread lower down.
-	private void startUp(int theport) throws Exception {
+	private void startUp(String host, int theport) throws Exception {
 		this.port = theport;
-		URI uri = new URI(URL);
-		String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
+		// URI uri = new URI(URL);
+		String scheme = "ws";// uri.getScheme() == null ? "http" : uri.getScheme();
 		// final String host = uri.getHost() == null ? "127.0.0.1" : uri.getHost();
 		// final int port;
 		// if (uri.getPort() == -1) {
@@ -161,20 +159,21 @@ public final class WsClientImpl {
 			// version = WebSocketVersion.V08;
 			boolean allowExtensions = false;
 
+			// ws://127.0.0.1:8081
+			URI uri = new URI(scheme + "://" + host + ":" + port);
+
 			handler = new MyWebSocketClientHandler(
 					WebSocketClientHandshakerFactory.newHandshaker(uri, version, null, allowExtensions, new DefaultHttpHeaders()), this);
 
 			Bootstrap b = new Bootstrap();
 			b.group(group).channel(NioSocketChannel.class).handler(new MyChannelInitializer());
 
-			ChannelFuture f = b.connect(uri.getHost(), port);
+			ChannelFuture f = b.connect(host, port);
 			f = f.sync();
 			Channel ch = f.channel();
 			handler.handshakeFuture().sync();
 
-			// BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
 			while (running) {
-				// String msg = console.readLine();
 				String msg;
 				try {
 					msg = commands4serverQ.poll(1, TimeUnit.MILLISECONDS);
@@ -232,41 +231,34 @@ public final class WsClientImpl {
 	public static WsClientImpl getClient() { // if any
 		return myClient.get();
 	}
-
-	static public void XXXXXXXXXreply(Runnable message) {
-		ChannelHandlerContext ctx = myClientContext.get();
-		// logger.info(" have ctx name = " + ctx.name());
-		try {
-			String sendme = Global.serialize(message);
-			ctx.channel().write(new TextWebSocketFrame(sendme));
-		} catch (JsonProcessingException e) {
-			// e.printStackTrace();
-			logger.error("bad message " + message, e);
-		}
-
-	}
-
+	
 	/**
 	 * Incoming messages to this client, or incoming in general, come directly through here.
 	 * 
-	 * try typing this into command prompt:
-	 * {"@":"org.messageweb.messages.PingEcho","key":"someRandomKeyToDoTricksWith"}
+	 * They get deserialized into Runnable and executed. Unless... todo: work on that. 
 	 * 
 	 * @param ctx
 	 * @param child
 	 */
 	public void executeChannelMessage(ChannelHandlerContext ctx, String message) {
 
-		// executor.execute(new ClientCtxWrapper(ctx, message));
-		executor.execute(() -> {
+		global.execute(() -> {
 			myClientContext.set(ctx);
 			myClient.set(WsClientImpl.this);
 			Runnable child;
 			try {
-				if ( logger.isTraceEnabled())
+				if (logger.isTraceEnabled())
 					logger.trace("Have message " + message);
 				child = Global.deserialize(message);
+				ExecutionContext ec = Global.getContext();
+				ec.global = global;
+				ec.agent = Optional.of(WsClientImpl.this);
 				child.run();
+				if (child instanceof Ack) {// Super Hack ! Kill meh know.
+					if (bindings != null)
+						bindings.put("sessionId", ((Ack) child).session);
+					this.userMap.put("sessionId", ((Ack) child).session);
+				}
 			} catch (JsonParseException e) {
 				logger.error("bad message:" + message, e);
 			} catch (JsonMappingException e) {
@@ -280,60 +272,46 @@ public final class WsClientImpl {
 		});
 	}
 
-	// private class ClientCtxWrapper implements Runnable {
-	//
-	// ChannelHandlerContext ctx;
-	// String message;
-	//
-	// public ClientCtxWrapper(ChannelHandlerContext ctx, String message) {
-	// super();
-	// this.ctx = ctx;
-	// this.message = message;
-	// }
-	//
-	// @Override
-	// public void run() {
-	// myClientContext.set(ctx);
-	// myClient.set(WsClientImpl.this);
-	// Runnable child;
-	// try {
-	// child = Global.deserialize(message);
-	// child.run();
-	// } catch (JsonParseException e) {
-	// logger.error("bad message", e);
-	// } catch (JsonMappingException e) {
-	// logger.error("bad message", e);
-	// } catch (IOException e) {
-	// logger.error("bad message", e);
-	// }
-	// myClientContext.set(null);
-	// myClient.set(null);
-	// }
-	// }
+	/**
+	 * This is all in one thread, right? We need to pass these on to some handler. So far the only use case is the
+	 * GwemsPubSub
+	 * 
+	 * @param ctx
+	 * @param frame
+	 */
+	// @Deprecated i'm not doing binary now. atw
+	public void executeChannelMessage(ChannelHandlerContext ctx, BinaryWebSocketFrame frame) {
+		if (frame.isFinalFragment()) {
+			logger.warn("  final frame - not handled");
+		} else {
+			logger.warn("non final frame - not handled");
+		}
+	}
 
 	/**
 	 * Kills everything - all FIXME: should kill all the clients. Not just this one.
 	 */
 	public void stop() {
-		executor.setRejectedExecutionHandler(new MyRejectedExecutionHandler());
+	//	executor.setRejectedExecutionHandler(new MyRejectedExecutionHandler());
 		running = false;
-		try {
-			executor.awaitTermination(5, TimeUnit.MILLISECONDS);
-		} catch (InterruptedException e) {
-		}
-		executor.shutdown();
+//		try {
+//			executor.awaitTermination(5, TimeUnit.MILLISECONDS);
+//		} catch (InterruptedException e) {
+//		}
+//		executor.shutdown();
+		global.stop();// global owns the executor now.
 	}
 
 	/**
 	 * Only wait 100 ms for q ?
 	 * 
-	 * @param r
+	 * @param message
 	 */
 
-	public void enqueueRunnable(Runnable r) {
+	public void enqueueRunnable(Runnable message) {
 		String s;
 		try {
-			s = Global.serialize(r);
+			s = Global.serialize(message);
 			enqueueString(s);
 		} catch (JsonProcessingException e) {
 			logger.error(e);
@@ -368,11 +346,11 @@ public final class WsClientImpl {
 
 		logger.info("Starting main");
 
-		WsClientImpl test = new WsClientImpl(8081);
+		WsClientImpl test = new WsClientImpl("localhost", 8081);
 
-		//test.enqueueRunnable(new PingEcho());
+		// test.enqueueRunnable(new PingEcho());
 
-		//test.enqueueRunnable(new PingEcho());
+		// test.enqueueRunnable(new PingEcho());
 
 		BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {

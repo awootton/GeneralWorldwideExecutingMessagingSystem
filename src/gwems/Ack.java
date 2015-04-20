@@ -19,6 +19,7 @@ public class Ack implements Runnable {
 	public void run() {
 		// does nothing.
 		// probably there is some javascript that executes this.
+		// Java WS client may have a special case so watch for that if renaming. 
 	}
 
 }
