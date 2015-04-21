@@ -17,12 +17,15 @@ import org.gwems.servers.Global;
  *
  */
 public class PublishLogAppender extends AppenderSkeleton {
+	
+	public static final boolean publishAgentLogs = false;
 
+	@SuppressWarnings("unused")
 	@Override
 	protected void append(LoggingEvent event) {
 
 		ExecutionContext ec = Global.getContext();
-		if (ec.agent.isPresent()) {
+		if (publishAgentLogs && ec.agent.isPresent()) {
 			String message = event.getRenderedMessage();
 			String channel = ec.agent.get().getKey() + "#log";
 			ec.global.publishLog(channel, new Push2Client(message));

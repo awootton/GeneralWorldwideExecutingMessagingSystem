@@ -1,12 +1,15 @@
 package org.messageweb.testmessages;
 
 import org.apache.log4j.Logger;
+import org.gwems.AgentFinder;
 import org.gwems.agents.SimpleAgent;
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
-import org.messageweb.experiments.AgentFinder;
 
 /** Used in test. Not for production. antique - delete me
+ * 
+ * What's goofy is that the reply is as a SASE and so the agent running it
+ * is the same one being looked up in the timeoutCache. 
  * 
  * @author awootton
  *

@@ -19,8 +19,6 @@ import org.gwems.servers.impl.MyWebSocketServerHandler;
 import org.gwems.util.TimeoutCache;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.experiments.AgentFinder;
-import org.messageweb.testmessages.AgentEcho;
 import org.messageweb.testmessages.LogonMessage;
 import org.messageweb.testmessages.PingEcho;
 
@@ -29,7 +27,7 @@ public class RunSomeJsMessage extends StartServers {
 	@Test
 	public void test2() {
 
-		Agent agent = new SimpleAgent(Global.getRandom(), global1);
+		Agent agent = new SimpleAgent(global1, Global.getRandom());
 		Js scriptMessage = new Js();
 
 		scriptMessage.js += "var aVar = new Date(); \n";// works
@@ -55,9 +53,9 @@ public class RunSomeJsMessage extends StartServers {
 		scriptMessage.js += "var touched = 1;";
 		scriptMessage.js += "console.log('touched is ' + touched)";
 
-		Agent agent = new SimpleAgent(Global.getRandom(), global1);
+		Agent agent = new SimpleAgent(global1, Global.getRandom());
 
-		Agent agent2 = new SimpleAgent(Global.getRandom(), global1);
+		Agent agent2 = new SimpleAgent(global1, Global.getRandom());
 
 		// won't work: scriptMessage.run();
 		// we need to pass it to a global
@@ -115,7 +113,7 @@ public class RunSomeJsMessage extends StartServers {
 		}
 	}
 
-	public static void main(String[] args)  {
+	public static void main(String[] args) {
 
 		Global.logger.setLevel(Level.TRACE);
 		MyWebSocketServer.logger.setLevel(Level.TRACE);

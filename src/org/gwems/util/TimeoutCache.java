@@ -1,6 +1,7 @@
 package org.gwems.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.concurrent.Executor;
@@ -11,8 +12,9 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 /**
- * This is a basic key value cache with the addition of a time-to-live for every key/value. There is an ordered collection of runnables that will execute if the
- * key/value expire. Also, the ttl can be extended and that is expected to be a major use case so that needs to be efficient.
+ * This is a basic key value cache with the addition of a time-to-live for every key/value. There is an ordered
+ * collection of runnables that will execute if the key/value expire. Also, the ttl can be extended and that is expected
+ * to be a major use case so that needs to be efficient.
  * 
  * FIXME: this will be a bottleneck at high volume.
  * 
@@ -60,7 +62,7 @@ public class TimeoutCache {
 		running = false;
 	}
 
-	TimeoutCache getSyncObject() {
+	TimeoutCache XXXgetSyncObject() {
 		return this;
 	}
 
@@ -76,17 +78,18 @@ public class TimeoutCache {
 					Thread.sleep(1);
 				} catch (InterruptedException e) {
 				}
-				if ( ! running ){
+				if (!running) {
 					return;
 				}
 				long time = System.currentTimeMillis() - delta;
 				while (timedQ.size() != 0 && timedQ.first().expires <= time) {
 					TimedKey head;
-					synchronized (getSyncObject()) {
+					synchronized (TimeoutCache.this) {
 						head = timedQ.pollFirst();
 						if (logger.isTraceEnabled()) {
 							logger.trace("popped = " + head.key + " " + timedQ.size() + " remaining");
 						}
+
 					}
 					if (logger.isTraceEnabled()) {
 						logger.trace("sending key to pool = " + head.key);
@@ -96,13 +99,17 @@ public class TimeoutCache {
 						if (logger.isTraceEnabled()) {
 							logger.trace("timing out key = " + head.key + " calling " + head.runners.size() + " watchers");
 						}
-						for (Runnable r : head.runners) {
+						List<Runnable> runList;
+						synchronized (TimeoutCache.this) {
+							runList = new ArrayList<Runnable>(head.runners);
+						}
+						for (Runnable r : runList) {
 							r.run();
 						}
-						synchronized (getSyncObject()) {
-							// only invalidate it if it's still timed out.
-							// the runners might have renewed it. 
-							if ( head.expires <= time )
+						// only invalidate it if it's still timed out.
+						// the runners might have renewed it.
+						synchronized (TimeoutCache.this) {
+							if (head.expires <= time)
 								cache.invalidate(head);
 						}
 					});
@@ -221,7 +228,8 @@ public class TimeoutCache {
 	}
 
 	/**
-	 * We don't really remove it. We just set the timeout to -1 and let it expire without the watchers. No expire routines are run.
+	 * We don't really remove it. We just set the timeout to -1 and let it expire without the watchers. No expire
+	 * routines are run.
 	 * 
 	 * @param key
 	 */

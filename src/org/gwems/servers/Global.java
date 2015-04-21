@@ -132,6 +132,12 @@ public class Global implements Executor {
 		if (!isDummyServer)
 			dynamoHelper = new DynamoHelper();
 
+		if (isDummyServer) {
+			this.id = "Dummy" + serveIdCounter;
+		} else {
+			this.id = "Svr" + port;
+		}
+
 		executor = new ThreadPoolExecutor(2, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new MyThreadFactory());
 
 		// open the port
@@ -164,7 +170,7 @@ public class Global implements Executor {
 			}
 		if (thePubSub != null) {
 			// start a timer to keep the 'dis pubsub alive
-			Agent shitAgent = new SimpleAgent(JedisRedisPubSubImpl.dummyChannel, this);
+			Agent shitAgent = new SimpleAgent(this, JedisRedisPubSubImpl.dummyChannel);
 			timeoutCache.put("eTADIUdpXuaVjdijWhlE", shitAgent, 12 * 60 * 1000, () -> {
 				timeoutCache.setTtl("eTADIUdpXuaVjdijWhlE", 12 * 60 * 1000);
 				thePubSub.publish(JedisRedisPubSubImpl.dummyChannel, "{\"@\":\"Live\"}");
@@ -184,7 +190,7 @@ public class Global implements Executor {
 		@Override
 		public Thread newThread(Runnable r) {
 			Thread thread = new Thread(r);
-			String name = "Global_Worker:" + id + ":" + count++;
+			String name = "Global_:" + id + ":" + count++;
 			thread.setName(name);
 			thread.setDaemon(true);
 			return thread;
@@ -261,7 +267,7 @@ public class Global implements Executor {
 		sessionAgent = almost_private_EnsureSessionAgent(ctx);
 		assert ctx != null;
 		if (logger.isTraceEnabled()) {
-			logger.trace("Sending message to execute on " + sessionAgent + " with " + message);
+			;// in nio thread logger.trace("Sending message to execute on " + sessionAgent + " with " + message);
 		}
 		sessionAgent.byteCount.addAndGet(message.length());
 		sessionAgent.socketMessageQ.run(new CtxWrapper(message));
@@ -316,11 +322,11 @@ public class Global implements Executor {
 		public void run() {
 			try {
 				if (logger.isTraceEnabled()) {
-					logger.trace("CtxWrapper deserialize  " + message);
+					// logger.trace("CtxWrapper deserialize  " + message);
 				}
 				Runnable r = Global.deserialize(message);
 				if (logger.isTraceEnabled()) {
-					logger.trace("CtxWrapper running " + r);
+					// logger.trace("CtxWrapper running " + r);
 				}
 				r.run();
 			} catch (JsonParseException e) {
@@ -350,23 +356,10 @@ public class Global implements Executor {
 			if (logger.isTraceEnabled()) {
 				logger.trace("something from redis " + str + " on channel " + channel);
 			}
-			// reject the bytes before the '{'
-			// TODO: there's a fancy, optimized, faster, way to do this job.
-			// FIXME: write it. Also, don't slow down this thread.
-			int pos = str.indexOf('{');
-			if (pos < 0) {
-				logger.error("bad message - missing {" + str);
-				return;
-			}
-			String prefix = str.substring(0, pos);
-			if (prefix.equals(id)) {// was sent by us
-				return;// so, we don't need to broadcast again.
-			}
-			String message = str.substring(pos);
 			// don't deserialize in the PubSub thread.
 			executor.execute(() -> {
 				try {
-					Runnable runme = Global.deserialize(message);
+					Runnable runme = Global.deserialize(str);
 					// get all the local subscribers
 					Set<Agent> agents = session2channel.thing2items_get(channel);
 					if (logger.isTraceEnabled()) {
@@ -378,9 +371,9 @@ public class Global implements Executor {
 					}
 
 				} catch (JsonProcessingException e) {
-					logger.error("bad message " + message, e);
+					logger.error("bad message " + str, e);
 				} catch (IOException e) {
-					logger.error("bad message io " + message, e);
+					logger.error("bad message io " + str, e);
 				} finally {
 				}
 			});
@@ -487,6 +480,18 @@ public class Global implements Executor {
 		return MAPPER.writeValueAsString(message);
 	}
 
+	public static String serialize4log(Object message) {
+		String s = "broken";
+		try {
+			s = serialize(message);
+		} catch (JsonProcessingException e) {
+			logger.error(e);
+		}
+		if (s.length() > 128)
+			s = s.substring(0, 127);
+		return s;
+	}
+
 	public static String serializePretty(Object message) throws JsonProcessingException {
 		return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(message);
 	}
@@ -501,7 +506,7 @@ public class Global implements Executor {
 
 	public void publish(String channel, Runnable runme, boolean log, Agent except) {
 		if (logger.isTraceEnabled() && log) {
-			logger.trace("publish sending runme " + runme + " on channel " + channel);
+			logger.trace("publish sending message: " + Global.serialize4log(runme) + " on channel " + channel);
 		}
 		if (channel == null)
 			return;
@@ -522,20 +527,21 @@ public class Global implements Executor {
 			ec.subscribedChannel = Optional.of(channel);
 			// get all the local subscribers
 			Set<Agent> agents = session2channel.thing2items_get(channel);
-			if (logger.isTraceEnabled() && log) {
-				logger.trace("sending on to " + agents + " on channel " + channel);
-			}
 			for (Agent agent : agents) {
 				// give them the message
-				if (agent != except)
+				if (agent != except) {
+					if (logger.isTraceEnabled() && log) {
+						logger.trace("Adding agentQ " + agents + " on channel " + channel);
+					}
 					agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
+				}
 			}
 			ec.subscribedChannel = Optional.empty();
 		});
 		// Tack our name on the front so we don't re-broadcast when it arrives.
 		// FIXME: don't need this when redis is gone
 		if (thePubSub != null)
-			thePubSub.publish(channel, id + str);
+			thePubSub.publish(channel, str);
 	}
 
 	public void subscribe(Agent agent, String channel) {
@@ -544,6 +550,9 @@ public class Global implements Executor {
 		if (channel.length() == 0)
 			return;
 
+		if (logger.isTraceEnabled()) {
+			logger.trace("subscribe " + agent + " to " + channel);
+		}
 		Set<Agent> agents = session2channel.thing2items_get(channel);
 		if (agents.isEmpty() && thePubSub != null) {
 			thePubSub.subcribe(channel);
@@ -552,6 +561,9 @@ public class Global implements Executor {
 	}
 
 	public void unsubscribe(Agent agent, String channel) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("unsubscribe " + agent + " from " + channel);
+		}
 		session2channel.remove(agent, channel);
 		Set<Agent> agents = session2channel.thing2items_get(channel);
 		if (agents.isEmpty() && thePubSub != null) {
@@ -560,6 +572,9 @@ public class Global implements Executor {
 	}
 
 	public void unsubscribeAgent(Agent agent) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("unsubscribe " + agent);
+		}
 		Set<String> channels = session2channel.item2things_get(agent);
 		session2channel.removeItem(agent);
 		for (String channel : channels) {

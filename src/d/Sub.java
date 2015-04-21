@@ -1,18 +1,27 @@
-package org.gwemdis;
+package d;
 
 import org.gwems.agents.SessionAgent;
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
 
-public class DisUnsub  implements Runnable {
+/** A message from a GwemsPubSub client to a server (Global) that is acting as a pub sub 
+ * system (instead of handling public/client/sessionAgent connections).
+ * 
+ * @author awootton
+ *
+ */
+public class Sub implements Runnable {
 	
 	String channel; 
 	
-	public DisUnsub(String channel) {
+	public Sub(String channel) {
 		super();
 		this.channel = channel;
 	}
 	
+	public Sub(){
+	}
+
 	@Override
 	public void run() {
 		ExecutionContext ec = Global.getContext();

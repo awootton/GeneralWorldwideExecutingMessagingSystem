@@ -1,4 +1,4 @@
-package org.gwemdis;
+package d;
 
 import gwems.Push2Client;
 import io.netty.channel.ChannelHandlerContext;
@@ -26,9 +26,8 @@ public class GwemsPubSub extends PubSub {
 		client = new PubSubWsClientImpl(host, port);
 	}
 
-	public GwemsPubSub(String host, int port, Handler handler, String id) {
+	public GwemsPubSub(String host, int port, Handler handler) {
 		client = new PubSubWsClientImpl(host, port);
-		// client.id = ??
 		this.handler = handler;
 	}
 
@@ -51,15 +50,19 @@ public class GwemsPubSub extends PubSub {
 
 			String channel = "need one";
 			String newMessage = "";
-			// it's going to get Q'd for execution on all the agents
-			// and they need to just send the string to their sockets.
-			// So, wrap it with a p2c
-			Push2Client p2c = new Push2Client(message);
-			try {
-				newMessage = Global.serialize(p2c);
-				handler.handle(channel, newMessage);
-			} catch (JsonProcessingException e) {
-				logger.error(e);
+			if (global.isPubSub) {
+				// it's going to get Q'd for execution on all the agents
+				// and they need to just send the string to their sockets.
+				// So, wrap it with a p2c
+				P2C p2c = new P2C(message);
+				try {
+					newMessage = Global.serialize(p2c);
+					handler.handle(channel, newMessage);
+				} catch (JsonProcessingException e) {
+					logger.error(e);
+				}
+			} else {
+				handler.handle(channel, message);
 			}
 		}
 	}
@@ -67,21 +70,21 @@ public class GwemsPubSub extends PubSub {
 	@Override
 	public void subcribe(String... channels) {
 		for (String string : channels) {
-			DisSub msg = new DisSub(string);
+			Sub msg = new Sub(string);
 			client.enqueueRunnable(msg);
 		}
 	}
 
 	@Override
 	public void publish(String channel, String message) {
-		DisPub pub = new DisPub(channel, message);
+		Pub pub = new Pub(channel, message);
 		client.enqueueRunnable(pub);
 	}
 
 	@Override
 	public void unsubcribe(String... channels) {
 		for (String string : channels) {
-			DisUnsub msg = new DisUnsub(string);
+			Unsub msg = new Unsub(string);
 			client.enqueueRunnable(msg);
 		}
 	}

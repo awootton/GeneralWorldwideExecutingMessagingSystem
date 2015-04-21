@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.log4j.Logger;
 import org.gwems.servers.Global;
-import org.gwems.servers.Util;
 import org.gwems.util.AgentRunnablesQueue;
 import org.gwems.util.SessionRunnablesQueue;
 
@@ -79,6 +78,9 @@ public class SessionAgent extends Agent {
 		String str;
 		try {
 			str = Global.serialize(message);
+			if ( logger.isTraceEnabled()){
+				logger.trace("Session sending " + message + " from " + getKey());
+			}
 			ctx.channel().writeAndFlush(new TextWebSocketFrame(str));
 		} catch (JsonProcessingException e) {
 			logger.error("bad message " + message, e);
@@ -106,6 +108,9 @@ public class SessionAgent extends Agent {
 				}
 			}
 			messageCount++;
+			if ( logger.isTraceEnabled()){
+				logger.trace("socketQ executing " + Global.serialize4log(message) + " from " + getKey());
+			}
 			if (validated) {
 				message.run();
 			} else {
@@ -121,6 +126,9 @@ public class SessionAgent extends Agent {
 	@Override
 	public void run(Runnable message) {
 
+		if ( logger.isTraceEnabled()){
+			logger.trace("messageQ executing " + Global.serialize4log(message) + " from " + getKey());
+		}
 		synchronized (this) {
 			// if they are supposed to go down then they will be wrapped with a Push2Client
 			// don't just blindly forward them because then there's no option to run them here.

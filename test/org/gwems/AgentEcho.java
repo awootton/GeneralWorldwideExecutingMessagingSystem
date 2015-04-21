@@ -1,9 +1,10 @@
-package org.messageweb.testmessages;
+package org.gwems;
 
 import org.apache.log4j.Logger;
 import org.gwems.agents.Agent;
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
+import org.messageweb.testmessages.AgentReply;
 
 /**
  * Used in a demo in the test folder

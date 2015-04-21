@@ -16,11 +16,14 @@ import org.gwems.servers.impl.MyWebSocketServerHandler;
 import org.gwems.util.TimeoutCache;
 import org.junit.Assert;
 import org.junit.Test;
-import org.messageweb.experiments.AgentFinder;
-import org.messageweb.testmessages.AgentEcho;
 import org.messageweb.testmessages.LogonMessage;
 import org.messageweb.testmessages.PingEcho;
 
+/** This used to be a major test but it's getting antique 3/2015
+ * The AgentFinder is a bad pattern. 
+ * @author awootton
+ *
+ */
 public class PingAgent extends StartServers {
 
 	@Test
@@ -54,7 +57,7 @@ public class PingAgent extends StartServers {
 
 		// now, install an agent on server
 
-		SimpleAgent simpleAgent = new SimpleAgent(channel, targetServer);
+		SimpleAgent simpleAgent = new SimpleAgent(targetServer, channel );
 		// install into globalX
 		// FIXME: formalize agentInstall
 		targetServer.timeoutCache.put("simpleAgentAAAA", simpleAgent, 2500, () -> {

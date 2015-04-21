@@ -16,7 +16,7 @@ public class SimpleAgent extends Agent {
 
 	public Object object;// what is this for?? 
 
-	public SimpleAgent(String subChannel, Global global) {
+	public SimpleAgent(Global global, String subChannel ) {
 		super(global, subChannel);
 		messageQ = new AgentRunnablesQueue(global, this);
 	}

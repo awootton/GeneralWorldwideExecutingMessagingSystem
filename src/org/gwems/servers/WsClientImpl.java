@@ -76,8 +76,6 @@ public class WsClientImpl extends Agent {
 
 	private BlockingQueue<String> commands4serverQ = new ArrayBlockingQueue<String>(16);
 
-	private static int clientInstanceCounter = 0;
-
 	// These are in Agent
 	// public m.T map;
 	// public Bindings bindings = null; // for javascript
@@ -103,7 +101,11 @@ public class WsClientImpl extends Agent {
 				logger.error(e);
 			}
 		});
-		thread.setName("Client#" + clientInstanceCounter++);
+		String n = "Client#" + global.id;
+		if ( global.id.contains("Dummy")){
+			n = "SubClient:" + port;
+		}
+		thread.setName(n);
 		thread.setDaemon(true);
 		thread.start();
 		logger.info("Web CLient started port= " + port);

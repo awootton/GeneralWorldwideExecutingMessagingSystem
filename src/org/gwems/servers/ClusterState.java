@@ -1,8 +1,9 @@
 package org.gwems.servers;
 
 import org.apache.log4j.Logger;
-import org.gwemdis.GwemsPubSub;
 import org.gwems.util.PubSub;
+
+import d.GwemsPubSub;
 
 /**
  * A reference to a pub sub for one server. It can be shared by all the servers that use the same pub sub.
@@ -34,7 +35,7 @@ public class ClusterState {
 
 		PubSub thePubSub = null;
 		if (redis_server != null) {
-			thePubSub = new GwemsPubSub(this.redis_server, this.redis_port, handler, id);
+			thePubSub = new GwemsPubSub(this.redis_server, this.redis_port, handler);
 		}
 
 		return thePubSub;

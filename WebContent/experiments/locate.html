@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mobiForge (atw) geolocation demo</title>
+<style>
+#map {
+	width: 100%;
+	height: 100%;
+}
+</style>
+<script>
+	function initGeolocation() {
+		if (navigator && navigator.geolocation) {
+			navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+		} else {
+			console.log('Geolocation is not supported');
+		}
+	}
+
+	function errorCallback() {
+		console.log("error on geolocate");
+	}
+
+	function successCallback(position) {
+
+		var imgElement = document.getElementById("map");
+		imgElement.innerHTML = "latitude=" + position.coords.latitude + " longitude=" + position.coords.longitude;
+
+		/* 		var mapUrl = "http://maps.google.com/maps/api/staticmap?center=";
+		 mapUrl = mapUrl + position.coords.latitude + ',' + position.coords.longitude;
+		 mapUrl = mapUrl + '&zoom=15&size=512x512&maptype=roadmap&sensor=false';
+		 var imgElement = document.getElementById("static-map");
+		 imgElement.src = mapUrl;
+		 */
+	}
+</script>
+</head>
+<body onload="javascript:initGeolocation()">
+	<div id="map">
+		<!--  <img id="static-map" src="placeholder.png" />  -->
+	</div>
+</body>
+</html>

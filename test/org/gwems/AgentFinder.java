@@ -1,9 +1,8 @@
-package org.messageweb.experiments;
+package org.gwems;
 
 import org.apache.log4j.Logger;
 import org.gwems.agents.SimpleAgent;
 import org.gwems.servers.Global;
-import org.messageweb.testmessages.AgentEcho;
 
 /**
  * Start up a subscription, send a quick ping that will collect the existence of an agent somewhere in the network, and
@@ -57,11 +56,11 @@ public class AgentFinder {
 	public Response goAndWait() {
 		response = new Response();
 
-		SimpleAgent localWatcher = new SimpleAgent(agentSubscribeChannel, global);
+		SimpleAgent localWatcher = new SimpleAgent(global, agentSubscribeChannel);
 		localWatcher.object = this;
 	
 		// FIXME: formalize agentInstall
-		global.subscribe(localWatcher, listenHere);
+//		global.subscribe(localWatcher, listenHere);
 		global.timeoutCache.put(localAgentId, localWatcher, ttl, () -> {
 			response.success = false;
 			response.failed = true;
