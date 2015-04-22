@@ -121,7 +121,7 @@ public class SessionAgent extends Agent {
 
 	/**
 	 * The messages coming from the subscriptions
-	 * 
+	 * TODO: write special Agent for isPubSub sessions. 
 	 */
 	@Override
 	public void run(Runnable message) {
@@ -132,7 +132,13 @@ public class SessionAgent extends Agent {
 		synchronized (this) {
 			// if they are supposed to go down then they will be wrapped with a Push2Client
 			// don't just blindly forward them because then there's no option to run them here.
-			message.run();
+			if ( global.isPubSub ){
+				// unless we never want to run them here
+				writeAndFlush(message);
+				
+			}else {
+				message.run();
+			}
 		}
 	}
 	

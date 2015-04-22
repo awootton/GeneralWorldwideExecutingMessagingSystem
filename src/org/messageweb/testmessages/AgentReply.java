@@ -45,7 +45,7 @@ public class AgentReply implements Runnable {
 			AgentFinder finder = (AgentFinder) simpleAgent.object;
 			AgentFinder.Response response = finder.getResponse();
 			response.agentInfo = agentInfo;
-			response.globalInfo = globalInfo;
+			response.globalInfo = global.id;
 			response.success = true;
 			if (logger.isTraceEnabled())
 				logger.trace(" localWatcher called from " + Thread.currentThread());

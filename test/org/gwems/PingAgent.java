@@ -10,12 +10,11 @@ import org.gwems.servers.Global;
 import org.gwems.servers.WsClientImpl;
 import org.gwems.servers.impl.JedisRedisPubSubImpl;
 import org.gwems.servers.impl.MyRedisPubSub;
-import org.gwems.servers.impl.MyWebSocketClientHandler;
-import org.gwems.servers.impl.MyWebSocketServer;
-import org.gwems.servers.impl.MyWebSocketServerHandler;
+import org.gwems.util.Stopwatch;
 import org.gwems.util.TimeoutCache;
 import org.junit.Assert;
 import org.junit.Test;
+import org.messageweb.testmessages.AgentReply;
 import org.messageweb.testmessages.LogonMessage;
 import org.messageweb.testmessages.PingEcho;
 
@@ -28,15 +27,16 @@ public class PingAgent extends StartServers {
 
 	@Test
 	public void myDemoOne() throws IOException {
-
-		// fixme: add these tests again sometime 
+// FIXME: This fails sometimes but I'm tired tonight. 
 		
-		demoAgentPing(global1);// from server1 to server1 - easy
+		//demoAgentPing(global0);// from server0 to server0 - easy
 	
-		//demoAgentPing(global2);// from server1 to server2 - a little harder
+		//demoAgentPing(global1);// from server0 to server1 - a little harder
 		
-		//demoAgentPing(global4);// from server1 to server3 - different clusters - broken TODO: FIXME: 
+		demoAgentPing(global3);// from server0 to server3 - different clusters - hard
 	}
+	
+	int counter = 0;
 	
 	public void demoAgentPing(Global targetServer) throws IOException {
 
@@ -45,9 +45,9 @@ public class PingAgent extends StartServers {
 		String channel = "AbcDefHijQQQQQ";
 		// Don't reuse the id on short notice.
 		// Is this a flaw?
-		channel = Global.getRandom();
+		//channel = Global.getRandom();
 
-		AgentFinder finder = new AgentFinder(global1, channel);
+		AgentFinder finder = new AgentFinder(global0, channel);
 		AgentFinder.Response response = finder.goAndWait();
 
 		System.out.println("found agent Info " + response.agentInfo + " from server " + response.globalInfo);
@@ -56,21 +56,32 @@ public class PingAgent extends StartServers {
 		Assert.assertFalse(response.success);
 
 		// now, install an agent on server
+		
+		counter = 0;//
+		Stopwatch.tryAwhile(1, () -> {
+			System.out.println();
+			return counter++ < 5;
+		});
 
+		// make an agent that is not a socket
 		SimpleAgent simpleAgent = new SimpleAgent(targetServer, channel );
+		// it subs itself to itself
+
 		// install into globalX
 		// FIXME: formalize agentInstall
-		targetServer.timeoutCache.put("simpleAgentAAAA", simpleAgent, 2500, () -> {
+		targetServer.timeoutCache.put(channel, simpleAgent, 5000, () -> {
 			System.out.println(" SimpleAgent #2 timed out ! called from " + Thread.currentThread());
 		});
-		targetServer.subscribe(simpleAgent, channel);
+		
+		// how do we wait for simpleAgent to finish it's sub?? 
+		Stopwatch.tryAwhile(0.1, () -> true);
 
 		// try the finder again
 		// should succeed
-		finder = new AgentFinder(global1, channel);
+		finder = new AgentFinder(global0, channel);
 		response = finder.goAndWait();
 
-		System.out.println("found agent Info " + response.agentInfo + " from server " + response.globalInfo);
+		System.out.println("found agent Info2 " + response.agentInfo + " from server " + response.globalInfo);
 
 		Assert.assertTrue(response.success);
 		Assert.assertFalse(response.failed);
@@ -80,13 +91,13 @@ public class PingAgent extends StartServers {
 	public static void main(String[] args)   {
 
 		Global.logger.setLevel(Level.TRACE);
-		MyWebSocketServer.logger.setLevel(Level.TRACE);
+		//MyWebSocketServer.logger.setLevel(Level.TRACE);
 		WsClientImpl.logger.setLevel(Level.TRACE);
-		MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
+		//MyWebSocketClientHandler.logger.setLevel(Level.TRACE);
 		PingTest.logger.setLevel(Level.TRACE);
 		PingEcho.logger.setLevel(Level.TRACE);
 		TimeoutCache.logger.setLevel(Level.TRACE);
-		MyWebSocketServerHandler.logger.setLevel(Level.TRACE);
+		//MyWebSocketServerHandler.logger.setLevel(Level.TRACE);
 
 		SessionAgent.logger.setLevel(Level.TRACE);
 		LogonMessage.logger.setLevel(Level.TRACE);
@@ -97,7 +108,8 @@ public class PingAgent extends StartServers {
 		
 		MyRedisPubSub.logger.setLevel(Level.TRACE);
 		JedisRedisPubSubImpl.logger.setLevel(Level.TRACE);
-
+		AgentReply.logger.setLevel(Level.TRACE);
+		
 		PingAgent test = new PingAgent();
 
 		setup();
@@ -106,11 +118,6 @@ public class PingAgent extends StartServers {
 			test.myDemoOne();
 		} catch (IOException e1) {
 			e1.printStackTrace();
-		}
-
-		try {
-			Thread.sleep(5 * 1000);
-		} catch (InterruptedException e) {
 		}
 
 		closeAll();

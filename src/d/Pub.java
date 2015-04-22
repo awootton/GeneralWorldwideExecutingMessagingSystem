@@ -15,13 +15,13 @@ public class Pub implements Runnable {
 
 	public static Logger logger = Logger.getLogger(Pub.class);
 
-	public String channel = "na";
-	public String msg;
+	public String c = "na";
+	public Runnable m;
 
-	public Pub(String channel, String msg) {
+	public Pub(String channel, Runnable msg) {
 		super();
-		this.channel = channel;
-		this.msg = msg;
+		this.c = channel;
+		this.m = msg;
 	}
 	
 	public Pub(){
@@ -30,8 +30,10 @@ public class Pub implements Runnable {
 	@Override
 	public void run() {
 		ExecutionContext ec = Global.getContext();
-		Runnable wrapper = new Pub(channel, msg);
-		ec.global.publish(channel, wrapper, true, ec.agent.get());
+		if (logger.isTraceEnabled()) {
+			logger.trace("global.publish " + Global.serialize4log(m));
+		}
+		ec.global.publish(c, m, true, ec.agent.get());
 	}
 
 }

@@ -33,7 +33,13 @@ public class Stopwatch {
 		public boolean test();
 	}
 
-	public static boolean tryForLessThan(double seconds, CheckCondition check) {
+	/** Test the condition until until it becomes false or the time expires.
+	 * 
+	 * @param seconds
+	 * @param check
+	 * @return - true if everything was ok, false if the time expired.
+	 */
+	public static boolean tryAwhile(double seconds, CheckCondition check) {
 		long maxTime = (long) (seconds * 10e9);
 		Stopwatch watch = Stopwatch.start();
 		while (check.test()) {
@@ -48,8 +54,8 @@ public class Stopwatch {
 		return true;// we're OK
 	}
 
-	public static boolean tryForLessThan(int seconds, CheckCondition check) {
-		return tryForLessThan(seconds * 1.0, check);
+	public static boolean tryAwhile(int seconds, CheckCondition check) {
+		return tryAwhile(seconds * 1.0, check);
 	}
 	
 	// in approx milliseconds

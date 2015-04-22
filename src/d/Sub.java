@@ -1,5 +1,6 @@
 package d;
 
+import org.apache.log4j.Logger;
 import org.gwems.agents.SessionAgent;
 import org.gwems.servers.ExecutionContext;
 import org.gwems.servers.Global;
@@ -12,11 +13,13 @@ import org.gwems.servers.Global;
  */
 public class Sub implements Runnable {
 	
-	String channel; 
+	public static Logger logger = Logger.getLogger(Sub.class);
+
+	String c; 
 	
 	public Sub(String channel) {
 		super();
-		this.channel = channel;
+		this.c = channel;
 	}
 	
 	public Sub(){
@@ -28,7 +31,10 @@ public class Sub implements Runnable {
 		SessionAgent agent = (SessionAgent)ec.agent.get();
 		// is this just a normal sub for this agent even though this agent is
 		// fronting permanently for a whole subtree?
-		ec.global.subscribe(agent, channel);
+		if (logger.isTraceEnabled()) {
+			logger.trace("global.subscribe  agent=" + agent.getKey() + " channel=" + c);
+		}
+		ec.global.subscribe(agent, c);
 		// seems too easy. 
 	}
 

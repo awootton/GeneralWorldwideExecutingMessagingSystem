@@ -38,32 +38,30 @@ public class GwemsPubSub extends PubSub {
 		}
 
 		/**
-		 * Incoming messages to this client, or incoming in general, come directly through here.
-		 * 
-		 * THe message has just arrived from
+		 * Incoming messages to this client, or incoming in general, come directly through here. We are in the polling
+		 * thread of the server. The message has just arrived from
 		 * 
 		 * @param ctx
 		 * @param child
 		 */
 		@Override
 		public void executeChannelMessage(ChannelHandlerContext ctx, String message) {
-
-			String channel = "need one";
-			String newMessage = "";
-			if (global.isPubSub) {
-				// it's going to get Q'd for execution on all the agents
-				// and they need to just send the string to their sockets.
-				// So, wrap it with a p2c
-				P2C p2c = new P2C(message);
+			// what comes back from GwemsPubSub is the message. Wrapped in a P2C
+			// we don't want to deserialize in this nio thread.
+			global.execute(() -> {
 				try {
-					newMessage = Global.serialize(p2c);
-					handler.handle(channel, newMessage);
-				} catch (JsonProcessingException e) {
+					Object obj = Global.deserialize(message);
+					if ( obj instanceof P2C ){
+						P2C p2c = (P2C)obj;
+						handler.handle(p2c.c, p2c.m);
+					}else {
+						logger.warn("didn't expect type="+obj);
+						((Runnable)obj).run();
+					}
+				} catch (Exception e) {
 					logger.error(e);
 				}
-			} else {
-				handler.handle(channel, message);
-			}
+			});
 		}
 	}
 
@@ -76,7 +74,7 @@ public class GwemsPubSub extends PubSub {
 	}
 
 	@Override
-	public void publish(String channel, String message) {
+	public void publish(String channel, Runnable message) {
 		Pub pub = new Pub(channel, message);
 		client.enqueueRunnable(pub);
 	}

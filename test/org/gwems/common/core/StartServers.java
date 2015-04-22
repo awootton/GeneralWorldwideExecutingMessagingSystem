@@ -13,13 +13,13 @@ import org.junit.BeforeClass;
 public class StartServers {
 
 	protected static Global gwemdisroot;
+	protected static Global gwemdis0;
 	protected static Global gwemdis1;
-	protected static Global gwemdis2;
 
+	protected static Global global0;
 	protected static Global global1;
 	protected static Global global2;
 	protected static Global global3;
-	protected static Global global4;
 	protected static List<WsClientImpl> clients;
 	protected static List<Global> servers;
 
@@ -38,10 +38,10 @@ public class StartServers {
 
 		cluster0.redis_server = "localhost";
 		cluster0.redis_port = 6381;
-		gwemdis1 = new Global(6379, cluster0);// starts a ws server
-		gwemdis2 = new Global(6380, cluster0);// starts a ws server
+		gwemdis0 = new Global(6379, cluster0);// starts a ws server
+		gwemdis1 = new Global(6380, cluster0);// starts a ws server
+		gwemdis0.isPubSub = true;
 		gwemdis1.isPubSub = true;
-		gwemdis2.isPubSub = true;
 
 		ClusterState cluster1 = new ClusterState();
 		ClusterState cluster2 = new ClusterState();
@@ -49,10 +49,10 @@ public class StartServers {
 		cluster1.redis_port = 6379;
 		cluster2.redis_port = 6380;
 
-		global1 = new Global(8081, cluster1);// starts a ws server
-		global2 = new Global(8082, cluster1);// starts a ws server
-		global3 = new Global(8083, cluster2);// starts a ws server
-		global4 = new Global(8084, cluster2);// starts a ws server
+		global0 = new Global(8081, cluster1);// starts a ws server
+		global1 = new Global(8082, cluster1);// starts a ws server
+		global2 = new Global(8083, cluster2);// starts a ws server
+		global3 = new Global(8084, cluster2);// starts a ws server
 
 		// WsClientImpl client = new WsClientImpl(8081);// start a client
 		clients = new ArrayList<>();
@@ -62,12 +62,12 @@ public class StartServers {
 		clients.add(new WsClientImpl("localhost", 8084));
 
 		servers = new ArrayList<>();
+		servers.add(global0);
 		servers.add(global1);
 		servers.add(global2);
 		servers.add(global3);
-		servers.add(global4);
-		servers.add(gwemdis2);
 		servers.add(gwemdis1);
+		servers.add(gwemdis0);
 		servers.add(gwemdisroot);
 	}
 

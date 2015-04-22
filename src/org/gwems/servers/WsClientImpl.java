@@ -102,7 +102,7 @@ public class WsClientImpl extends Agent {
 			}
 		});
 		String n = "Client#" + global.id;
-		if ( global.id.contains("Dummy")){
+		if (global.id.contains("Dummy")) {
 			n = "SubClient:" + port;
 		}
 		thread.setName(n);
@@ -110,11 +110,11 @@ public class WsClientImpl extends Agent {
 		thread.start();
 		logger.info("Web CLient started port= " + port);
 	}
-	
+
 	public WsClientImpl(String host, int port) {
-		this(host,port,Global.dummyGlobal());
-		// FIXME: for some reason I don't know the ack won't arrive 
-		// unless we say something first. 
+		this(host, port, Global.dummyGlobal());
+		// FIXME: for some reason I don't know the ack won't arrive
+		// unless we say something first.
 		enqueueString("{\"@\":\"Live\"}");
 	}
 
@@ -174,35 +174,39 @@ public class WsClientImpl extends Agent {
 			f = f.sync();
 			Channel ch = f.channel();
 			handler.handshakeFuture().sync();
-
-			while (running) {
-				String msg;
-				try {
-					msg = commands4serverQ.poll(1, TimeUnit.MILLISECONDS);
-				} catch (Exception e) {
-					msg = null;
-				}
-				if (msg == null) {
-					continue;
-				}
-				if (logger.isTraceEnabled())
-					logger.trace("pulled string from Q =" + msg);
-
-				if ("bye".equals(msg.toLowerCase())) {
-					ch.writeAndFlush(new CloseWebSocketFrame());
-					ch.closeFuture().sync();
-					break;
-				} else if ("ping".equals(msg.toLowerCase())) {
-					WebSocketFrame frame = new PingWebSocketFrame(Unpooled.wrappedBuffer(new byte[] { 8, 1, 8, 1 }));
-					ch.writeAndFlush(frame);
-				} else {
-					WebSocketFrame frame = new TextWebSocketFrame(msg);
-					ch.writeAndFlush(frame);
-				}
-			}
+			pollingLoop(ch);
 		} finally {
 			group.shutdownGracefully();
 		}
+	}
+
+	private void pollingLoop(Channel ch) throws InterruptedException {
+		while (running) {
+			String msg;
+			try {
+				msg = commands4serverQ.poll(1, TimeUnit.MILLISECONDS);
+			} catch (Exception e) {
+				msg = null;
+			}
+			if (msg == null) {
+				continue;
+			}
+			if (logger.isTraceEnabled())
+				logger.trace("pulled string from Q =" + msg);
+
+			if ("bye".equals(msg.toLowerCase())) {
+				ch.writeAndFlush(new CloseWebSocketFrame());
+				ch.closeFuture().sync();
+				break;
+			} else if ("ping".equals(msg.toLowerCase())) {
+				WebSocketFrame frame = new PingWebSocketFrame(Unpooled.wrappedBuffer(new byte[] { 8, 1, 8, 1 }));
+				ch.writeAndFlush(frame);
+			} else {
+				WebSocketFrame frame = new TextWebSocketFrame(msg);
+				ch.writeAndFlush(frame);
+			}
+		}
+
 	}
 
 	int getPort() {
@@ -233,11 +237,11 @@ public class WsClientImpl extends Agent {
 	public static WsClientImpl getClient() { // if any
 		return myClient.get();
 	}
-	
+
 	/**
 	 * Incoming messages to this client, or incoming in general, come directly through here.
 	 * 
-	 * They get deserialized into Runnable and executed. Unless... todo: work on that. 
+	 * They get deserialized into Runnable and executed. Unless... todo: work on that.
 	 * 
 	 * @param ctx
 	 * @param child
@@ -294,13 +298,13 @@ public class WsClientImpl extends Agent {
 	 * Kills everything - all FIXME: should kill all the clients. Not just this one.
 	 */
 	public void stop() {
-	//	executor.setRejectedExecutionHandler(new MyRejectedExecutionHandler());
+		// executor.setRejectedExecutionHandler(new MyRejectedExecutionHandler());
 		running = false;
-//		try {
-//			executor.awaitTermination(5, TimeUnit.MILLISECONDS);
-//		} catch (InterruptedException e) {
-//		}
-//		executor.shutdown();
+		// try {
+		// executor.awaitTermination(5, TimeUnit.MILLISECONDS);
+		// } catch (InterruptedException e) {
+		// }
+		// executor.shutdown();
 		global.stop();// global owns the executor now.
 	}
 

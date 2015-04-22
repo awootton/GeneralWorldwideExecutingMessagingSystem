@@ -10,6 +10,8 @@ import org.gwems.servers.Global;
  * 
  * This is a blocking operation and is not recommended for general use.
  * 
+ * Don't use this in prod. It's antique. 
+ * 
  * @author awootton
  *
  */
@@ -26,8 +28,8 @@ public class AgentFinder {
 	/// this is also how long we wait for a fail.
 	int ttl = 100;// 100ms = how long to wait for reply from agent.
 
-	public String localAgentId;//  our local, tmp, agent will need an id	
-	public String listenHere; // we will listen to this.
+	public String localAgentRandomId;//  our local, tmp, agent will need an id	
+	//public String listenHere; // we will listen to this.
 
 	private Response response;
 
@@ -36,8 +38,7 @@ public class AgentFinder {
 	public AgentFinder(Global global, String agentSubscribeChannel) {
 		this.global = global;
 		this.agentSubscribeChannel = agentSubscribeChannel;
-		this.localAgentId = Global.getRandom();
-		listenHere = localAgentId;
+		this.localAgentRandomId = Global.getRandom();
 	}
 
 	public class Response {
@@ -52,22 +53,25 @@ public class AgentFinder {
 	}
 
 	// TODO: return a future.
-	
+	/** There's supposed to be something at agentSubscribeChannel
+	 * 
+	 * @return
+	 */
 	public Response goAndWait() {
 		response = new Response();
 
-		SimpleAgent localWatcher = new SimpleAgent(global, agentSubscribeChannel);
+		SimpleAgent localWatcher = new SimpleAgent(global, localAgentRandomId);
 		localWatcher.object = this;
+		
+		global.subscribe(localWatcher, localAgentRandomId);
 	
-		// FIXME: formalize agentInstall
-//		global.subscribe(localWatcher, listenHere);
-		global.timeoutCache.put(localAgentId, localWatcher, ttl, () -> {
+		global.timeoutCache.put(localAgentRandomId, localWatcher, ttl, () -> {
 			response.success = false;
 			response.failed = true;
 			System.out.println(" timeoutCache called from " + Thread.currentThread());
 		});
 		
-		AgentEcho echo = new AgentEcho(listenHere);
+		AgentEcho echo = new AgentEcho(localAgentRandomId);
 		global.publish(agentSubscribeChannel, echo);
 		
 		// Wait (TODO: use wait()) for response, or timeout.
@@ -78,8 +82,8 @@ public class AgentFinder {
 			}
 		}
 		// remove global1 agent
-		global.timeoutCache.remove(localAgentId);
-		global.unsubscribe(localWatcher, listenHere);
+		global.timeoutCache.remove(localAgentRandomId);
+		global.unsubscribe(localWatcher, localAgentRandomId);
 		
 		return response;
 	}

@@ -39,6 +39,7 @@ import org.gwems.util.TwoWayMapping;
 import org.messageweb.dynamo.DynamoHelper;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -50,6 +51,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
+
+import d.P2C;
 
 /**
  * This represents one 'server' and by that I mean a web socket (ws) port that is accepting incoming connections.
@@ -106,6 +109,9 @@ public class Global implements Executor {
 	public int sessionTtl = SessionAgentTTL;// 15 min
 
 	public boolean isPubSub = false;
+
+	public int subscriptionsRecorded = 0;// for tests
+	public int unsubscriptionsRecorded = 0;// for tests
 
 	public static Global dummyGlobal() {
 		Global global = new Global(0, null);
@@ -173,7 +179,11 @@ public class Global implements Executor {
 			Agent shitAgent = new SimpleAgent(this, JedisRedisPubSubImpl.dummyChannel);
 			timeoutCache.put("eTADIUdpXuaVjdijWhlE", shitAgent, 12 * 60 * 1000, () -> {
 				timeoutCache.setTtl("eTADIUdpXuaVjdijWhlE", 12 * 60 * 1000);
-				thePubSub.publish(JedisRedisPubSubImpl.dummyChannel, "{\"@\":\"Live\"}");
+				try {
+					thePubSub.publish(JedisRedisPubSubImpl.dummyChannel, Global.deserialize("{\"@\":\"Live\"}"));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			});
 		}
 	}
@@ -190,7 +200,7 @@ public class Global implements Executor {
 		@Override
 		public Thread newThread(Runnable r) {
 			Thread thread = new Thread(r);
-			String name = "Global_:" + id + ":" + count++;
+			String name = "Gbl_" + id + ":" + count++;
 			thread.setName(name);
 			thread.setDaemon(true);
 			return thread;
@@ -257,7 +267,7 @@ public class Global implements Executor {
 	}
 
 	/**
-	 * Incoming messages from the WS channel come directly through here.
+	 * Incoming messages from the WS channel come directly through here. They are still strings fresh from a text frame.
 	 * 
 	 * @param ctx
 	 * @param child
@@ -354,20 +364,34 @@ public class Global implements Executor {
 		@Override
 		public void handle(String channel, String str) {
 			if (logger.isTraceEnabled()) {
-				logger.trace("something from redis " + str + " on channel " + channel);
+				logger.trace("something from PubSub " + str + " on channel " + channel + " gbl=" + Global.this.id);
 			}
 			// don't deserialize in the PubSub thread.
 			executor.execute(() -> {
 				try {
-					Runnable runme = Global.deserialize(str);
 					// get all the local subscribers
 					Set<Agent> agents = session2channel.thing2items_get(channel);
 					if (logger.isTraceEnabled()) {
 						logger.trace("sending2 to " + agents + " on channel " + channel);
 					}
-					for (Agent agent : agents) {
-						// give them the message
-						agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
+					// It's actually an error if we have something coming in on the sub socket
+					// and NOBODY is subscribed to it
+					if (agents.isEmpty()) {
+						logger.error("no agents on channel " + channel);
+					}
+					if (Global.this.isPubSub) {
+						for (Agent agent : agents) {
+							// wrap the message (again) - it's raw and all the agents go to
+							// child servers of pubsub tree.
+							// isPubSub agents don't execute their messageQ, the just send it.
+							agent.messageQ.run(new P2C(str, channel));
+						}
+					} else {
+						Runnable runme = Global.deserialize(str);
+						for (Agent agent : agents) {
+							// give them the message
+							agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
+						}
 					}
 
 				} catch (JsonProcessingException e) {
@@ -381,17 +405,20 @@ public class Global implements Executor {
 	}
 
 	/**
+	 * Provides for the channel and the agent to be available during the execution of the message in an agents messageQ.
+	 * 
 	 * This was a lambda but it's used in several places here. Both in the receiver of redis (LocalSubscriberHandler
-	 * above) and also in the two publish methods. x
+	 * above)
 	 * 
 	 * @author awootton
 	 *
 	 */
 	@JsonIgnoreType
-	// never serialize this
+	// never serialize this - except debugging!
 	private static class ChannelSubscriberWrapper implements Runnable {
 
 		String channel;
+		@JsonIgnore
 		Agent agent;
 		Runnable runme;
 
@@ -506,42 +533,72 @@ public class Global implements Executor {
 
 	public void publish(String channel, Runnable runme, boolean log, Agent except) {
 		if (logger.isTraceEnabled() && log) {
-			logger.trace("publish sending message: " + Global.serialize4log(runme) + " on channel " + channel);
+			logger.trace("has message: " + Global.serialize4log(runme) + " on channel " + channel);
 		}
 		if (channel == null)
 			return;
 		if (channel.length() == 0)
 			return;
-		String str = "";
-		try {
-			str = serialize(runme);
-		} catch (JsonProcessingException e) {
-			logger.error("bad message io " + runme, e);
-		}
-		if (str.length() == 0)
-			return;
-		// tell the local subscribers
 
-		executor.execute(() -> {
-			ExecutionContext ec = context.get();
-			ec.subscribedChannel = Optional.of(channel);
-			// get all the local subscribers
-			Set<Agent> agents = session2channel.thing2items_get(channel);
-			for (Agent agent : agents) {
-				// give them the message
-				if (agent != except) {
-					if (logger.isTraceEnabled() && log) {
-						logger.trace("Adding agentQ " + agents + " on channel " + channel);
+		if (this.isPubSub) {
+			// come here from executing a d.Pub message in an agent.
+			// all of the 'agents' are really pubsub return sockets. Right?
+			executor.execute(() -> {
+				ExecutionContext ec = context.get();
+				ec.subscribedChannel = Optional.of(channel);
+				// get all the local subscribers
+				Set<Agent> agents = session2channel.thing2items_get(channel);
+				for (Agent agent : agents) {
+					// Give them the message, except the one that the message just come from.
+					// It already knows.
+					if (agent != except) {
+						if (logger.isTraceEnabled() && log) {
+							logger.trace("Adding agentQ id=" + agent.getKey() + " on channel " + channel + " msg=" + Global.serialize4log(runme));
+						}
+						String strmsg;
+						try {
+							strmsg = Global.serialize(runme);
+							agent.messageQ.run(new P2C(strmsg, channel));
+						} catch (Exception e) {
+							logger.error(e);
+						}
 					}
-					agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
 				}
+				ec.subscribedChannel = Optional.empty();
+			});
+			if (thePubSub != null) {
+				if (logger.isTraceEnabled() && log) {
+					logger.trace("promote msg channel=" + channel + " msg=" + Global.serialize4log(runme));
+				}
+				thePubSub.publish(channel, runme);
 			}
-			ec.subscribedChannel = Optional.empty();
-		});
-		// Tack our name on the front so we don't re-broadcast when it arrives.
-		// FIXME: don't need this when redis is gone
-		if (thePubSub != null)
-			thePubSub.publish(channel, str);
+
+		} else {
+
+			executor.execute(() -> {
+				ExecutionContext ec = context.get();
+				ec.subscribedChannel = Optional.of(channel);
+				// get all the local subscribers
+				Set<Agent> agents = session2channel.thing2items_get(channel);
+				for (Agent agent : agents) {
+					// give them the message
+					// if (agent != except)
+					{
+						if (logger.isTraceEnabled() && log) {
+							logger.trace("Adding agentQ id=" + agent.getKey() + " on channel " + channel + " msg=" + Global.serialize4log(runme));
+						}
+						agent.messageQ.run(new ChannelSubscriberWrapper(channel, agent, runme));
+					}
+				}
+				ec.subscribedChannel = Optional.empty();
+			});
+			if (thePubSub != null) {
+				if (logger.isTraceEnabled() && log) {
+					logger.trace("promote msg channel=" + channel + " msg=" + Global.serialize4log(runme));
+				}
+				thePubSub.publish(channel, runme);
+			}
+		}
 	}
 
 	public void subscribe(Agent agent, String channel) {
@@ -557,6 +614,7 @@ public class Global implements Executor {
 		if (agents.isEmpty() && thePubSub != null) {
 			thePubSub.subcribe(channel);
 		}
+		subscriptionsRecorded++;
 		session2channel.add(agent, channel);
 	}
 
@@ -564,6 +622,7 @@ public class Global implements Executor {
 		if (logger.isTraceEnabled()) {
 			logger.trace("unsubscribe " + agent + " from " + channel);
 		}
+		unsubscriptionsRecorded++;
 		session2channel.remove(agent, channel);
 		Set<Agent> agents = session2channel.thing2items_get(channel);
 		if (agents.isEmpty() && thePubSub != null) {
@@ -576,6 +635,7 @@ public class Global implements Executor {
 			logger.trace("unsubscribe " + agent);
 		}
 		Set<String> channels = session2channel.item2things_get(agent);
+		unsubscriptionsRecorded++;
 		session2channel.removeItem(agent);
 		for (String channel : channels) {
 			Set<Agent> agents = session2channel.thing2items_get(channel);

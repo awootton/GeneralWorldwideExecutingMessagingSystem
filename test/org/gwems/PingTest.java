@@ -60,13 +60,13 @@ public class PingTest {
 	@Test
 	public void pubsub() {
 
-		Assert.assertTrue(Stopwatch.tryForLessThan(1, () -> client.userMap.get("sessionId") == null ));
+		Assert.assertTrue(Stopwatch.tryAwhile(1, () -> client.userMap.get("sessionId") == null ));
 
 		WsClientImpl client2 = new WsClientImpl("localhost", 9981);// start a client
 
 		client2.enqueueRunnable(new Subscribe("aChannel2Sub2"));
 		// wait for the ack
-		boolean ok = Stopwatch.tryForLessThan(1, () -> client2.userMap.get("sessionId") == null );
+		boolean ok = Stopwatch.tryAwhile(1, () -> client2.userMap.get("sessionId") == null );
 		Assert.assertTrue(ok);
 
 
@@ -75,8 +75,8 @@ public class PingTest {
 		client.enqueueRunnable(new Publish("aChannel2Sub2", new Push2Client(jsmessage)));
 
 
-		Assert.assertTrue(Stopwatch.tryForLessThan(1, () -> client2.bindings  == null ));
-		Assert.assertTrue(Stopwatch.tryForLessThan(1, () -> client2.bindings.get("received")  == null ));
+		Assert.assertTrue(Stopwatch.tryAwhile(1, () -> client2.bindings  == null ));
+		Assert.assertTrue(Stopwatch.tryAwhile(1, () -> client2.bindings.get("received")  == null ));
 		
 		Assert.assertEquals( client2.bindings.get("received"), new Integer(12345678)); 
 		

@@ -8,7 +8,7 @@ public abstract class PubSub {
 
 	public abstract void subcribe(String... channels);
 
-	public abstract void publish(String channel, String message);
+	public abstract void publish(String channel, Runnable message);
 
 	public abstract void unsubcribe(String... channels);
 

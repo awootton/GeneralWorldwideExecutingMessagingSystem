@@ -36,7 +36,9 @@ public class StartOneGlobalServer {
 
 		// No Guice here yet. Assembling manually.
 
-		Global global = new Global(8081, new ClusterState());// starts a ws server
+		ClusterState clusterState = new ClusterState();
+		clusterState.rootMode = true;// root mode.
+		Global global = new Global(8081, clusterState);// starts a ws server
 		
 		//global.sessionTtl = 30000;// 30 sec. 
 

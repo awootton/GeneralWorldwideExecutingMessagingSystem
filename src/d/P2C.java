@@ -7,7 +7,8 @@ import org.gwems.servers.Global;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-/** Push 2 client
+/**
+ * A publish response flowing down the pubsub tree.
  * 
  * @author awootton
  *
@@ -16,15 +17,18 @@ public class P2C implements Runnable {
 
 	public static Logger logger = Logger.getLogger(P2C.class);
 
-	Object msg = "none";
+	String c = "none";
+	String m = "none";
 
-	/** Object will need to be serializable by jackson.
+	/**
+	 * Object will need to be serializable by jackson.
 	 * 
 	 * @param message
 	 */
-	public P2C(Object message) {
+	public P2C(String message, String channel) {
 		super();
-		this.msg = message;
+		this.m = message;
+		this.c = channel;
 	}
 
 	public P2C() {// for jackson
@@ -32,24 +36,21 @@ public class P2C implements Runnable {
 
 	@Override
 	public void run() {
-		// meant to run in a session agent.
 		ExecutionContext ec = Global.getContext();
 		if (ec.agent.isPresent() && ec.agent.get() instanceof SessionAgent) {
 			SessionAgent session = (SessionAgent) ec.agent.get();
 			if (logger.isTraceEnabled()) {
-				logger.trace("Sending message2client " + msg + " to " + session);
+				logger.trace("writeAndFlush " + m + " session=" + session);
 			}
 			try {
-				session.writeAndFlush(Global.serialize(msg));
+				session.writeAndFlush(Global.serialize(m));
 			} catch (JsonProcessingException e) {
 				logger.error(e);
 			}
 		} else {
 			// what?
-			logger.debug("non session message? " + msg + " agent = " + ec.agent);
+			logger.debug("non session message? " + m + " session= " + ec.agent);
 		}
 	}
-
-	 
 
 }

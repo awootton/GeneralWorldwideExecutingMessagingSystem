@@ -25,29 +25,29 @@ public class TryJedis {
 
 	static String aChannel = "dummyChannel#1";
 
-	@Test
-	public void t1() {
-		ps = new JedisRedisPubSubImpl("localhost", 6380, new Handle(), "noGlobal");
-
-		receivedMessage = "none";
-
-		ps.subcribe(aChannel);
-
-		ps.publish(aChannel, "Hello World from ATW");
-
-		System.out.println("sent");
-
-		while (!hit)
-			try {
-				Thread.sleep(1);// 1000 * 10);
-			} catch (InterruptedException e) {
-			}
-		//
-		Assert.assertTrue(hit);
-		Assert.assertEquals("Hello World from ATW", receivedMessage);
-
-		ps.stop();
-	}
+//	@Test
+//	public void t1() {
+//		ps = new JedisRedisPubSubImpl("localhost", 6380, new Handle(), "noGlobal");
+//
+//		receivedMessage = "none";
+//
+//		ps.subcribe(aChannel);
+//
+//		ps.publish(aChannel, "Hello World from ATW");
+//
+//		System.out.println("sent");
+//
+//		while (!hit)
+//			try {
+//				Thread.sleep(1);// 1000 * 10);
+//			} catch (InterruptedException e) {
+//			}
+//		//
+//		Assert.assertTrue(hit);
+//		Assert.assertEquals("Hello World from ATW", receivedMessage);
+//
+//		ps.stop();
+//	}
 
 	public static void main(String[] args) {
 
@@ -56,7 +56,7 @@ public class TryJedis {
 
 		TryJedis test = new TryJedis();
 
-		test.t1();
+//		test.t1();
 
 		System.out.println("(#(  (#(  (#(  (#(  (#(    main finished      main finished      main finished      main finished  ");
 

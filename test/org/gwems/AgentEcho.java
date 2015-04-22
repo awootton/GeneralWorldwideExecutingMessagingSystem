@@ -30,8 +30,6 @@ public class AgentEcho implements Runnable {
 	@Override
 	public void run() {
 
-		AgentReply reply = new AgentReply(replyChannel);
-
 		// things we know when arriving at the end of publish
 		// and making our way through an Agent messageQ
 		ExecutionContext ec = Global.getContext();
@@ -43,6 +41,7 @@ public class AgentEcho implements Runnable {
 		if (logger.isTraceEnabled())
 			logger.trace("found agent. does " + incoming + " == " + agent);
 
+		AgentReply reply = new AgentReply(replyChannel);
 		reply.agentInfo = "" + agent;
 		reply.globalInfo = global.id;
 
@@ -50,7 +49,5 @@ public class AgentEcho implements Runnable {
 			logger.trace("Sending reply on channel " + replyChannel);
 		// publish it again, reply, on a different channel
 		global.publish(replyChannel, reply);
-
 	}
-
 }

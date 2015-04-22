@@ -3,6 +3,7 @@ package org.gwems.servers.impl;
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
+import org.gwems.servers.Global;
 import org.gwems.util.PubSub;
 
 import redis.clients.jedis.Jedis;
@@ -56,10 +57,10 @@ public class JedisRedisPubSubImpl extends PubSub {
 	}
 
 	@Override
-	public void publish(String channel, String message) {
+	public void publish(String channel, Runnable message) {
 		Jedis jedis = pool.getResource();
 		try {
-			jedis.publish(channel, message);
+			jedis.publish(channel, Global.serialize(message));
 		} catch (Exception e) {
 			logger.error("what?", e);
 		} finally {
