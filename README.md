@@ -4,7 +4,7 @@ Aka General Worldwide Executing Messaging System.
 
 A worldwide distributed message system in AWS.
 
-It's meant to eventually be the low level backbone of the Metaverse. Since the Metaverse does not exist yet it mostly resembles a very fast international distributed messaging system with publish and subscribe. It is meant to be used through a simple JSON api and is available now for people to experiment.
+It's meant to eventually be the low level backbone of the Metaverse. Since the Metaverse does not exist yet it mostly resembles a very fast international distributed messaging system with publish and subscribe. It is meant to be used through a simple JSON api and is available now for people to experiment with.
 
 I am working on a functioning explanation of How The Metaverse Works.
 
