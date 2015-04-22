@@ -1,9 +1,12 @@
 Welcome to GWEMS 
 -------------------
-Aka GeneralWorldwideExecutingMessagingSystem.
+Aka General Worldwide Executing Messaging System.
 
 A worldwide distributed message system in AWS.
-Because every metaverse needs a strong backbone. 
+
+It's meant to eventually be the low level backbone of the Metaverse. Since the Metaverse does not exist yet it mostly resembles a very fast international distributed messaging system with publish and subscribe. It is meant to be used through a simple JSON api and is available now for people to experiment.
+
+I am working on a functioning explanation of How The Metaverse Works.
 
 Connections are being served on a [WebSocket](ws://go3here.com:8081/). There is a very rough example of message delivery in the form of [an http page with javascript that operates the websocket api]( http://go2here.com) There will be worldwide endpoints soon. 
 
