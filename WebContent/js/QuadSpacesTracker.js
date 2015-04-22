@@ -75,7 +75,7 @@ QuadSpaces.Tracker.prototype.getId = function() {
 
 QuadSpaces.Tracker.prototype.handleIncoming = function(string) {
 	var obj = JSON.parse(string);
-	var payload = JSON.parse(obj.msg);
+	var payload = JSON.parse(obj);// how does it get double json'ed?
 	if (payload.id == this.id) {
 		this.selfCount++;
 	} else {
