@@ -86,7 +86,7 @@ canvas {
 
 		gwems.handleMessage = function(message) {
 
-			message = JSON.parse(message);
+			//message = JSON.parse(message);
 			if (message.position) {
 				var anAvatar = moving.getOrConstructDefault(message);
 				anAvatar.position.set(message.position.x, message.position.y, message.position.z);

@@ -74,8 +74,15 @@ QuadSpaces.Tracker.prototype.getId = function() {
 }
 
 QuadSpaces.Tracker.prototype.handleIncoming = function(string) {
-	var obj = JSON.parse(string);
-	var payload = JSON.parse(obj);// how does it get double json'ed?
+	try {
+		var payload = JSON.parse(string);// how does it get double json'ed?
+		// there's a parsing flaw in gwems. frack.
+	} catch (e) {
+		console.log("err " + e);
+	}
+	if ( ! payload || ! payload['id'] ){
+		return;
+	}
 	if (payload.id == this.id) {
 		this.selfCount++;
 	} else {
@@ -151,6 +158,7 @@ QuadSpaces.Tracker.prototype.update = function(position, velocity) {
 			// send message
 			var msg = level.makeMessage(p, v, this.id);
 			msg = JSON.stringify(msg);
+			// there's a parsing flaw in gwems. frack.
 			var pubstr = GWEMS.getPublishString(level.string, msg);
 			this.socket.send(pubstr);
 			level.nextSend += level.interval;

@@ -28,6 +28,8 @@ GWEMS.WebSocketClient.prototype.start = function() {
 	this.socket = new WebSocket("ws://" + this.host + ":" + this.port + this.uri);
 	
 	var gewms = this;
+	
+	this.sessionId = "none";// 
 
 	this.socket.onopen = function(event) {
 		gewms.setOpen(1);
@@ -42,7 +44,17 @@ GWEMS.WebSocketClient.prototype.start = function() {
 	};
 	this.socket.onmessage = function(event) {
 		var msg = event.data;
-		gewms.handleMessage(msg);
+		// it's always an object! 
+		// Always.
+		try{
+			var obj = JSON.parse(msg);
+		} catch (e) {
+			console.log("gwems parse fail " + e);
+		}
+		if ( obj['@'] == "gwems.Ack") {
+			this.sessionId = obj.session;
+		}
+		gewms.handleMessage(obj);
 	};
 	
 	// set up keep alive.
@@ -75,6 +87,10 @@ GWEMS.WebSocketClient.prototype.handleError = function(event) {
 
 GWEMS.WebSocketClient.prototype.handleMessage = function(string) {
 	console.log("Have message " + string);
+};
+
+GWEMS.WebSocketClient.prototype.getSessionId = function() {
+	return this.sessionId;
 };
 
 /**

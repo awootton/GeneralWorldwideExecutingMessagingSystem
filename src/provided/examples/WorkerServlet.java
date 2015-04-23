@@ -66,6 +66,8 @@ public class WorkerServlet extends HttpServlet {
 		t.start();
 	}
 
+	// Do this over in js and add it to the db
+	
 	private class TimePusher implements Runnable {
 		Global global;
 
@@ -124,7 +126,7 @@ public class WorkerServlet extends HttpServlet {
 
 			byte[] message = workRequest.getMessage().getBytes(UTF_8);
 
-			s3.putObject(workRequest.getBucket(), workRequest.getKey(), new ByteArrayInputStream(message), new ObjectMetadata());
+			// don't actually do that ! s3.putObject(workRequest.getBucket(), workRequest.getKey(), new ByteArrayInputStream(message), new ObjectMetadata());
 
 			// Signal to beanstalk that processing was successful so this work
 			// item should not be retried.
@@ -168,7 +170,7 @@ public class WorkerServlet extends HttpServlet {
 		b.setWhen("" + new Date());
 		mapper.save(b);
 
-		// an ecxample of doing it the hard way.
+		// an example of doing it the hard way.
 		// Map<String, AttributeValue> keyMap = new HashMap<String, AttributeValue>();
 		// keyMap.put("id", new AttributeValue("dummyKey123"));
 		//
