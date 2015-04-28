@@ -75,6 +75,8 @@ QuadSpaces.Tracker.prototype.getId = function() {
 
 QuadSpaces.Tracker.prototype.handleIncoming = function(string) {
 	try {
+		if ( string['@'] )
+			return;// ignore ack and others
 		var payload = JSON.parse(string);// how does it get double json'ed?
 		// there's a parsing flaw in gwems. frack.
 	} catch (e) {
