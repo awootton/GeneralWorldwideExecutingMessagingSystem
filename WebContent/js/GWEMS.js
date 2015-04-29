@@ -46,8 +46,9 @@ GWEMS.WebSocketClient.prototype.start = function() {
 		var msg = event.data;
 		// it's always an object! 
 		// Always.
+		var obj = {};
 		try{
-			var obj = JSON.parse(msg);
+			obj = JSON.parse(msg);
 		} catch (e) {
 			console.log("gwems parse fail " + e);
 		}
@@ -60,7 +61,7 @@ GWEMS.WebSocketClient.prototype.start = function() {
 	// set up keep alive.
 	window.setInterval(function() {
 		gewms.send('{"@":"Live"}');
-	},  12 * 60 * 1000);// every 12 minutes. 
+	},  10 * 1000);// every 12 minutes. 
 };
 
 GWEMS.WebSocketClient.prototype.send = function(string) {
@@ -69,6 +70,7 @@ GWEMS.WebSocketClient.prototype.send = function(string) {
 			this.socket.send(string);
 		}
 	} catch (e) {
+		console.log(e);
 	}
 };
 
@@ -151,6 +153,7 @@ GWEMS.publishObject = {
 GWEMS.subscribe = function(aMap, gwemsSocket) {
 	for (key in aMap) {
 		var msg = GWEMS.getSubscribeString(key);
+		console.log(msg);
 		gwemsSocket.send(msg);
 	}
 };

@@ -10,10 +10,11 @@ import org.gwems.agents.SessionAgent;
 import org.gwems.agents.SimpleAgent;
 import org.gwems.common.core.StartServers;
 import org.gwems.servers.Global;
-import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.WsClient;
 import org.gwems.servers.impl.JedisRedisPubSubImpl;
 import org.gwems.servers.impl.MyRedisPubSub;
 import org.gwems.servers.impl.MyWebSocketServer;
+import org.gwems.servers.impl.WsClientImpl;
 import org.gwems.util.Stopwatch;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,11 +34,11 @@ public class BasicPubSub extends StartServers {
 	@Test
 	public void pubsub() {
 
-		WsClientImpl client0 = clients.get(0);
+		WsClient client0 = clients.get(0);
 
 		Assert.assertTrue(Stopwatch.tryAwhile(1, () -> client0.userMap.get("sessionId") == null));
 
-		WsClientImpl client2 = new WsClientImpl("localhost", 8081);// start a client
+		WsClient client2 = new WsClientImpl("localhost", 8081);// start a client
 
 		client2.enqueueRunnable(new Subscribe("aChannel2Sub2"));
 		// wait for the ack
@@ -61,8 +62,8 @@ public class BasicPubSub extends StartServers {
 	@Test
 	public void pubsubCross() {
 
-		WsClientImpl client0 = clients.get(0);
-		WsClientImpl client1 = clients.get(1);
+		WsClient client0 = clients.get(0);
+		WsClient client1 = clients.get(1);
 
 		Assert.assertTrue(Stopwatch.tryAwhile(1, () -> client0.userMap.get("sessionId") == null));
 
@@ -124,8 +125,8 @@ public class BasicPubSub extends StartServers {
 	@Test
 	public void pubsubCrossCross() {
 
-		WsClientImpl client0 = clients.get(0);
-		WsClientImpl client3 = clients.get(3);
+		WsClient client0 = clients.get(0);
+		WsClient client3 = clients.get(3);
 
 		Assert.assertTrue(Stopwatch.tryAwhile(1, () -> client0.userMap.get("sessionId") == null));
 

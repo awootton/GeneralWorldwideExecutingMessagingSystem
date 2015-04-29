@@ -120,6 +120,12 @@ public class Global implements Executor {
 	}
 
 	public Global(int port, ClusterState cluster) {
+		
+		if ( cluster == null ){
+			cluster = new ClusterState();
+			cluster.redis_server = null;// is root
+			cluster.rootMode = true;// is root
+		}
 
 		// SecurityManager def = java.lang.System.getSecurityManager();
 		// def is null - no checks at all

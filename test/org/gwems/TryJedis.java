@@ -7,6 +7,11 @@ import org.gwems.util.PubSub;
 import org.junit.Assert;
 import org.junit.Test;
 
+/** OMG kill me quick because my corpse is rotting.
+ * 
+ * @author awootton
+ *
+ */
 public class TryJedis {
 
 	boolean hit = false;

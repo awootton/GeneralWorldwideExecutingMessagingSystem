@@ -12,10 +12,11 @@ import org.apache.log4j.Logger;
 import org.gwems.agents.SessionAgent;
 import org.gwems.servers.ClusterState;
 import org.gwems.servers.Global;
-import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.WsClient;
 import org.gwems.servers.impl.MyRedisPubSub;
 import org.gwems.servers.impl.MyWebSocketClientHandler;
 import org.gwems.servers.impl.MyWebSocketServer;
+import org.gwems.servers.impl.WsClientImpl;
 import org.gwems.servers.impl.WsLoggingHandler;
 import org.gwems.util.Stopwatch;
 import org.gwems.util.TimeoutCache;
@@ -37,7 +38,7 @@ public class PingTest {
 	public static Logger logger = Logger.getLogger(PingTest.class);
 
 	static Global global;
-	static WsClientImpl client;
+	static WsClient client;
 
 	@BeforeClass
 	public static void setup() {

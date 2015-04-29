@@ -6,7 +6,8 @@ import java.util.List;
 import org.apache.log4j.Level;
 import org.gwems.servers.ClusterState;
 import org.gwems.servers.Global;
-import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.WsClient;
+import org.gwems.servers.impl.WsClientImpl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -20,7 +21,7 @@ public class StartServers {
 	protected static Global global1;
 	protected static Global global2;
 	protected static Global global3;
-	protected static List<WsClientImpl> clients;
+	protected static List<WsClient> clients;
 	protected static List<Global> servers;
 
 	@BeforeClass
@@ -76,7 +77,7 @@ public class StartServers {
 		for (Global global : servers) {
 			global.stop();
 		}
-		for (WsClientImpl client : clients) {
+		for (WsClient client : clients) {
 			client.stop();// aka client.running = false;
 		}
 	}

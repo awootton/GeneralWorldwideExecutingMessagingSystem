@@ -9,6 +9,12 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.messageweb.experiments.QuadSpaces;
 
+/** I don't think I like QuadSpaces anymore - delete this.
+ * 
+ * @author awootton
+ *
+ */
+
 public class QuadSpacesMathTest {
 	
 	

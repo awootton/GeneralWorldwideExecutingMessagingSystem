@@ -1,4 +1,4 @@
-package org.gwems.servers;
+package org.gwems.servers.impl;
 
 import gwems.Ack;
 import io.netty.bootstrap.Bootstrap;
@@ -36,8 +36,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.gwems.agents.Agent;
-import org.gwems.servers.impl.MyWebSocketClientHandler;
+import org.gwems.servers.ExecutionContext;
+import org.gwems.servers.Global;
+import org.gwems.servers.WsClient;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -57,7 +58,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
  * arguments if you want to connect to the example WebSocket server, as this is the default. Copyright 2015 Alan Wootton
  * see included license.
  */
-public class WsClientImpl extends Agent {
+public class WsClientImpl extends WsClient {
 
 	public static Logger logger = Logger.getLogger(WsClientImpl.class);
 

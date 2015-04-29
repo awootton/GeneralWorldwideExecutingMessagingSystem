@@ -42,6 +42,10 @@ public class Js implements Runnable {
 					agent.bindings = engine.createBindings();
 					// this won't really work in the long run.
 					engine.eval("var java = {};", agent.bindings);
+					
+//					Window w = new Window();
+//					engine.put("window", w);
+
 				}
 				try {
 					ec.isJs = true;
@@ -68,6 +72,21 @@ public class Js implements Runnable {
 			ec.global.returnEngine(engine);
 		}
 	}
+	
+	
+// 
+//public class Window {
+//	
+//	public Object setInterval( Object funct, double amt ){
+//		System.out.println("funct IN JS!  is" + funct );
+//		
+//		return "sss";
+//				
+//	}
+//	
+//}
+//
+
 
 	public static void main(String[] args) throws JsonProcessingException {
 

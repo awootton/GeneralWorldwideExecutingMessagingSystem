@@ -5,7 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.log4j.Logger;
 import org.gwems.agents.SessionAgent;
 import org.gwems.servers.Global;
-import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.WsClient;
+import org.gwems.servers.impl.WsClientImpl;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -58,7 +59,7 @@ public class PingEcho implements Runnable {
 				e.printStackTrace();
 			}
 		} else {// there is still a global and an agent but the agent is a WsClientImpl 
-			WsClientImpl client = WsClientImpl.getClient();
+			WsClient client = WsClientImpl.getClient();
 			logger.info("PingEcho null context , back on client " + client);
 
 			// this would mean that we are inside of the client

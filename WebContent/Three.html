@@ -102,18 +102,18 @@ canvas {
 		cube2.position.set(1.25, 0.25, 1.25);
 		scene.add(cube2);
 
-		var floorTexture = new THREE.ImageUtils.loadTexture('images/ColoredKnives.jpg');
-		floorTexture.minFilter = THREE.LinearFilter;
-		floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
-		floorTexture.repeat.set(1, 1);
+		//var floorTexture = new THREE.ImageUtils.loadTexture('images/ColoredKnives.jpg');
+		//floorTexture.minFilter = THREE.LinearFilter;
+		//floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+		//floorTexture.repeat.set(1, 1);
 
 		floor = new THREE.Mesh(new THREE.BoxGeometry(3 * 3 * 3 * 3 * 3, 1, 3 * 3 * 3 * 3 * 3),
 				new THREE.MeshBasicMaterial({
-					map : floorTexture,
+					// map : floorTexture,
 					color : 0x888899
 				}));
 		floor.position.set(0, -0.5, 0);
-		scene.add(floor);
+		//scene.add(floor);
 
 		scene.add(new THREE.GridHelper(64, 4));
 
@@ -137,17 +137,14 @@ canvas {
 			camera.position.sub(cubeBefore);// follow it
 
 			// cubeBefore is actually becomes our velocity.
-			cubeBefore.multiplyScalar(1.0 / delta);
+			cubeBefore.multiplyScalar(-1.0 / delta);
 			// our position is avatarContainer.position
-			tracker.update(avatarContainer.position, cubeBefore);
+			tracker.update(avatarContainer.position, cubeBefore, delta);
 
 			var str = "x=" + (camera.position.x / 4 | 0) * 4 + " ";
 			str += "y=" + (camera.position.y / 4 | 0) * 4 + " ";
 			str += "z=" + (camera.position.z / 4 | 0) * 4;
 
-			//var strList = QuadSpaces.decompose(camera.position, 0);
-			//var strList6 = QuadSpaces.decompose(camera.position, 6);
-			//strList + "<br>" + strList6 + "<br>" + 
 			stats.update(str);
 		};
 

@@ -15,7 +15,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.CharsetUtil;
 
 import org.apache.log4j.Logger;
-import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.WsClient;
 
 public class MyWebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
 
@@ -24,9 +24,9 @@ public class MyWebSocketClientHandler extends SimpleChannelInboundHandler<Object
 	private final WebSocketClientHandshaker handshaker;
 	private ChannelPromise handshakeFuture;
 
-	WsClientImpl client;
+	WsClient client;
 
-	public MyWebSocketClientHandler(WebSocketClientHandshaker handshaker, WsClientImpl client) {
+	public MyWebSocketClientHandler(WebSocketClientHandshaker handshaker, WsClient client) {
 		this.handshaker = handshaker;
 		this.client = client;
 	}
@@ -70,16 +70,16 @@ public class MyWebSocketClientHandler extends SimpleChannelInboundHandler<Object
 			} catch (Exception e) {
 				logger.error(e);
 			}
-		} else if (frame instanceof BinaryWebSocketFrame) {
-			// TODO: deprecate
-			BinaryWebSocketFrame bytesFrame = (BinaryWebSocketFrame) frame;
-			if ( logger.isTraceEnabled() )
-				logger.trace("WebSocket Client received binary: " + bytesFrame.content().readableBytes());
-			try {
-				client.executeChannelMessage(ctx, bytesFrame);
-			} catch (Exception e) {
-				logger.error(e);
-			}
+//		} else if (frame instanceof BinaryWebSocketFrame) {
+//			// TODO: deprecate
+//			BinaryWebSocketFrame bytesFrame = (BinaryWebSocketFrame) frame;
+//			if ( logger.isTraceEnabled() )
+//				logger.trace("WebSocket Client received binary: " + bytesFrame.content().readableBytes());
+//			try {
+//				client.executeChannelMessage(ctx, bytesFrame);
+//			} catch (Exception e) {
+//				logger.error(e);
+//			}
 		} else if (frame instanceof PongWebSocketFrame) {
 			logger.info("WebSocket Client received pong - not handled");
 		} else if (frame instanceof CloseWebSocketFrame) {

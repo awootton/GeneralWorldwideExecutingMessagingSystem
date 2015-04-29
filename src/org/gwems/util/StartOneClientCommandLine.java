@@ -1,7 +1,7 @@
 package org.gwems.util;
 
 import org.apache.log4j.Level;
-import org.gwems.servers.WsClientImpl;
+import org.gwems.servers.impl.WsClientImpl;
 
 public class StartOneClientCommandLine {
 

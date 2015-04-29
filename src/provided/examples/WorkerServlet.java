@@ -2,7 +2,6 @@ package provided.examples;
 
 import gwems.Push2Client;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
@@ -27,7 +26,6 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 
 /**
  * An example Amazon Elastic Beanstalk Worker Tier application. This example requires a Java 7 (or higher) compiler.
@@ -53,8 +51,10 @@ public class WorkerServlet extends HttpServlet {
 		// what is the location of the redis here?
 
 		ClusterState cluster = new ClusterState();
-		cluster.redis_server = "localhost";// the default
-		cluster.redis_port = 6379;
+		//cluster.redis_server = "localhost";// the default
+		//cluster.redis_port = 6379;
+		
+		cluster.rootMode = true;// 
 
 		Global global = new Global(8081, cluster);
 

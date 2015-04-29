@@ -167,7 +167,7 @@ public class TimeoutCache {
 
 	/**
 	 * A Key Value memory store with expiration. Nothing lasts forever.
-	 * 
+	 * One can add callbacks to define actions when the timer expires.
 	 * 
 	 * @param key
 	 * @param value
@@ -208,7 +208,8 @@ public class TimeoutCache {
 	}
 
 	/**
-	 * Reset the ttl. Aka refresh the object. If it's not present then do nothing
+	 * Reset the ttl. Aka refresh the object. If it's not present then do nothing.
+	 * It should work to reset the ttl from inside of a timeout callback. 
 	 * 
 	 * @param key
 	 * @param ttl
@@ -239,8 +240,7 @@ public class TimeoutCache {
 			timedQ.remove(holder.key);
 			holder.key.runners.clear();
 			holder.key.expires = System.currentTimeMillis() - 1;
-			timedQ.add(holder.key);
-
+			timedQ.add(holder.key);// because we want to delete in only 1 thread?
 			if (logger.isTraceEnabled()) {
 				logger.trace("Removed key = " + key);
 			}

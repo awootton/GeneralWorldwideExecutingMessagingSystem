@@ -12,7 +12,10 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
+
 import org.apache.log4j.Logger;
+import org.gwems.js.GetToKnowBindingsAndScopes;
 import org.gwems.servers.Global;
 
 public class JsEnginePool {
@@ -44,7 +47,7 @@ public class JsEnginePool {
 			globalBinding.put("java", obj);
 
 		} catch (ScriptException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 
@@ -71,7 +74,59 @@ public class JsEnginePool {
 		logger.info("created new JavaScript engine #" + count++);
 		// bindings made here don't stick because
 		// a new engine bindings is set by every agent
+
+		Bindings gBindings = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
+
+		Bindings b = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
+
+		Window w = new Window();
+		w.engine = engine;
+		gBindings.put("window", w);
+		
+		try {
+			Object ooo = engine.eval("function(aFunct,ms){return window.setTimeout(aFunct,ms)};",gBindings);
+			gBindings.put("setTimeout", ooo);
+			
+//			GetToKnowBindingsAndScopes.dumpBindings("global",engine.getBindings(ScriptContext.GLOBAL_SCOPE));
+//			GetToKnowBindingsAndScopes.dumpBindings("engimne",engine.getBindings(ScriptContext.ENGINE_SCOPE));
+			
+		} catch (ScriptException e) {
+			logger.error(e);
+		}
+		
 		return engine;
+	}
+
+	public class Window {
+
+		ScriptEngine engine;
+
+		public Object setTimeout(ScriptObjectMirror funct, double amt) {
+			String timerId = Global.getRandom();
+			global.timeoutCache.put(timerId, engine, (int) amt, () -> {
+				funct.call("arg0", "arg1");
+			});
+			return timerId;
+		}
+
+		public void clearTimeout(Object timeoutVariable) {
+			System.out.println("clearTimeout");
+			global.timeoutCache.remove("" + timeoutVariable);
+		}
+
+		public Object setInterval(ScriptObjectMirror funct, double amt) {
+			String timerId = Global.getRandom();
+			global.timeoutCache.put(timerId, engine, (int) amt, () -> {
+				funct.call("arg0", "arg1");
+				global.timeoutCache.setTtl(timerId, (int) amt);
+			});
+			return timerId;
+		}
+
+		public void clearInterval(Object timeoutVariable) {
+			global.timeoutCache.remove("" + timeoutVariable);
+		}
+
 	}
 
 	public static class JsConsole {

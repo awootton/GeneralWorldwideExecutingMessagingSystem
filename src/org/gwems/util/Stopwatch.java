@@ -33,7 +33,7 @@ public class Stopwatch {
 		public boolean test();
 	}
 
-	/** Test the condition until until it becomes false or the time expires.
+	/** Test the condition until it becomes false or the time expires.
 	 * 
 	 * @param seconds
 	 * @param check
@@ -49,7 +49,6 @@ public class Stopwatch {
 				Thread.sleep(1);
 			} catch (InterruptedException e) {
 			}
-
 		}
 		return true;// we're OK
 	}

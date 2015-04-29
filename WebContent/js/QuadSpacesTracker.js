@@ -32,7 +32,6 @@ QuadSpaces.Tracker = function(socket, scene, userHash) {
 	this.socket = socket;
 	this.scene = scene;
 	this.userHash = "" + userHash;// an id of the user/camera/avatar
-	this.id = "" + userHash;
 	this.selfCount = 0;// should increment
 
 	this.allSubscribedChannels = {};// a set.
@@ -46,10 +45,8 @@ QuadSpaces.Tracker = function(socket, scene, userHash) {
 	// smallest to largest
 	// populate them from 1 to 7 = 4m to 4km
 	var time = Date.now();
-	var interval = 10;// 100;// 30;// ms
+	var interval = 200;//  ms
 	for (i = this.minLevel; i < this.maxLevel; i += 2) {
-		if ( interval < 20 )
-			interval = 20;//hack max at 50hz
 		var newi = new QuadSpaces.Level(i);
 		newi.nextSend = time;
 		newi.interval = interval | 0;
@@ -58,8 +55,8 @@ QuadSpaces.Tracker = function(socket, scene, userHash) {
 		// TODO: override makeMessage on larger layers
 		// to leave off v and etc.
 	}
-	// this.intervals[0].interval = 300;// slow down for debugging
-	// this.intervals[1].interval = 300;// slow down for debugging
+	//this.intervals[0].interval = 1000;// slow down for debugging
+	//this.intervals[1].interval = 1000;// slow down for debugging
 
 	this.avatars = {};// id to Object3D map
 
@@ -70,22 +67,25 @@ QuadSpaces.Tracker = function(socket, scene, userHash) {
 }
 
 QuadSpaces.Tracker.prototype.getId = function() {
-	return this.id;
+	return this.userHash;
 }
 
 QuadSpaces.Tracker.prototype.handleIncoming = function(string) {
+	var payload = {};
 	try {
-		if ( string['@'] )
+		if ( string['@'] ){
+			console.log("ignoring " + JSON.stringify(string) )
 			return;// ignore ack and others
-		var payload = JSON.parse(string);// how does it get double json'ed?
-		// there's a parsing flaw in gwems. frack.
+		}
+		payload = JSON.parse(string);// Q: how does it get double json'ed?
+		// A:there's a parsing flaw in gwems. frack.
 	} catch (e) {
 		console.log("err " + e);
 	}
 	if ( ! payload || ! payload['id'] ){
 		return;
 	}
-	if (payload.id == this.id) {
+	if (payload.id == this.userHash) {
 		this.selfCount++;
 	} else {
 		// console.log("Tracker has message: -------------->> " + payload);
@@ -93,16 +93,22 @@ QuadSpaces.Tracker.prototype.handleIncoming = function(string) {
 		if (theObject == null) {
 			var theObject = avatarBuilder.build(payload.id);
 			this.avatars[payload.id] = theObject;
+			theObject.velocity = new THREE.Vector3();
 			this.scene.add(theObject);
+			console.log("added player " + payload.id)
 		}
 		// actually, we should just pass the payload and let the object do it.
 		theObject.position.x = payload.p[0];
 		theObject.position.y = payload.p[1];
 		theObject.position.z = payload.p[2];
+		
+		theObject.velocity.x = payload.v[0];
+		theObject.velocity.y = payload.v[1];
+		theObject.velocity.z = payload.v[2];
 	}
 }
 
-QuadSpaces.Tracker.prototype.update = function(position, velocity) {
+QuadSpaces.Tracker.prototype.update = function(position, velocity, delta) {
 	// don't start if the socket is not done yet
 	if (this.socket.isOpen == 0)
 		return;
@@ -110,6 +116,18 @@ QuadSpaces.Tracker.prototype.update = function(position, velocity) {
 
 	var nextSubscribedChannels = {};// a set.
 	var nextUnsubs = {};// a set.
+	
+	//Apply all the velocities
+	for ( key in this.avatars ) {
+		var obj = this.avatars[key];
+		var v = obj.velocity;
+		if (v) {
+			obj.position.x += v.x * delta;
+			obj.position.y += v.y * delta;
+			obj.position.z += v.z * delta;
+		}
+		
+	}
 
 	var lodlist = QuadSpaces.decompose(position, this.minLevel);
 	// re-do the channels before we publish
@@ -158,7 +176,7 @@ QuadSpaces.Tracker.prototype.update = function(position, velocity) {
 		var level = this.intervals[i];
 		if (level.nextSend < time) {
 			// send message
-			var msg = level.makeMessage(p, v, this.id);
+			var msg = level.makeMessage(p, v, this.userHash);
 			msg = JSON.stringify(msg);
 			// there's a parsing flaw in gwems. frack.
 			var pubstr = GWEMS.getPublishString(level.string, msg);
@@ -202,7 +220,7 @@ QuadSpaces.Level = function(logscale) {
 		msg.p = p;
 		msg.v = v;
 		msg.id = id;
-		return msg;// JSON.stringify(msg);
+		return msg;
 	}
 
 }/**
