@@ -1,5 +1,6 @@
 package org.gwems.servers;
 
+import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
@@ -21,6 +22,7 @@ public class ExecutionContext {
 			md5 = MessageDigest.getInstance("MD5");
 			sha = MessageDigest.getInstance("SHA-1");
 			sha256 = MessageDigest.getInstance("SHA-256");
+			utf8 = Charset.forName("utf8");
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
@@ -41,6 +43,8 @@ public class ExecutionContext {
 	public MessageDigest md5;
 	public MessageDigest sha;
 	public MessageDigest sha256;
+	
+	public Charset utf8;
 
 	// A utility.
 	public String getAgentName() {

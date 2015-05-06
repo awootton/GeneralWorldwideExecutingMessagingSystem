@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MineForKey - search for keys of higher levels.</title>
+
+<script src="js/jquery-1.11.2.min.js"></script>
+
+<!--  
+<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha256.js"></script>
+<script src="js/SHA256_veness.js"></script> -->
+
+<script src="js/SHA256_Chestnykh.js"></script>
+
+
+<script>
+	// supposed to be the same as UTF8 getBytes in java
+	String.prototype.getBytes = function() {
+		var bytes = [];
+		for (var i = 0; i < this.length; i++) {
+			var charCode = this.charCodeAt(i);
+			var cLen = Math.ceil(Math.log(charCode) / Math.log(256));
+			for (var j = 0; j < cLen; j++) {
+				bytes.push((charCode << (j * 8)) & 0xFF);
+			}
+		}
+		return new Uint8Array(bytes);
+	}
+
+	var toBase64 = [ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+			'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+			'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8',
+			'9', '+', '/' ];
+
+	var reverse64 = [];
+
+	for (i = 0; i < 256; i++) {
+		reverse64[i] = 0;
+	}
+	for (i = 0; i < 64; i++) {
+		b = toBase64[i];
+		reverse64[b.charCodeAt(0)] = i;
+	}
+
+	var calcLevel = function(bytes) {
+		var byteval = 0;
+		var bitval = 0;
+
+		while (bytes[byteval] == 0 && byteval < bytes.length) {
+			byteval++;
+		}
+		var tmp = bytes[byteval];
+
+		var mask = 0x80;
+		while (((tmp & mask) == 0) && (mask != 0)) {
+			mask >>= 1;
+			bitval++;
+		}
+		return byteval * 8 + bitval;
+	}
+
+	var user = "admin";
+
+	var key = "BCFSzAA";
+
+	var level = 0;
+
+	var arr = (user + key).getBytes();
+	var bytes = sha256(arr);
+	console.log(btoa(String.fromCharCode.apply(null, bytes)));
+	bytes = sha256(bytes);
+	console.log(btoa(String.fromCharCode.apply(null, bytes)));
+
+	//Uint8Arrays 
+	//var arr = str2ab(user + key);
+	for ( count = 0; count < 100; count++) {
+		var arr = (user + key).getBytes();
+
+		// is array
+		var bytes = sha256(arr);
+		bytes = sha256(bytes);
+
+		//console.log(bytes);// is an array
+
+		//var b64encoded = btoa(String.fromCharCode.apply(null, bytes));
+		//console.log(b64encoded);
+
+		var tmp = calcLevel(bytes);
+		if (tmp > level) {
+			level = tmp;
+			str = btoa(String.fromCharCode.apply(null, bytes));
+			shorter = str.substring(0, 20);
+			console.log("user = " + user + " level = " + level + " key = " + key + " hash= " + shorter);
+		}
+
+		// increment the key
+		// here's just one way
+		// assume that the bytes are inside of base64;
+		var keyBytes = key.getBytes();
+		var i;
+		for (i = keyBytes.length - 1; i >= 0; i--) {
+			var b = reverse64[keyBytes[i] & 0xFF];
+			b++;
+			if (b >= 64) {
+				b = 0;// carry
+			}
+			b = toBase64[b & 0xFF];
+			keyBytes[i] = b.charCodeAt(0);
+			if (b != 'A')
+				break;
+		}
+		key = String.fromCharCode.apply(null, keyBytes);
+		if (i == 0) {
+			key = "B" + key;
+		}
+
+		//console.log("key is now " +key );
+
+	}
+
+	console.log("done scanning");
+</script>
+
+
+</head>
+<body>
+
+	<div class="content"></div>
+
+	<script>
+		(function(i, s, o, g, r, a, m) {
+			i['GoogleAnalyticsObject'] = r;
+			i[r] = i[r] || function() {
+				(i[r].q = i[r].q || []).push(arguments)
+			}, i[r].l = 1 * new Date();
+			a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+			a.async = 1;
+			a.src = g;
+			m.parentNode.insertBefore(a, m)
+		})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+		ga('create', 'UA-62339543-1', 'auto');
+		ga('send', 'pageview');
+	</script>
+</body>
+</html>
