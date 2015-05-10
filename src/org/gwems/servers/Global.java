@@ -1,6 +1,7 @@
 package org.gwems.servers;
 
 import gwems.Ack;
+import gwems.Push2Client;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
@@ -51,6 +52,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import d.P2C;
 
@@ -120,8 +122,8 @@ public class Global implements Executor {
 	}
 
 	public Global(int port, ClusterState cluster) {
-		
-		if ( cluster == null ){
+
+		if (cluster == null) {
 			cluster = new ClusterState();
 			cluster.redis_server = null;// is root
 			cluster.rootMode = true;// is root
@@ -449,10 +451,30 @@ public class Global implements Executor {
 
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	static {
+
+//		SimpleModule module = new SimpleModule();
+//		module.addSerializer(Push2Client.class, new Push2Client.MySerializer());
+//		module.addDeserializer(Push2Client.class, new Push2Client.MyDeserializer());
+		//MAPPER.registerModule(module);
+
 		MAPPER.setVisibility(PropertyAccessor.GETTER, Visibility.NONE);
 		MAPPER.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
+
+//		Push2Client tmp = new Push2Client();
+//		try {
+//			String str = MAPPER.writeValueAsString(tmp);
+//			
+//			Push2Client p = (Push2Client) MAPPER.readValue(str, Object.class);
+//			logger.info(p);
+//		} catch (IOException e) {
+//			logger.error(e);
+//		}
+		
 		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@");
 	}
+
+	// @JsonSerialize(using = Push2Client.MySerializer.class)
+	// @JsonDeserialize(using = Push2Client.MyDeserializer.class)
 
 	// public static class XXXCustomTypeResolverBuilder extends DefaultTypeResolverBuilder
 	// {
@@ -508,6 +530,11 @@ public class Global implements Executor {
 		Runnable obj = MAPPER.readValue(s, Runnable.class);
 		return obj;
 	}
+
+	// public static TreeNode deserializeTree(String s) throws JsonParseException, JsonMappingException, IOException {
+	// TreeNode obj = MAPPER.readTree(s);
+	// return obj;
+	// }
 
 	public static String serialize(Object message) throws JsonProcessingException {
 		return MAPPER.writeValueAsString(message);

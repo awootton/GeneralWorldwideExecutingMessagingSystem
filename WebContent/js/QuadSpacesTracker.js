@@ -77,8 +77,8 @@ QuadSpaces.Tracker.prototype.handleIncoming = function(string) {
 			console.log("ignoring " + JSON.stringify(string) )
 			return;// ignore ack and others
 		}
-		payload = JSON.parse(string);// Q: how does it get double json'ed?
-		// A:there's a parsing flaw in gwems. frack.
+		payload = string ;// JSON.parse(string);// Q: how does it get double json'ed?
+		// A:there's a parsing flaw in gwems. frack. NOT! 
 	} catch (e) {
 		console.log("err " + e);
 	}
@@ -177,7 +177,7 @@ QuadSpaces.Tracker.prototype.update = function(position, velocity, delta) {
 		if (level.nextSend < time) {
 			// send message
 			var msg = level.makeMessage(p, v, this.userHash);
-			msg = JSON.stringify(msg);
+			// msg = JSON.stringify(msg);
 			// there's a parsing flaw in gwems. frack.
 			var pubstr = GWEMS.getPublishString(level.string, msg);
 			this.socket.send(pubstr);

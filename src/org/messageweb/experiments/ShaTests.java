@@ -49,9 +49,9 @@ public class ShaTests {
 
 		ExecutionContext ec = new ExecutionContext();
 
-		String user = "admin";
+		String user = "user";
 
-		String key = "BCFSzAA";
+		String key = "a";
 
 		// let's 'adjust' the key
 		byte[] keyBytes = key.getBytes(ec.utf8);

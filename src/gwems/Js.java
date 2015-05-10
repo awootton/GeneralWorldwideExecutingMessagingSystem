@@ -13,7 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 /**
  * This runs some javascript.
  * 
- * {"@":"gwems.Js","js":"console.log('Hello World');"} 
+ * {"@":"gwems.Js","js":"console.log('Hello World');"}
  * 
  * 
  * @author awootton
@@ -32,7 +32,6 @@ public class Js implements Runnable {
 		try {
 
 			if (ec.agent.isPresent()) {
-				// Global global = ec.global;
 				engine = ec.global.getEngine();
 				Agent agent = ec.agent.get();
 				// we need to restore the context from the agent.
@@ -42,16 +41,12 @@ public class Js implements Runnable {
 					agent.bindings = engine.createBindings();
 					// this won't really work in the long run.
 					engine.eval("var java = {};", agent.bindings);
-					
-//					Window w = new Window();
-//					engine.put("window", w);
-
 				}
 				try {
 					ec.isJs = true;
 					engine.eval(js, agent.bindings);
 					ec.isJs = false;
-
+					// debug much?
 					// Bindings globalBinding = engine.getBindings(ScriptContext.GLOBAL_SCOPE);
 					// Bindings engineBinding = engine.getBindings(ScriptContext.ENGINE_SCOPE);
 					// GetToKnowBindingsAndScopes.dumpBindings("global",globalBinding);
@@ -72,21 +67,31 @@ public class Js implements Runnable {
 			ec.global.returnEngine(engine);
 		}
 	}
-	
-	
-// 
-//public class Window {
-//	
-//	public Object setInterval( Object funct, double amt ){
-//		System.out.println("funct IN JS!  is" + funct );
-//		
-//		return "sss";
-//				
-//	}
-//	
-//}
-//
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((js == null) ? 0 : js.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Js other = (Js) obj;
+		if (js == null) {
+			if (other.js != null)
+				return false;
+		} else if (!js.equals(other.js))
+			return false;
+		return true;
+	}
 
 	public static void main(String[] args) throws JsonProcessingException {
 
