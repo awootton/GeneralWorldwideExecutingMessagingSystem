@@ -37,18 +37,13 @@ public class Push2Client implements Runnable {
 
 	@JsonSerialize(using = JsType.MySerializer.class)
 	@JsonDeserialize(using = JsType.MyDeserializer.class)
-	Object msg = "none";// Eval.dummy;// "none";
+	Object msg = "none";
 
 	/**
 	 * Object will need to be serializable by jackson.
 	 * 
 	 * @param message
 	 */
-	// public Push2Client(TreeNode message) {
-	// super();
-	// this.msg = new Eval();
-	// this.msg = message;
-	// }
 
 	public Push2Client(Runnable message) {
 		super();

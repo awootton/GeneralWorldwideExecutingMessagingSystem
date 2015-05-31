@@ -3,16 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MineForKey - search for keys of higher levels.</title>
+<title>MineForKey - search for GWEMS high level keys.</title>
 
 <script src="js/jquery-1.11.2.min.js"></script>
-
-<!--  
-<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha256.js"></script>
-<script src="js/SHA256_veness.js"></script> -->
-
 <script src="js/SHA256_Chestnykh.js"></script>
-
 
 <script>
 	// supposed to be the same as UTF8 getBytes in java
@@ -60,11 +54,12 @@
 		return byteval * 8 + bitval;
 	}
 
-	var user = "admin";
+	var user = "user";
 
-	var key = "BCFSzAA";
+	var key = "AAAA";
 
-	var level = 0;
+	var level = 10;
+	var seconds = new Date().getTime() / 1000;
 
 	var arr = (user + key).getBytes();
 	var bytes = sha256(arr);
@@ -72,61 +67,115 @@
 	bytes = sha256(bytes);
 	console.log(btoa(String.fromCharCode.apply(null, bytes)));
 
-	//Uint8Arrays 
-	//var arr = str2ab(user + key);
-	for ( count = 0; count < 100; count++) {
-		var arr = (user + key).getBytes();
+	var kiloTry = function() {
+		//Uint8Arrays 
+		//var arr = str2ab(user + key);
+		for (count = 0; count < 5000; count++) {
+			var arr = (user + key).getBytes();
 
-		// is array
-		var bytes = sha256(arr);
-		bytes = sha256(bytes);
+			// is array
+			var bytes = sha256(arr);
+			bytes = sha256(bytes);
 
-		//console.log(bytes);// is an array
-
-		//var b64encoded = btoa(String.fromCharCode.apply(null, bytes));
-		//console.log(b64encoded);
-
-		var tmp = calcLevel(bytes);
-		if (tmp > level) {
-			level = tmp;
-			str = btoa(String.fromCharCode.apply(null, bytes));
-			shorter = str.substring(0, 20);
-			console.log("user = " + user + " level = " + level + " key = " + key + " hash= " + shorter);
-		}
-
-		// increment the key
-		// here's just one way
-		// assume that the bytes are inside of base64;
-		var keyBytes = key.getBytes();
-		var i;
-		for (i = keyBytes.length - 1; i >= 0; i--) {
-			var b = reverse64[keyBytes[i] & 0xFF];
-			b++;
-			if (b >= 64) {
-				b = 0;// carry
+			var tmp = calcLevel(bytes);
+			if (tmp > level) {
+				level = tmp;
+				str = btoa(String.fromCharCode.apply(null, bytes));
+				shorter = str.substring(0, 25);
+				var message = "user = " + user + " level = " + level + " key = " + key + " hash= " + shorter;
+				var now = new Date().getTime() / 1000;
+				passed = now - seconds;
+				message += " time = " + (passed|0) + " Sec.";
+				console.log(message);
+				var logText = $("#log");
+				logText.prepend(message + '<br>');
 			}
-			b = toBase64[b & 0xFF];
-			keyBytes[i] = b.charCodeAt(0);
-			if (b != 'A')
-				break;
-		}
-		key = String.fromCharCode.apply(null, keyBytes);
-		if (i == 0) {
-			key = "B" + key;
-		}
 
-		//console.log("key is now " +key );
-
+			// increment the key
+			// here's just one way
+			// assume that the bytes are inside of base64;
+			var keyBytes = key.getBytes();
+			var i;
+			for (i = keyBytes.length - 1; i >= 0; i--) {
+				var b = reverse64[keyBytes[i] & 0xFF];
+				b++;
+				if (b >= 64) {
+					b = 0;// carry
+				}
+				b = toBase64[b & 0xFF];
+				keyBytes[i] = b.charCodeAt(0);
+				if (b != 'A')
+					break;
+			}
+			key = String.fromCharCode.apply(null, keyBytes);
+			if (i == 0) {
+				key = "B" + key;
+			}
+		}
+		$('#theKey').val(key)
 	}
 
-	console.log("done scanning");
+	var running = 0;
+	var interval;
+
+	window.onload = function() {
+
+		$('#start').click(function() {
+
+			var newuser = $('#userName').val();
+			if (newuser.length < 4) {
+				$("#log").prepend("User name must be 4 or more characters<br>");
+				running = 1;
+			}
+			if ( newuser != user ){
+				level = 10;
+				var seconds = new Date().getTime() / 1000;
+				user = newuser;
+			}
+
+			key = $('#theKey').val();
+			if (key.length < 4) {
+				$("#log").prepend("Starting key name must be 4 or more characters<br>");
+				running = 1;
+			}	
+
+			if (running) {
+
+				$('#start').html('Start');
+
+				running = false;
+				clearInterval(interval)
+
+			} else {
+				console.log("starting");
+				kiloTry();
+				interval = setInterval(function() {
+					kiloTry();
+				}, 10);
+				$('#start').html('Stop');
+				running = true;
+			}
+		});
+	}
 </script>
 
 
 </head>
 <body>
 
-	<div class="content"></div>
+	<div class="content">
+		Compute a secret key of high level given a user name. <br> Enter
+		a username and an optional starting key. Wait. Copy the key with the
+		best level. Save it.<br> User name:
+		<textarea id="userName" placeholder="Player1" style="height: 20px;"></textarea>
+		Starting key:
+		<textarea id="theKey" placeholder="AAAA" style="height: 20px;">AAAA</textarea>
+
+		<button id="start" type="button">Start</button>
+
+		<div id="log"></div>
+
+	</div>
 
 	<script>
 		(function(i, s, o, g, r, a, m) {

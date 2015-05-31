@@ -28,10 +28,8 @@ RunInCircle = function(gwems, id, center, radius, angularVelocity, startAngle) {
 		var z = radius * Math.sin(angle);
 
 		var message = {};
-		message["@"] = "m.P";
 		message.id = id;
 		message.position = {};// position
-		message.position["@"] = "m.P";
 		message.position.x = deres(x + center.x);
 		message.position.y = deres(0 + center.y);
 		message.position.z = deres(z + center.z);
@@ -41,7 +39,6 @@ RunInCircle = function(gwems, id, center, radius, angularVelocity, startAngle) {
 		var nextz = radius * Math.sin(angle);
 
 		message.velocity = {};
-		message.velocity["@"] = "m.P";
 		message.velocity.x = (nextx - x) / interval;
 		message.velocity.y = 0;
 		message.velocity.z = (nextz - z) / interval;

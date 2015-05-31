@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * A publish response flowing down the pubsub tree.
+ * Not the same as Push2Client?
  * 
  * @author awootton
  *
@@ -17,8 +18,8 @@ public class P2C implements Runnable {
 
 	public static Logger logger = Logger.getLogger(P2C.class);
 
-	String c = "none";
-	String m = "none";
+	public String c = "none";
+	public String m = "none";
 
 	/**
 	 * Object will need to be serializable by jackson.

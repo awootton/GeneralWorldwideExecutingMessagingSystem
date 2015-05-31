@@ -26,15 +26,18 @@ public abstract class Agent implements Comparable<Agent> {
 	 */
 	public AgentRunnablesQueue messageQ = null;// protected?
 
-	private final String key;// must be unique!
+	private final String hash;// must be unique!
 	public final Map<Object, Object> userMap;
 	public final Global global;
+	
+	public String user = "none";
+	public String secretKey = "none";
 	
 	public Bindings bindings = null; // needs accessors
 
 	public Agent(Global global, String key) {
 		this.global = global;
-		this.key = key;
+		this.hash = key;
 		this.userMap = new HashMap<>();
 		// agents always subscribe to their own key so that they can make a SASE
 		global.subscribe(this, key);
@@ -43,11 +46,11 @@ public abstract class Agent implements Comparable<Agent> {
 
 	@Override
 	public String toString() {
-		return this.getClass() + ":" + key;
+		return this.getClass() + ":" + hash;
 	}
 
 	public final String getKey() {
-		return key;
+		return hash;
 	}
 
 	/**
@@ -66,7 +69,7 @@ public abstract class Agent implements Comparable<Agent> {
 
 	@Override
 	public int compareTo(Agent o) {
-		return key.compareTo(o.key);
+		return hash.compareTo(o.hash);
 	}
 
 	public static Global getGlobal() {

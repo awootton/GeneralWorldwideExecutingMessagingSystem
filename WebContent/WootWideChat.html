@@ -6,8 +6,7 @@
 <title>WootWideChat GWEMS client demo.</title>
 
 <style>
-<!--
-Help ! I have no style and no class . -->.content .Top .Bottom #log {
+.content .Top .Bottom #log {
 	width: 640px;
 }
 
@@ -134,7 +133,6 @@ textarea {
 		if (Object.keys(tagMap).length) {
 			for (key in tagMap) {
 				var msg = {};
-				msg["@"] = "m.P";// TODO: eliminate need 
 				msg.from = "#" + key;
 				msg.msg = str;
 				var s = GWEMS.getPublishString("#" + key, msg);

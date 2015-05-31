@@ -3,8 +3,6 @@ package org.gwems.servers;
 import org.apache.log4j.Logger;
 import org.gwems.util.PubSub;
 
-import d.GwemsPubSub;
-
 /**
  * A reference to a pub sub for one server. It can be shared by all the servers that use the same pub sub.
  * 

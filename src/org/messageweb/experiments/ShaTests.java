@@ -49,9 +49,9 @@ public class ShaTests {
 
 		ExecutionContext ec = new ExecutionContext();
 
-		String user = "user";
+		String user = "F3nDnoQ";
 
-		String key = "a";
+		String key = "ACxa";
 
 		// let's 'adjust' the key
 		byte[] keyBytes = key.getBytes(ec.utf8);
@@ -70,18 +70,20 @@ public class ShaTests {
 
 		keyBytes = key.getBytes(ec.utf8);
 
-		int level = 0;
+		int level = 10;
 
 		{// a test
 			md.update(userBytes);
 			md.update(keyBytes);
 			byte[] bytes = md.digest();
-			System.out.println(Base64.getEncoder().encodeToString(bytes));//ESWOwmDeTs
+			System.out.println(Base64.getEncoder().encodeToString(bytes));// ESWOwmDeTs
 			md.update(bytes);
 			bytes = md.digest();
 			String str = Base64.getEncoder().encodeToString(bytes);
 			System.out.println("user = " + user + " key = " + new String(keyBytes) + " hash= " + str);
-		}//user = admin key = BCFSzAA hash= nQROny8RQYim9XFKj4EYqUMTXoA8OWUYL1M61MpFzB0=
+		}// user = admin key = BCFSzAA hash= nQROny8RQYim9XFKj4EYqUMTXoA8OWUYL1M61MpFzB0=
+
+		long startTime = System.currentTimeMillis();
 
 		while (true) {
 
@@ -95,8 +97,10 @@ public class ShaTests {
 			if (tmp > level) {
 				level = tmp;
 				String str = Base64.getEncoder().encodeToString(bytes);
-				String shorter = str.substring(0, 20);
-				System.out.println("user = " + user + " level = " + level + " key = " + new String(keyBytes) + " hash= " + shorter);
+				String shorter = str.substring(0, 25);
+				long now = System.currentTimeMillis();
+				System.out.println("user = " + user + " level = " + level + " key = " + new String(keyBytes) + " hash= " + shorter + " time="
+						+ (now - startTime)/1000);
 			}
 			// increment the key
 			// here's just one way

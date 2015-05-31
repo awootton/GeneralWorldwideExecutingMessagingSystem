@@ -1,11 +1,15 @@
-package d;
+package org.gwems.servers;
 
 import io.netty.channel.ChannelHandlerContext;
 
 import org.apache.log4j.Logger;
-import org.gwems.servers.Global;
 import org.gwems.servers.impl.WsClientImpl;
 import org.gwems.util.PubSub;
+
+import d.P2C;
+import d.Pub;
+import d.Sub;
+import d.Unsub;
 
 public class GwemsPubSub extends PubSub {
 
