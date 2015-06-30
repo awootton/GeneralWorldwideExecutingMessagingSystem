@@ -1,7 +1,5 @@
 package provided.examples;
 
-import gwems.Push2Client;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
@@ -14,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.gwems.servers.ClusterState;
 import org.gwems.servers.Global;
 import org.messageweb.dynamo.LastTimeItem;
 
@@ -43,59 +40,71 @@ public class WorkerServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 
+	Global global = null;
+
 	public WorkerServlet() {
 
-		logger.debug(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Starting");
-
-		// what is the name of the cluster???
-		// what is the location of the redis here?
-
-		ClusterState cluster = new ClusterState();
-		//cluster.redis_server = "localhost";// the default
-		//cluster.redis_port = 6379;
-		
-		cluster.rootMode = true;// 
-
-		Global global = new Global(8081, cluster);
-
-		logger.debug("-* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -* Started " + global);
-
-		TimePusher pusher = new TimePusher();
-		pusher.global = global;
-		Thread t = new Thread(pusher);
-		t.start();
+//		logger.debug(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Starting");
+//
+//		GlobalRunner rrr = new GlobalRunner();
+//		Thread tt = new Thread(rrr);
+//		tt.start();
+//		while (global == null) {
+//			try {
+//				Thread.sleep(1);
+//			} catch (InterruptedException e) {
+//			}
+//		}
+//
+//		logger.debug("-* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -* Started " + global);
+//
+//		TimePusher pusher = new TimePusher();
+//		pusher.global = global;
+//		Thread t = new Thread(pusher);
+//		t.start();
 	}
+
+
+//	private class GlobalRunner implements Runnable {
+//
+//		@Override
+//		public void run() {
+//			ClusterState clusterState = new ClusterState();
+//			clusterState.rootMode = true;// root mode.
+//			global = new Global(8081, clusterState);// starts a ws server
+//		}
+//	}
 
 	// Do this over in js and add it to the db
-	
-	private class TimePusher implements Runnable {
-		Global global;
 
-		@Override
-		public void run() {
-			// publish the time every 10 sec.
-			long time_10 = System.currentTimeMillis() + 10 * 1000;
-			long time_60 = System.currentTimeMillis() + 22 * 1000;
-			while (true) {
-				long time = System.currentTimeMillis();
-				if (time > time_10) {
-					time_10 += 10 * 1000;
-					global.publish("WWC#TimeEveryTenSeconds", new Push2Client("" + new Date()));
-					global.publish("WWC#10secs", new Push2Client("" + new Date()));
-					// logger.info("sent time to #TimeEveryTenSeconds");
-				}
-				if (time > time_60) {
-					time_60 += 60 * 1000;
-					global.publish("WWC#TimeEveryMinute", new Push2Client("" + new Date()));
-					// logger.info("sent time to #TimeEveryMinute");
-				}
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-				}
-			}
-		}
-	}
+//	private class TimePusher implements Runnable {
+//		Global global;
+//
+//		@Override
+//		public void run() {
+//			// publish the time every 10 sec.
+//			long time_10 = System.currentTimeMillis() + 10 * 1000;
+//			long time_60 = System.currentTimeMillis() + 22 * 1000;
+//			while (true) {
+//				long time = System.currentTimeMillis();
+//				if (time > time_10) {
+//					time_10 += 10 * 1000;
+//					global.publish("WWC#TimeEveryTenSeconds", new Push2Client("" + new Date()));
+//					global.publish("WWC#10secs", new Push2Client("" + new Date()));
+//					// logger.info("sent time to #TimeEveryTenSeconds");
+//				}
+//				if (time > time_60) {
+//					time_60 += 60 * 1000;
+//					global.publish("WWC#TimeEveryMinute", new Push2Client("" + new Date()));
+//					// logger.info("sent time to #TimeEveryMinute");
+//				}
+//				try {
+//					Thread.sleep(1000);
+//				} catch (InterruptedException e) {
+//				}
+//			}
+//		}
+//	}
 
 	/**
 	 * A client to use to access Amazon S3. Pulls credentials from the {@code AwsCredentials.properties} file if found
@@ -126,7 +135,8 @@ public class WorkerServlet extends HttpServlet {
 
 			byte[] message = workRequest.getMessage().getBytes(UTF_8);
 
-			// don't actually do that ! s3.putObject(workRequest.getBucket(), workRequest.getKey(), new ByteArrayInputStream(message), new ObjectMetadata());
+			// don't actually do that ! s3.putObject(workRequest.getBucket(), workRequest.getKey(), new
+			// ByteArrayInputStream(message), new ObjectMetadata());
 
 			// Signal to beanstalk that processing was successful so this work
 			// item should not be retried.

@@ -35,7 +35,7 @@ textarea {
 	var hostName = location.hostname;
 	console.log("Using " + hostName);
 	//hostName = "gwemsenvrion1-vmgpmyvah3.elasticbeanstalk.com";// uncomment to use local server
-	var sock = new GWEMS.WebSocketClient(hostName, 8081, "/");
+	var sock = new GWEMS.WebSocketClient(hostName, location.port, "/");
 
 	var handleIncomingMessage = function(obj) {// show it in 'log'
 		if (obj['@'] == "gwems.Ack") {

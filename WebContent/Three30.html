@@ -33,7 +33,7 @@ canvas {
 		console.log("our name will be " + userName)
 		var hostName = location.hostname;
 		console.log("Using host " + hostName);
-		var gwems = new GWEMS.WebSocketClient(hostName, 8081, "/");
+		var gwems = new GWEMS.WebSocketClient(hostName, location.port, "/");
 		gwems.start();
 
 		var scene = new THREE.Scene();

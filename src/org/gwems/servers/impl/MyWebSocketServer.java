@@ -47,9 +47,9 @@ import org.gwems.servers.Global;
 /**
  * A HTTP server which serves Web Socket requests at:
  *
- * http://localhost:8081/websocket
+ * http://localhost:8080/websocket
  *
- * Open your browser at http://localhost:8081/, then the demo page will be loaded and a Web Socket connection will be made automatically.
+ * Open your browser at http://localhost:8080/, then the demo page will be loaded and a Web Socket connection will be made automatically.
  *
  * This server illustrates support for the different web socket specification versions and will work with:
  *
@@ -66,7 +66,8 @@ public final class MyWebSocketServer {
 
 	public static Logger logger = Logger.getLogger(MyWebSocketServer.class);
 
-	final boolean SSL = System.getProperty("ssl") != null;
+	///
+	final boolean SSL;// = System.getProperty("ssl") != null;
 	// static final int PORT = Integer.parseInt(System.getProperty("port", SSL ?
 	// ""+ (8443 + 1) : "" + (8080 + 1)));
 
@@ -77,9 +78,10 @@ public final class MyWebSocketServer {
 	EventLoopGroup bossGroup;
 	EventLoopGroup workerGroup;
 
-	public MyWebSocketServer(Global global) {
+	public MyWebSocketServer(Global global, boolean SSL ) {
 		super();
 		this.global = global;
+		this.SSL = SSL;
 	}
 
 	public void stop() {
@@ -174,7 +176,10 @@ public final class MyWebSocketServer {
 			}
 			pipeline.addLast(new HttpServerCodec());
 			pipeline.addLast(new HttpObjectAggregator(65536));
-			pipeline.addLast(new MyWebSocketServerHandler(global));
+			
+			GwemsMainHttpHandler httpHandler = new GwemsMainHttpHandler();
+			
+			pipeline.addLast(new MyWebSocketServerHandler(global,httpHandler));
 		}
 	}
 

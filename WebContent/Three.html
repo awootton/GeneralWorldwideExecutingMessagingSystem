@@ -54,7 +54,8 @@ canvas {
 
 		var hostName = location.hostname;
 		console.log("Using host " + hostName);
-		var sock = new GWEMS.WebSocketClient(hostName, 8081, "/");
+		var port = location.port;
+		var sock = new GWEMS.WebSocketClient(hostName, port, "/");
 		sock.start();
 
 		var clock = new THREE.Clock();

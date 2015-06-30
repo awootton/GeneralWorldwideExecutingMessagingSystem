@@ -1,36 +1,29 @@
 package org.gwems.util;
 
-import gwems.Publish;
 import gwems.Push2Client;
-import gwems.Subscribe;
-import gwems.Unsubscribe;
 
 import java.util.Date;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.gwems.servers.ClusterState;
 import org.gwems.servers.Global;
-import org.gwems.servers.impl.MyWebSocketServerHandler;
-import org.gwems.servers.impl.WsLoggingHandler;
 
-public class StartOneGlobalServer {
-
+public class Main {
 	public static Logger logger = Logger.getLogger(StartOneGlobalServer.class);
 
 	public static boolean running = true;
 
 	public static void main(String[] args) {
 		
-		Push2Client.logger.setLevel(Level.DEBUG);
-		Subscribe.logger.setLevel(Level.TRACE);
-		Unsubscribe.logger.setLevel(Level.TRACE);
-		Publish.logger.setLevel(Level.DEBUG);
-		Global.logger.setLevel(Level.DEBUG);
-		
-		WsLoggingHandler.logger.setLevel(Level.DEBUG);
-		
-		MyWebSocketServerHandler.logger.setLevel(Level.DEBUG);
+//		Push2Client.logger.setLevel(Level.DEBUG);
+//		Subscribe.logger.setLevel(Level.TRACE);
+//		Unsubscribe.logger.setLevel(Level.TRACE);
+//		Publish.logger.setLevel(Level.DEBUG);
+//		Global.logger.setLevel(Level.DEBUG);
+//		
+//		WsLoggingHandler.logger.setLevel(Level.DEBUG);
+//		
+//		MyWebSocketServerHandler.logger.setLevel(Level.DEBUG);
 		
 		System.setProperty("catalina.base", "..");
 

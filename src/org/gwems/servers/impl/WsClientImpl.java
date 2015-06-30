@@ -162,7 +162,7 @@ public class WsClientImpl extends WsClient {
 			// version = WebSocketVersion.V08;
 			boolean allowExtensions = false;
 
-			// ws://127.0.0.1:8081
+			// ws://127.0.0.1:8080
 			URI uri = new URI(scheme + "://" + host + ":" + port);
 
 			handler = new MyWebSocketClientHandler(
@@ -340,7 +340,7 @@ public class WsClientImpl extends WsClient {
 	}
 
 	/**
-	 * When you run this is tries to connect to localhost on 8081 and then you can try various commands in the console.
+	 * When you run this is tries to connect to localhost on 8080 and then you can try various commands in the console.
 	 * Only correct serializations of Runnables actually do anything on a Global server.
 	 * 
 	 * @param args
@@ -353,7 +353,7 @@ public class WsClientImpl extends WsClient {
 
 		logger.info("Starting main");
 
-		WsClientImpl test = new WsClientImpl("localhost", 8081);
+		WsClientImpl test = new WsClientImpl("localhost", 8080);
 
 		// test.enqueueRunnable(new PingEcho());
 

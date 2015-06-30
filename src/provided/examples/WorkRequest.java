@@ -3,7 +3,7 @@ package provided.examples;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gwems.servers.Global;
 
 
 /**
@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class WorkRequest {
     
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+  //  private static final ObjectMapper MAPPER = new ObjectMapper();
     
     private String bucket;
     private String key;
@@ -27,7 +27,7 @@ public class WorkRequest {
     public static WorkRequest fromJson(final InputStream json) 
             throws IOException {
         
-        return MAPPER.readValue(json, WorkRequest.class);
+        return Global.getMAPPER().readValue(json, WorkRequest.class);
     }
 
     /**
@@ -79,6 +79,6 @@ public class WorkRequest {
      * @throws IOException on error serializing the value
      */
     public String toJson() throws IOException {
-        return MAPPER.writeValueAsString(this);
+        return Global.getMAPPER().writeValueAsString(this);
     }
 }

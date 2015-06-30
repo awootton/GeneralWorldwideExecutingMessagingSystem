@@ -156,7 +156,7 @@ public class Global implements Executor {
 
 		// open the port
 		if (!isDummyServer) {
-			server = new MyWebSocketServer(this);
+			server = new MyWebSocketServer(this,false);
 			Runnable starter = server.new Starter(port, this);
 			serverThread = new Thread(starter);
 			serverThread.setName(id + ":" + port);
@@ -471,6 +471,10 @@ public class Global implements Executor {
 //		}
 		
 		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@");
+	}
+	
+	public static ObjectMapper getMAPPER(){
+		return MAPPER;
 	}
 
 	// @JsonSerialize(using = Push2Client.MySerializer.class)
