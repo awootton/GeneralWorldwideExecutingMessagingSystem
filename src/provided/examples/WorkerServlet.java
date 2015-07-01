@@ -1,5 +1,7 @@
 package provided.examples;
 
+import gwems.Push2Client;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
@@ -12,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.gwems.servers.ClusterState;
 import org.gwems.servers.Global;
 import org.messageweb.dynamo.LastTimeItem;
 
@@ -44,67 +47,68 @@ public class WorkerServlet extends HttpServlet {
 
 	public WorkerServlet() {
 
-//		logger.debug(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Starting");
-//
-//		GlobalRunner rrr = new GlobalRunner();
-//		Thread tt = new Thread(rrr);
-//		tt.start();
-//		while (global == null) {
-//			try {
-//				Thread.sleep(1);
-//			} catch (InterruptedException e) {
-//			}
-//		}
-//
-//		logger.debug("-* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -* Started " + global);
-//
-//		TimePusher pusher = new TimePusher();
-//		pusher.global = global;
-//		Thread t = new Thread(pusher);
-//		t.start();
+		logger.debug(" . . . . . . . . . . . . . . . . . . . . . . . . . . . . . Starting");
+
+		GlobalRunner rrr = new GlobalRunner();
+		Thread tt = new Thread(rrr);
+		tt.start();
+		while (global == null) {
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+			}
+		}
+
+		logger.debug("-* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -*  -* -* Started " + global);
+
+		TimePusher pusher = new TimePusher();
+		pusher.global = global;
+		Thread t = new Thread(pusher);
+		t.start();
 	}
 
 
-//	private class GlobalRunner implements Runnable {
-//
-//		@Override
-//		public void run() {
-//			ClusterState clusterState = new ClusterState();
-//			clusterState.rootMode = true;// root mode.
-//			global = new Global(8081, clusterState);// starts a ws server
-//		}
-//	}
+	private class GlobalRunner implements Runnable {
+
+		@Override
+		public void run() {
+			ClusterState clusterState = new ClusterState();
+			clusterState.rootMode = true;// root mode.
+			global = new Global(8081, clusterState);// starts a ws server
+			//Main.main(new String[0]);
+		}
+	}
 
 	// Do this over in js and add it to the db
 
-//	private class TimePusher implements Runnable {
-//		Global global;
-//
-//		@Override
-//		public void run() {
-//			// publish the time every 10 sec.
-//			long time_10 = System.currentTimeMillis() + 10 * 1000;
-//			long time_60 = System.currentTimeMillis() + 22 * 1000;
-//			while (true) {
-//				long time = System.currentTimeMillis();
-//				if (time > time_10) {
-//					time_10 += 10 * 1000;
-//					global.publish("WWC#TimeEveryTenSeconds", new Push2Client("" + new Date()));
-//					global.publish("WWC#10secs", new Push2Client("" + new Date()));
-//					// logger.info("sent time to #TimeEveryTenSeconds");
-//				}
-//				if (time > time_60) {
-//					time_60 += 60 * 1000;
-//					global.publish("WWC#TimeEveryMinute", new Push2Client("" + new Date()));
-//					// logger.info("sent time to #TimeEveryMinute");
-//				}
-//				try {
-//					Thread.sleep(1000);
-//				} catch (InterruptedException e) {
-//				}
-//			}
-//		}
-//	}
+	private class TimePusher implements Runnable {
+		Global global;
+
+		@Override
+		public void run() {
+			// publish the time every 10 sec.
+			long time_10 = System.currentTimeMillis() + 10 * 1000;
+			long time_60 = System.currentTimeMillis() + 22 * 1000;
+			while (true) {
+				long time = System.currentTimeMillis();
+				if (time > time_10) {
+					time_10 += 10 * 1000;
+					global.publish("WWC#TimeEveryTenSeconds", new Push2Client("" + new Date()));
+					global.publish("WWC#10secs", new Push2Client("" + new Date()));
+					// logger.info("sent time to #TimeEveryTenSeconds");
+				}
+				if (time > time_60) {
+					time_60 += 60 * 1000;
+					global.publish("WWC#TimeEveryMinute", new Push2Client("" + new Date()));
+					// logger.info("sent time to #TimeEveryMinute");
+				}
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				}
+			}
+		}
+	}
 
 	/**
 	 * A client to use to access Amazon S3. Pulls credentials from the {@code AwsCredentials.properties} file if found

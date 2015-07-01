@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.gwems.util.PubSub.Handler;
 
 import redis.clients.jedis.JedisPubSub;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class MyRedisPubSub extends JedisPubSub {
 
@@ -22,7 +21,7 @@ public class MyRedisPubSub extends JedisPubSub {
 	@Override
 	public void onPMessage(String pattern, String channel, String message) {
 		logger.error("we are not using this feature");
-		throw new NotImplementedException();
+		//throw new NotImplementedException();
 	}
 
 	/** These are the REPLIES from when we call sub and unsub in 
@@ -43,13 +42,13 @@ public class MyRedisPubSub extends JedisPubSub {
 	@Override
 	public void onPUnsubscribe(String pattern, int subscribedChannels) {
 		logger.error("we are not using this feature");
-		throw new NotImplementedException();
+		//throw new NotImplementedException();
 	}
 
 	@Override
 	public void onPSubscribe(String pattern, int subscribedChannels) {
 		logger.error("we are not using this feature");
-		throw new NotImplementedException();
+		//throw new NotImplementedException();
 	}
 
 }

@@ -1,9 +1,5 @@
 package org.messageweb.experiments;
 
-import java.security.MessageDigest;
-import java.util.Base64;
-
-import org.gwems.servers.ExecutionContext;
 
 public class ScanStringHash {
 

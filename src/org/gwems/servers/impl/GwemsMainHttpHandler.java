@@ -29,7 +29,6 @@ import io.netty.channel.ChannelProgressiveFutureListener;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.example.http.helloworld.HttpHelloWorldServerHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -63,6 +62,28 @@ import org.apache.log4j.Logger;
 public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 
 	public static Logger logger = Logger.getLogger(GwemsMainHttpHandler.class);
+	
+
+	public static String baseDirectory = "WebContent";
+
+	public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
+	public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
+	public static final int HTTP_CACHE_SECONDS = 60;
+
+	
+	public GwemsMainHttpHandler(){
+		 if ( ! new File(baseDirectory).exists() ){
+			 //System.out.println(new File(".").getAbsolutePath());
+			 
+			 //System.out.println(System.getProperties());
+			 // super hack
+			 baseDirectory = "/Users/awootton/Documents/workspace/GeneralWorldwideExecutingMessagingSystem1/WebContent/";
+			 if ( ! new File(baseDirectory).exists() ){
+				 // on EC2 I have to check out the content separately
+				 baseDirectory = "/home/ec2-user/workspace/GeneralWorldwideExecutingMessagingSystem/WebContent/";
+			 }
+		 }
+	}
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -111,12 +132,6 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 		}
 	}
 
-	public static String baseDirectory = "WebContent";
-
-	public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
-	public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
-	public static final int HTTP_CACHE_SECONDS = 60;
-
 	// @Override
 	public void staticChannelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
 		if (!request.getDecoderResult().isSuccess()) {
@@ -138,6 +153,7 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 
 		File file = new File(path);
 		if (file.isHidden() || !file.exists()) {
+			logger.warn("sent 404 " + path + " " + new File(".").getAbsolutePath()) ;
 			sendError(ctx, NOT_FOUND);
 			return;
 		}
@@ -217,7 +233,7 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 
 			@Override
 			public void operationComplete(ChannelProgressiveFuture future) {
-				System.err.println(future.channel() + " Transfer complete.");
+				//System.err.println(future.channel() + " Transfer complete.");
 			}
 		});
 

@@ -4,8 +4,6 @@ import org.apache.log4j.Level;
 import org.gwems.servers.impl.JedisRedisPubSubImpl;
 import org.gwems.servers.impl.MyRedisPubSub;
 import org.gwems.util.PubSub;
-import org.junit.Assert;
-import org.junit.Test;
 
 /** OMG kill me quick because my corpse is rotting.
  * 

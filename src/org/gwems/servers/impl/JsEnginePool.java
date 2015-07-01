@@ -15,7 +15,6 @@ import javax.script.ScriptException;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import org.apache.log4j.Logger;
-import org.gwems.js.GetToKnowBindingsAndScopes;
 import org.gwems.servers.Global;
 
 public class JsEnginePool {
