@@ -32,11 +32,9 @@ if [ -d "/Users/awootton" ]; then
   
 else
 
-	AWS="../aws/aws-java-sdk-1.10.2"
-
 	collectClasses "WebContent/WEB-INF/lib/*.jar"
 	
-	collectClasses "/usr/share/java/*.jar"
+	AWS="../aws/aws-java-sdk-1.10.2"
 	
 fi
 
@@ -53,7 +51,13 @@ echo $CLASSPATH
 echo
 echo
 
-command="javac -classpath $CLASSPATH -d build/classes -sourcepath src  src/org/gwems/util/ProductionMain.java src/org/gwems/util/PublishLogAppender.java"   
+NEEDED="src/org/gwems/util/ProductionMain.java"
+NEEDED=$NEEDED" src/org/gwems/util/PublishLogAppender.java"
+NEEDED=$NEEDED" src/d/Live.java"
+
+echo $NEEDED
+
+command="javac -classpath $CLASSPATH -d build/classes -sourcepath src  $NEEDED "   
 
 ##echo $command
 
@@ -62,6 +66,5 @@ $command
 command="java -Xms3000m -Xmx3000m -XX:MaxPermSize=64m -classpath build/classes:$CLASSPATH org/gwems/util/ProductionMain"
 
 $command
-
 
 
