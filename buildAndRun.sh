@@ -1,5 +1,11 @@
 #!/bin/bash
 
+pid=`cat ../log/gwems.pid`
+
+echo "killing "$pid
+
+kill $pid
+
 echo $CLASSPATH 
 
 classes=
@@ -65,6 +71,7 @@ $command
 
 command="java -Xms3000m -Xmx3000m -XX:MaxPermSize=64m -classpath build/classes:$CLASSPATH org/gwems/util/ProductionMain"
 
-$command
+nohup $command &
+echo $! > ../log/gwems.pid
 
 
