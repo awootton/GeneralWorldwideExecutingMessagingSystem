@@ -53,7 +53,7 @@ echo $CLASSPATH
 echo
 echo
 
-command="javac -classpath $CLASSPATH -d build/classes -sourcepath src  src/org/gwems/util/ProductionMain.java"
+command="javac -classpath $CLASSPATH -d build/classes -sourcepath src  src/org/gwems/util/ProductionMain.java src/org/gwems/util/PublishLogAppender.java"   
 
 ##echo $command
 
@@ -62,10 +62,6 @@ $command
 command="java -Xms2000m -Xmx2000m -XX:MaxPermSize=64m -classpath build/classes:$CLASSPATH org/gwems/util/ProductionMain"
 
 $command
-
-
-# yum search java | grep openjdk
-# sudo yum install java-1.8.0-openjdk-devel.x86_64
 
 
 
