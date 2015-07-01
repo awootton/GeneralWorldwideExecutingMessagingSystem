@@ -60,7 +60,7 @@ GWEMS.WebSocketClient.prototype.start = function() {
 	
 	// set up keep alive.
 	window.setInterval(function() {
-		gewms.send('{"@":"Live"}');
+		gewms.send('{"@":"d.Live"}');
 	},  10 * 1000);// every 12 minutes. 
 };
 

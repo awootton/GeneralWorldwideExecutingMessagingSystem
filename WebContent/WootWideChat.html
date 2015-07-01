@@ -88,7 +88,7 @@ textarea {
 	// start a timer to keep the socket alive 60 sec
 	var timer = setInterval(function() {
 		if (restartTimer == undefined) {
-			sock.send('{"@":"Live"}');
+			sock.send('{"@":"d.Live"}');
 		}
 	}, 60 * 1000);
 

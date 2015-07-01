@@ -1,3 +1,4 @@
+package d;
 import org.apache.log4j.Logger;
 import org.gwems.servers.Global;
 
@@ -6,7 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 /**
  * The smallest possible message. Used to keep sockets, and their agents, alive.
  * 
- * Send this string: {"@":"Live"}
+ * Send this string: {"@":"d.Live"}
  * 
  * @author awootton
  * 

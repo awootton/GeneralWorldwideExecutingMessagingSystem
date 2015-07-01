@@ -59,7 +59,7 @@ command="javac -classpath $CLASSPATH -d build/classes -sourcepath src  src/org/g
 
 $command
 
-command="java -Xms2000m -Xmx2000m -XX:MaxPermSize=64m -classpath build/classes:$CLASSPATH org/gwems/util/ProductionMain"
+command="java -Xms3000m -Xmx3000m -XX:MaxPermSize=64m -classpath build/classes:$CLASSPATH org/gwems/util/ProductionMain"
 
 $command
 
