@@ -1,0 +1,7 @@
+#!/bin/bash
+
+mkdir ../aws
+curl http://sdk-for-java.amazonwebservices.com/latest/aws-java-sdk.zip > ../aws/aws-java-sdk.zip
+
+unzip -d ../aws ../aws/aws-java-sdk.zip
+

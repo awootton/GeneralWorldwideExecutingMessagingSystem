@@ -21,7 +21,8 @@ collectClasses() {
 # -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager 
 # org.apache.catalina.startup.Bootstrap start
 
-# /usr/share/java/
+
+# http://central.maven.org/maven2/com/amazonaws/aws-java-sdk/1.10.2/aws-java-sdk-1.10.2.jar
 
 if [ -d "/Users/awootton" ]; then
   
@@ -31,13 +32,14 @@ if [ -d "/Users/awootton" ]; then
   
 else
 
+	AWS="../aws/aws-java-sdk-1.10.2"
+
 	collectClasses "WebContent/WEB-INF/lib/*.jar"
 	
 	collectClasses "/usr/share/java/*.jar"
 	
 fi
 
- 
 collectClasses "$AWS/lib/*.jar"
 
 collectClasses "$AWS/third-party/commons-logging-1.1.3/*.jar"
@@ -60,6 +62,10 @@ $command
 command="java -Xms2000m -Xmx2000m -XX:MaxPermSize=64m -classpath build/classes:$CLASSPATH org/gwems/util/ProductionMain"
 
 $command
+
+
+# yum search java | grep openjdk
+# sudo yum install java-1.8.0-openjdk-devel.x86_64
 
 
 
