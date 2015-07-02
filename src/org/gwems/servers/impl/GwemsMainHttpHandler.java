@@ -62,7 +62,6 @@ import org.apache.log4j.Logger;
 public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 
 	public static Logger logger = Logger.getLogger(GwemsMainHttpHandler.class);
-	
 
 	public static String baseDirectory = "WebContent";
 
@@ -70,19 +69,18 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 	public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
 	public static final int HTTP_CACHE_SECONDS = 60;
 
-	
-	public GwemsMainHttpHandler(){
-		 if ( ! new File(baseDirectory).exists() ){
-			 //System.out.println(new File(".").getAbsolutePath());
-			 
-			 //System.out.println(System.getProperties());
-			 // super hack
-			 baseDirectory = "/Users/awootton/Documents/workspace/GeneralWorldwideExecutingMessagingSystem1/WebContent/";
-			 if ( ! new File(baseDirectory).exists() ){
-				 // on EC2 I have to check out the content separately
-				 baseDirectory = "/home/ec2-user/workspace/GeneralWorldwideExecutingMessagingSystem/WebContent/";
-			 }
-		 }
+	public GwemsMainHttpHandler() {
+		if (!new File(baseDirectory).exists()) {
+			// System.out.println(new File(".").getAbsolutePath());
+
+			// System.out.println(System.getProperties());
+			// super hack
+			baseDirectory = "/Users/awootton/Documents/workspace/GeneralWorldwideExecutingMessagingSystem1/WebContent/";
+			if (!new File(baseDirectory).exists()) {
+				// on EC2 I have to check out the content separately
+				baseDirectory = "/home/ec2-user/workspace/GeneralWorldwideExecutingMessagingSystem/WebContent/";
+			}
+		}
 	}
 
 	@Override
@@ -96,17 +94,17 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 			}
 			// boolean keepAlive = HttpHeaders.isKeepAlive(req);
 
-//			boolean upgrade = false;
-//			String connection = req.headers().get("Upgrade");
-//			if (connection != null && ("websocket".equals(connection))) {
-//				upgrade = true;
-//			}
-//			if (upgrade) {
-//				System.out.println(" --------------- >>>>>>>>>>>  UPGHRADED " + req);
-//				return;
-//			}
-//
-//			System.out.println(" --------------- >> " + req);
+			// boolean upgrade = false;
+			// String connection = req.headers().get("Upgrade");
+			// if (connection != null && ("websocket".equals(connection))) {
+			// upgrade = true;
+			// }
+			// if (upgrade) {
+			// System.out.println(" --------------- >>>>>>>>>>>  UPGHRADED " + req);
+			// return;
+			// }
+			//
+			// System.out.println(" --------------- >> " + req);
 
 			// find
 			try {
@@ -153,7 +151,7 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 
 		File file = new File(path);
 		if (file.isHidden() || !file.exists()) {
-			logger.warn("sent 404 " + path + " " + new File(".").getAbsolutePath()) ;
+			logger.warn("sent 404 " + path + " " + new File(".").getAbsolutePath());
 			sendError(ctx, NOT_FOUND);
 			return;
 		}
@@ -211,12 +209,16 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 		// Write the content.
 		ChannelFuture sendFileFuture;
 		ChannelFuture lastContentFuture;
+		
 		if (ctx.pipeline().get(SslHandler.class) == null) {
+			System.err.println("writing http len=" + fileLength );
 			sendFileFuture = ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
 			// Write the end marker.
 			lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
 		} else {
-			sendFileFuture = ctx.write(new HttpChunkedInput(new ChunkedFile(raf, 0, fileLength, 8192)), ctx.newProgressivePromise());
+			// https://localhost:8443
+			System.err.println("writing ssh len=" + fileLength );
+			sendFileFuture = ctx.writeAndFlush(new HttpChunkedInput(new ChunkedFile(raf, 0, fileLength, 8192)), ctx.newProgressivePromise());
 			// HttpChunkedInput will write the end marker (LastHttpContent) for us.
 			lastContentFuture = sendFileFuture;
 		}
@@ -233,7 +235,7 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 
 			@Override
 			public void operationComplete(ChannelProgressiveFuture future) {
-				//System.err.println(future.channel() + " Transfer complete.");
+				System.err.println(future.channel() + " Transfer complete.");
 			}
 		});
 

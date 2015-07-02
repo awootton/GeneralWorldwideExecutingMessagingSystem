@@ -82,12 +82,15 @@ public class Global implements Executor {
 	private static int serveIdCounter = 0;
 	public String id = "Svr" + serveIdCounter++;// ("" + Math.random()).substring(2);
 
-	private MyWebSocketServer server;
+	private MyWebSocketServer plainServer;
+	private MyWebSocketServer secureServer;
 
 	public TimeoutCache timeoutCache;
 
 	// The thread that watches the NIO acceptor.
-	private Thread serverThread;
+	private Thread plainServerThread;
+	// The thread that watches the NIO acceptor.
+	private Thread secureServerThread;
 
 	private PubSub thePubSub;
 
@@ -152,14 +155,22 @@ public class Global implements Executor {
 
 		executor = new ThreadPoolExecutor(2, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new MyThreadFactory());
 
-		// open the port
+		// open the port : 443 = 80 + 363
 		if (!isDummyServer) {
-			server = new MyWebSocketServer(this,false);
-			Runnable starter = server.new Starter(port, this);
-			serverThread = new Thread(starter);
-			serverThread.setName(id + ":" + port);
-			serverThread.setDaemon(true);
-			serverThread.start();
+			plainServer = new MyWebSocketServer(this, false);
+			Runnable starter1 = plainServer.new Starter(port, this);
+			plainServerThread = new Thread(starter1);
+			plainServerThread.setName(id + ":" + port);
+			plainServerThread.setDaemon(true);
+			plainServerThread.start();
+
+			secureServer = new MyWebSocketServer(this, true);
+			Runnable starter2 = secureServer.new Starter(port + 363, this);
+			secureServerThread = new Thread(starter2);
+			secureServerThread.setName(id + ":" + (port + 363));
+			secureServerThread.setDaemon(true);
+			secureServerThread.start();
+
 		}
 
 		// start the timeout cache.
@@ -174,12 +185,18 @@ public class Global implements Executor {
 
 		// how do we wait for server to start up?
 		if (!isDummyServer)
-			while (server.startedChannel == false) {
+			while (plainServer.startedChannel == false) {
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException e) {
 				}
 			}
+		while (secureServer.startedChannel == false) {
+			try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+			}
+		}
 		if (thePubSub != null) {
 			// start a timer to keep the 'dis pubsub alive
 			Agent shitAgent = new SimpleAgent(this, JedisRedisPubSubImpl.dummyChannel);
@@ -293,8 +310,10 @@ public class Global implements Executor {
 
 		if (thePubSub != null)
 			thePubSub.stop();
-		if (server != null)
-			server.stop();
+		if (plainServer != null)
+			plainServer.stop();
+		if (secureServer != null)
+			secureServer.stop();
 		executor.setRejectedExecutionHandler(new MyRejectedExecutionHandler());
 		try {
 			executor.awaitTermination(5, TimeUnit.MILLISECONDS);
@@ -450,28 +469,28 @@ public class Global implements Executor {
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	static {
 
-//		SimpleModule module = new SimpleModule();
-//		module.addSerializer(Push2Client.class, new Push2Client.MySerializer());
-//		module.addDeserializer(Push2Client.class, new Push2Client.MyDeserializer());
-		//MAPPER.registerModule(module);
+		// SimpleModule module = new SimpleModule();
+		// module.addSerializer(Push2Client.class, new Push2Client.MySerializer());
+		// module.addDeserializer(Push2Client.class, new Push2Client.MyDeserializer());
+		// MAPPER.registerModule(module);
 
 		MAPPER.setVisibility(PropertyAccessor.GETTER, Visibility.NONE);
 		MAPPER.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
 
-//		Push2Client tmp = new Push2Client();
-//		try {
-//			String str = MAPPER.writeValueAsString(tmp);
-//			
-//			Push2Client p = (Push2Client) MAPPER.readValue(str, Object.class);
-//			logger.info(p);
-//		} catch (IOException e) {
-//			logger.error(e);
-//		}
-		
+		// Push2Client tmp = new Push2Client();
+		// try {
+		// String str = MAPPER.writeValueAsString(tmp);
+		//
+		// Push2Client p = (Push2Client) MAPPER.readValue(str, Object.class);
+		// logger.info(p);
+		// } catch (IOException e) {
+		// logger.error(e);
+		// }
+
 		MAPPER.enableDefaultTypingAsProperty(DefaultTyping.NON_FINAL, "@");
 	}
-	
-	public static ObjectMapper getMAPPER(){
+
+	public static ObjectMapper getMAPPER() {
 		return MAPPER;
 	}
 

@@ -37,6 +37,7 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -66,10 +67,7 @@ public final class MyWebSocketServer {
 
 	public static Logger logger = Logger.getLogger(MyWebSocketServer.class);
 
-	///
-	final boolean SSL;// = System.getProperty("ssl") != null;
-	// static final int PORT = Integer.parseInt(System.getProperty("port", SSL ?
-	// ""+ (8443 + 1) : "" + (8080 + 1)));
+	final boolean SSL; 
 
 	static Set<Integer> portsStarted = new HashSet<Integer>();// doesn't work in reload
 
@@ -176,6 +174,8 @@ public final class MyWebSocketServer {
 			}
 			pipeline.addLast(new HttpServerCodec());
 			pipeline.addLast(new HttpObjectAggregator(65536));
+			
+			pipeline.addLast(new ChunkedWriteHandler());
 			
 			GwemsMainHttpHandler httpHandler = new GwemsMainHttpHandler();
 			

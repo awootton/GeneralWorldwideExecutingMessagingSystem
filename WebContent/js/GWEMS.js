@@ -25,7 +25,11 @@ GWEMS.WebSocketClient.prototype.setOpen = function( val ){
 
 GWEMS.WebSocketClient.prototype.start = function() {
  
-	this.socket = new WebSocket("ws://" + this.host + ":" + this.port + this.uri);
+	wsString = "ws://"
+	if (location.protocol === 'https:') {
+		wsString = "wss://"
+	}
+	this.socket = new WebSocket(wsString + this.host + ":" + this.port + this.uri);
 	
 	var gewms = this;
 	
