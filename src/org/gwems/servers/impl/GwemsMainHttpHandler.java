@@ -8,7 +8,6 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.EXPIRES;
 import static io.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.LAST_MODIFIED;
 import static io.netty.handler.codec.http.HttpHeaders.Names.LOCATION;
-import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
 import static io.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
@@ -34,6 +33,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpChunkedInput;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -58,6 +58,7 @@ import java.util.regex.Pattern;
 import javax.activation.MimetypesFileTypeMap;
 
 import org.apache.log4j.Logger;
+import org.gwems.servers.Global;
 
 public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 
@@ -69,7 +70,13 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 	public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
 	public static final int HTTP_CACHE_SECONDS = 60;
 
-	public GwemsMainHttpHandler() {
+	final HttpPostHandler postHandler;
+
+	final Global global;
+
+	public GwemsMainHttpHandler(Global global) {
+		this.global = global;
+		postHandler = new HttpPostHandler(global);
 		if (!new File(baseDirectory).exists()) {
 			// System.out.println(new File(".").getAbsolutePath());
 
@@ -137,7 +144,12 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 			return;
 		}
 
-		if (request.getMethod() != GET) {
+		if (request.getMethod() == HttpMethod.POST) {
+			postHandler.channelRead(ctx, request);
+			return;
+		}
+
+		if (request.getMethod() != HttpMethod.GET) {
 			sendError(ctx, METHOD_NOT_ALLOWED);
 			return;
 		}
@@ -209,15 +221,15 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 		// Write the content.
 		ChannelFuture sendFileFuture;
 		ChannelFuture lastContentFuture;
-		
+
 		if (ctx.pipeline().get(SslHandler.class) == null) {
-			System.err.println("writing http len=" + fileLength );
+			System.err.println("writing http len=" + fileLength);
 			sendFileFuture = ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
 			// Write the end marker.
 			lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
 		} else {
 			// https://localhost:8443
-			System.err.println("writing ssh len=" + fileLength );
+			System.err.println("writing ssh len=" + fileLength);
 			sendFileFuture = ctx.writeAndFlush(new HttpChunkedInput(new ChunkedFile(raf, 0, fileLength, 8192)), ctx.newProgressivePromise());
 			// HttpChunkedInput will write the end marker (LastHttpContent) for us.
 			lastContentFuture = sendFileFuture;
@@ -227,15 +239,15 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 			@Override
 			public void operationProgressed(ChannelProgressiveFuture future, long progress, long total) {
 				if (total < 0) { // total unknown
-					System.err.println(future.channel() + " Transfer progress: " + progress);
+					//System.err.println(future.channel() + " Transfer progress: " + progress);
 				} else {
-					System.err.println(future.channel() + " Transfer progress: " + progress + " / " + total);
+					//System.err.println(future.channel() + " Transfer progress: " + progress + " / " + total);
 				}
 			}
 
 			@Override
 			public void operationComplete(ChannelProgressiveFuture future) {
-				System.err.println(future.channel() + " Transfer complete.");
+				//System.err.println(future.channel() + " Transfer complete.");
 			}
 		});
 
@@ -332,7 +344,7 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
 	}
 
-	private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
+	static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
 		FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + status + "\r\n", CharsetUtil.UTF_8));
 		response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
 

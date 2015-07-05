@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+
+<script>
+	var doPost = function() {
+
+		var xmlhttp = new XMLHttpRequest();
+
+		xmlhttp.open("POST", "gwems", true);
+
+		xmlhttp.send('{"@":"gwems.Publish","channel":"#mom","msg":{"@":"gwems.Push2Client","msg":{"from":"#mom","msg":"HiMom From Post"}}}');
+
+	}
+</script>
+</head>
+<body>
+
+	<button onclick="doPost()">push for post</button>
+
+</body>
+</html>

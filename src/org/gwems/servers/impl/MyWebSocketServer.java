@@ -177,7 +177,7 @@ public final class MyWebSocketServer {
 			
 			pipeline.addLast(new ChunkedWriteHandler());
 			
-			GwemsMainHttpHandler httpHandler = new GwemsMainHttpHandler();
+			GwemsMainHttpHandler httpHandler = new GwemsMainHttpHandler(global);
 			
 			pipeline.addLast(new MyWebSocketServerHandler(global,httpHandler));
 		}

@@ -306,6 +306,17 @@ public class Global implements Executor {
 		sessionAgent.socketMessageQ.run(new CtxWrapper(message));
 	}
 
+	public void executeHttpMessage(String message) {
+		SessionAgent sessionAgent;
+		ChannelHandlerContext ctx = null;
+		sessionAgent = new SessionAgent(this, getRandom(), ctx);
+		timeoutCache.put(sessionAgent.getKey(), sessionAgent, 1, () -> {
+			unsubscribeAgent(sessionAgent);// Super important. We don't want the subscriptions to leak.
+			});
+		sessionAgent.byteCount.addAndGet(message.length());
+		sessionAgent.socketMessageQ.run(new CtxWrapper(message));
+	}
+
 	public void stop() {
 
 		if (thePubSub != null)

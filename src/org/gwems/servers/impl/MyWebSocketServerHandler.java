@@ -45,8 +45,6 @@ public class MyWebSocketServerHandler extends SimpleChannelInboundHandler<Object
 	@Override
 	public void channelRead0(ChannelHandlerContext ctx, Object msg) {
 		
-		//System.out.println("********** " + msg);
-
 		boolean upgrade = false;
 		boolean isHttp = false;
 		if (msg instanceof FullHttpRequest) {
