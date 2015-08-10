@@ -311,6 +311,7 @@ public class Global implements Executor {
 		ChannelHandlerContext ctx = null;
 		sessionAgent = new SessionAgent(this, getRandom(), ctx);
 		timeoutCache.put(sessionAgent.getKey(), sessionAgent, 1, () -> {
+			System.out.println("executeHttpMessage unsubscribing " + sessionAgent.getKey());
 			unsubscribeAgent(sessionAgent);// Super important. We don't want the subscriptions to leak.
 			});
 		sessionAgent.byteCount.addAndGet(message.length());

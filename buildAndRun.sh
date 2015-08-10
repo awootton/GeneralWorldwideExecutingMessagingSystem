@@ -71,7 +71,9 @@ $command
 
 command="java -Xms3000m -Xmx3000m -XX:MaxPermSize=64m -classpath build/classes:$CLASSPATH org/gwems/util/ProductionMain"
 
-nohup $command &
+####nohup 
+$command
+##### &
 echo $! > ../log/gwems.pid
 
 

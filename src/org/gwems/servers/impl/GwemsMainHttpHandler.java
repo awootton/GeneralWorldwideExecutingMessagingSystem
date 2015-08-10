@@ -92,6 +92,10 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) {
+		
+		System.out.println("top of channelRead");
+		
+		
 		if (msg instanceof HttpRequest) {
 
 			HttpRequest req = (HttpRequest) msg;
@@ -143,6 +147,7 @@ public class GwemsMainHttpHandler extends HttpHelloWorldServerHandler {
 			sendError(ctx, BAD_REQUEST);
 			return;
 		}
+		System.out.println("have good request in staticChannelRead0");
 
 		if (request.getMethod() == HttpMethod.POST) {
 			postHandler.channelRead(ctx, request);
